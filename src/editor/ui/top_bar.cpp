@@ -1,0 +1,495 @@
+#include "top_bar.h"
+#include "file_explorer.h"
+#include "help_panel.h"
+#include "splash_screen.h"
+#include "scene/outliner.h"
+#include "properties_panel.h"
+#include "assets/model_manager.h"
+#include "ui_button.h"
+#include "ui_style.h"
+#include <cstdio>
+#include <cstring>
+
+// -------------------------------------------------------
+// STATIC TOP BAR STATE
+// -------------------------------------------------------
+static Texture2D iconFolder = {0};
+static Texture2D iconHelp = {0};
+static Texture2D iconN = {0};
+static bool playModeActive = false;
+static bool playPaused = false;
+static bool playStopRequested = false;
+static bool playRestartRequested = false;
+static bool playHover = false;
+static bool stopHover = false;
+static bool restartHover = false;
+static bool addMenuOpen = false;
+static bool addHover = false;
+static int addMainHoverItem = -1;
+static int addShapeHoverItem = -1;
+static bool addShapesSubmenuOpen = false;
+static const PrimitiveModelType addPrimitiveTypes[] = {
+    PRIMITIVE_MODEL_CUBE,
+    PRIMITIVE_MODEL_SPHERE,
+    PRIMITIVE_MODEL_CYLINDER,
+    PRIMITIVE_MODEL_PLANE};
+static const char *addPrimitiveLabels[] = {
+    "Cube",
+    "Sphere",
+    "Cylinder",
+    "Plane"};
+static const char *topBarBrandText = "Nanquimori Engine";
+
+static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativePath, char *out, size_t outSize)
+{
+    if (!baseDir || baseDir[0] == '\0' || !relativePath || relativePath[0] == '\0' || !out || outSize == 0)
+        return false;
+
+    char current[512] = {0};
+    strncpy(current, baseDir, sizeof(current) - 1);
+    current[sizeof(current) - 1] = '\0';
+
+    for (int i = 0; i < 6; i++)
+    {
+        snprintf(out, outSize, "%s/%s", current, relativePath);
+        out[outSize - 1] = '\0';
+        if (FileExists(out))
+            return true;
+
+        char next[512] = {0};
+        snprintf(next, sizeof(next), "%s/..", current);
+        next[sizeof(next) - 1] = '\0';
+        if (strcmp(next, current) == 0)
+            break;
+        strncpy(current, next, sizeof(current) - 1);
+        current[sizeof(current) - 1] = '\0';
+    }
+
+    return false;
+}
+
+static bool ResolveAssetPath(const char *relativePath, char *out, size_t outSize)
+{
+    if (!relativePath || relativePath[0] == '\0' || !out || outSize == 0)
+        return false;
+    out[0] = '\0';
+
+    if (FileExists(relativePath))
+    {
+        strncpy(out, relativePath, outSize - 1);
+        out[outSize - 1] = '\0';
+        return true;
+    }
+
+    const char *cwd = GetWorkingDirectory();
+    const char *appDir = GetApplicationDirectory();
+    if (TryResolvePathFromBaseChain(cwd, relativePath, out, outSize))
+        return true;
+    if (TryResolvePathFromBaseChain(appDir, relativePath, out, outSize))
+        return true;
+
+    return false;
+}
+
+static void DrawTopBarIcon(Texture2D icon, Vector2 pos, float size, Color tint)
+{
+    if (icon.id <= 0 || icon.width <= 0 || icon.height <= 0)
+        return;
+    DrawTextureEx(icon, pos, 0.0f, size / (float)icon.width, tint);
+}
+
+static void UnloadTopBarIcon(Texture2D *icon)
+{
+    if (!icon || icon->id <= 0)
+        return;
+    UnloadTexture(*icon);
+    *icon = (Texture2D){0};
+}
+
+static void BuildUniqueObjectName(const char *baseName, char *outName, size_t outSize)
+{
+    if (!outName || outSize == 0)
+        return;
+    outName[0] = '\0';
+
+    const char *base = (baseName && baseName[0] != '\0') ? baseName : "Object";
+    if (!ObjetoExisteNoOutliner(base))
+    {
+        strncpy(outName, base, outSize - 1);
+        outName[outSize - 1] = '\0';
+        return;
+    }
+
+    for (int i = 1; i < 1000; i++)
+    {
+        snprintf(outName, outSize, "%s %d", base, i);
+        outName[outSize - 1] = '\0';
+        if (!ObjetoExisteNoOutliner(outName))
+            return;
+    }
+
+    strncpy(outName, base, outSize - 1);
+    outName[outSize - 1] = '\0';
+}
+
+static void AddEmptyObject(void)
+{
+    char objectName[32] = {0};
+    BuildUniqueObjectName("Empty", objectName, sizeof(objectName));
+    int id = RegistrarObjeto(objectName, (Vector3){0, 0, 0}, -1);
+    if (id <= 0)
+        return;
+
+    int idx = BuscarIndicePorId(id);
+    if (idx != -1)
+        objetos[idx].caminhoModelo[0] = '\0';
+
+    SelecionarObjetoPorId(id);
+    SetSelectedModelByObjetoId(id);
+}
+
+// -------------------------------------------------------
+// INIT / UNLOAD
+// -------------------------------------------------------
+void InitTopBar()
+{
+    char path[512] = {0};
+
+    if (ResolveAssetPath("icons/window.png", path, sizeof(path)))
+        iconFolder = LoadTexture(path);
+    if (ResolveAssetPath("icons/help.png", path, sizeof(path)))
+        iconHelp = LoadTexture(path);
+
+    if (ResolveAssetPath("icons/N.ico", path, sizeof(path)))
+        iconN = LoadTexture(path);
+    if (iconN.id <= 0 && ResolveAssetPath("icons/n.png", path, sizeof(path)))
+        iconN = LoadTexture(path);
+}
+
+void UnloadTopBar()
+{
+    UnloadTopBarIcon(&iconFolder);
+    UnloadTopBarIcon(&iconHelp);
+    UnloadTopBarIcon(&iconN);
+}
+
+// -------------------------------------------------------
+// UPDATE
+// -------------------------------------------------------
+void UpdateTopBar()
+{
+    Vector2 mouse = GetMousePosition();
+    bool clicked = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+
+    float W = (float)GetScreenWidth();
+    float left = (float)PAINEL_LARGURA;
+    float right = (float)PROPERTIES_PAINEL_LARGURA;
+    float availableW = W - left - right;
+    float barY = 4.0f;
+    float iconSize = 16.0f;
+    float brandW = iconSize + 6.0f + (float)MeasureText(topBarBrandText, 12);
+    float brandX = left + (availableW - brandW) * 0.5f;
+    Rectangle areaBrand = {brandX, barY, brandW, 16.0f};
+    if (clicked && CheckCollisionPointRec(mouse, areaBrand))
+        ShowSplashScreen();
+
+    float barX = 8.0f + left;
+
+    // File
+    Rectangle areaFile = {barX, barY, 50.0f, 16.0f};
+    if (clicked && CheckCollisionPointRec(mouse, areaFile))
+    {
+        ToggleFileMenu();
+        addMenuOpen = false;
+        addShapesSubmenuOpen = false;
+    }
+
+    // Add
+    barX += 70.0f;
+    Rectangle areaAdd = {barX, barY, 55.0f, 16.0f};
+    addHover = CheckCollisionPointRec(mouse, areaAdd);
+    bool addToggledThisFrame = false;
+    if (clicked && addHover)
+    {
+        addMenuOpen = !addMenuOpen;
+        addToggledThisFrame = true;
+    }
+
+    const float addItemH = 24.0f;
+    Rectangle addMenuRect = {areaAdd.x, 24.0f, 220.0f, addItemH * 2.0f};
+    Rectangle itemEmpty = {addMenuRect.x, addMenuRect.y, addMenuRect.width, addItemH};
+    Rectangle itemGeometry = {addMenuRect.x, addMenuRect.y + addItemH, addMenuRect.width, addItemH};
+    const int addShapeCount = (int)(sizeof(addPrimitiveTypes) / sizeof(addPrimitiveTypes[0]));
+    Rectangle addShapesRect = {addMenuRect.x + addMenuRect.width + 2.0f, itemGeometry.y, 180.0f, addShapeCount * addItemH};
+
+    addMainHoverItem = -1;
+    addShapeHoverItem = -1;
+    if (addMenuOpen)
+    {
+        if (CheckCollisionPointRec(mouse, itemEmpty))
+            addMainHoverItem = 0;
+        else if (CheckCollisionPointRec(mouse, itemGeometry))
+            addMainHoverItem = 1;
+
+        bool mouseInSubmenu = CheckCollisionPointRec(mouse, addShapesRect);
+        addShapesSubmenuOpen = (addMainHoverItem == 1) || mouseInSubmenu;
+
+        if (addShapesSubmenuOpen)
+        {
+            for (int i = 0; i < addShapeCount; i++)
+            {
+                Rectangle item = {addShapesRect.x, addShapesRect.y + i * addItemH, addShapesRect.width, addItemH};
+                if (CheckCollisionPointRec(mouse, item))
+                {
+                    addShapeHoverItem = i;
+                    break;
+                }
+            }
+        }
+
+        if (clicked && !addToggledThisFrame)
+        {
+            if (addMainHoverItem == 0)
+            {
+                AddEmptyObject();
+                addMenuOpen = false;
+                addShapesSubmenuOpen = false;
+            }
+            else if (addShapesSubmenuOpen && addShapeHoverItem >= 0)
+            {
+                AddPrimitiveObject(addPrimitiveTypes[addShapeHoverItem]);
+                addMenuOpen = false;
+                addShapesSubmenuOpen = false;
+            }
+            else if (!CheckCollisionPointRec(mouse, addMenuRect) && !CheckCollisionPointRec(mouse, addShapesRect))
+            {
+                addMenuOpen = false;
+                addShapesSubmenuOpen = false;
+            }
+        }
+    }
+
+    // Help
+    barX += 70.0f;
+    Rectangle areaHelp = {barX, barY, 70.0f, 16.0f};
+    if (clicked && CheckCollisionPointRec(mouse, areaHelp))
+    {
+        SetHelpPanelShow(!HelpPanelShouldShow());
+        addMenuOpen = false;
+        addShapesSubmenuOpen = false;
+    }
+
+    // Play / Stop / Restart (depois do Help)
+    float btnY = barY;
+    float btnX = barX + 80.0f;
+    Rectangle areaPlay = {btnX, btnY, 60.0f, 16.0f};
+
+    UIButtonState playState = UIButtonGetState(areaPlay);
+    playHover = playState.hovered;
+    if (playState.clicked)
+    {
+        if (!playModeActive)
+        {
+            playModeActive = true;
+            playPaused = false;
+        }
+        else if (playPaused)
+        {
+            playPaused = false;
+        }
+        else
+        {
+            playPaused = true;
+        }
+    }
+    else if (playModeActive)
+    {
+        Rectangle areaStop = {btnX + 70.0f, btnY, 60.0f, 16.0f};
+        Rectangle areaRestart = {btnX + 140.0f, btnY, 70.0f, 16.0f};
+        UIButtonState stopState = UIButtonGetState(areaStop);
+        UIButtonState restartState = UIButtonGetState(areaRestart);
+        stopHover = stopState.hovered;
+        restartHover = restartState.hovered;
+        if (stopState.clicked)
+        {
+            playStopRequested = true;
+        }
+        else if (restartState.clicked)
+        {
+            playRestartRequested = true;
+        }
+    }
+    else
+    {
+        stopHover = false;
+        restartHover = false;
+    }
+
+}
+
+// -------------------------------------------------------
+// DRAW
+// -------------------------------------------------------
+void DrawTopBar()
+{
+    float W = (float)GetScreenWidth();
+    float left = (float)PAINEL_LARGURA;
+    float right = (float)PROPERTIES_PAINEL_LARGURA;
+    float availableW = W - left - right;
+
+    const UIStyle *style = GetUIStyle();
+    DrawRectangle((int)left, 0, (int)availableW, 24, style->topBarBg);
+    DrawLine((int)left, 24, (int)(left + availableW), 24, style->topBarBorder);
+
+    float barY = 4.0f;
+    float iconSize = 16.0f;
+    float brandW = iconSize + 6.0f + (float)MeasureText(topBarBrandText, 12);
+    float brandX = left + (availableW - brandW) * 0.5f;
+    DrawTopBarIcon(iconN, (Vector2){brandX, barY}, iconSize, style->textPrimary);
+    DrawText(topBarBrandText, (int)(brandX + iconSize + 6.0f), 5, 12, style->textSecondary);
+
+    float barX = 8.0f + left;
+
+    // File
+    DrawTopBarIcon(iconFolder, (Vector2){barX, barY}, iconSize, style->textPrimary);
+    DrawText("File", barX + 20.0f, 5, 12, style->textPrimary);
+
+    // Add
+    barX += 70.0f;
+    float addMenuX = barX;
+    Color addColor = (addMenuOpen || addHover) ? style->accent : style->textPrimary;
+    DrawText("Add", (int)barX, 5, 12, addColor);
+
+    // Help
+    barX += 70.0f;
+    DrawTopBarIcon(iconHelp, (Vector2){barX, barY}, iconSize, style->textPrimary);
+    DrawText("Help", barX + 20.0f, 5, 12, style->textPrimary);
+
+    if (addMenuOpen)
+    {
+        const float addItemH = 24.0f;
+        Rectangle addMenuRect = {addMenuX, 24.0f, 220.0f, addItemH * 2.0f};
+        Rectangle itemEmpty = {addMenuRect.x, addMenuRect.y, addMenuRect.width, addItemH};
+        Rectangle itemGeometry = {addMenuRect.x, addMenuRect.y + addItemH, addMenuRect.width, addItemH};
+        const int addShapeCount = (int)(sizeof(addPrimitiveLabels) / sizeof(addPrimitiveLabels[0]));
+        Rectangle addShapesRect = {addMenuRect.x + addMenuRect.width + 2.0f, itemGeometry.y, 180.0f, addShapeCount * addItemH};
+
+        DrawRectangleRec(addMenuRect, style->buttonBg);
+        DrawRectangleLinesEx(addMenuRect, 1.0f, style->panelBorder);
+        DrawRectangleRec(itemEmpty, (addMainHoverItem == 0) ? style->buttonBgHover : style->buttonBg);
+        DrawRectangleRec(itemGeometry, (addMainHoverItem == 1 || addShapesSubmenuOpen) ? style->buttonBgHover : style->buttonBg);
+        DrawText("Empty Object", (int)(itemEmpty.x + 10.0f), (int)(itemEmpty.y + 6.0f), 12,
+                 (addMainHoverItem == 0) ? style->buttonTextHover : style->buttonText);
+        DrawText("Geometric Shapes", (int)(itemGeometry.x + 10.0f), (int)(itemGeometry.y + 6.0f), 12,
+                 (addMainHoverItem == 1 || addShapesSubmenuOpen) ? style->buttonTextHover : style->buttonText);
+        DrawText(">", (int)(itemGeometry.x + itemGeometry.width - 18.0f), (int)(itemGeometry.y + 6.0f), 12,
+                 (addMainHoverItem == 1 || addShapesSubmenuOpen) ? style->buttonTextHover : style->buttonText);
+
+        if (addShapesSubmenuOpen)
+        {
+            DrawRectangleRec(addShapesRect, style->buttonBg);
+            DrawRectangleLinesEx(addShapesRect, 1.0f, style->panelBorder);
+            for (int i = 0; i < addShapeCount; i++)
+            {
+                Rectangle item = {addShapesRect.x, addShapesRect.y + i * addItemH, addShapesRect.width, addItemH};
+                bool hover = (i == addShapeHoverItem);
+                DrawRectangleRec(item, hover ? style->buttonBgHover : style->buttonBg);
+                DrawText(addPrimitiveLabels[i], (int)(item.x + 10.0f), (int)(item.y + 6.0f), 12,
+                         hover ? style->buttonTextHover : style->buttonText);
+            }
+        }
+    }
+
+    // Play / Stop / Restart after Help
+    barX += 80.0f;
+    const char *playLabel = playModeActive ? (playPaused ? "Resume" : "Pause") : "Play";
+    Color playColor = playPaused ? (Color){80, 160, 220, 255} : (playModeActive ? (Color){220, 110, 80, 255} : (Color){80, 200, 120, 255});
+
+    UIButtonConfig baseCfg = {0};
+    const UIStyle *uiStyle = GetUIStyle();
+    baseCfg.fontSize = 12;
+    baseCfg.padding = 6;
+    baseCfg.centerText = true;
+    baseCfg.textColor = WHITE;
+    baseCfg.textHoverColor = WHITE;
+    baseCfg.bgColor = uiStyle->buttonBg;
+    baseCfg.bgHoverColor = uiStyle->itemHover;
+    baseCfg.borderColor = uiStyle->buttonBorder;
+    baseCfg.borderHoverColor = uiStyle->accent;
+    baseCfg.borderThickness = 1.0f;
+
+    Rectangle areaPlay = {barX, 4.0f, 60.0f, 16.0f};
+    UIButtonConfig playCfg = baseCfg;
+    playCfg.textColor = playColor;
+    playCfg.textHoverColor = playColor;
+    playCfg.borderColor = playColor;
+    playCfg.borderHoverColor = playColor;
+    UIButtonDraw(areaPlay, playLabel, nullptr, &playCfg, playHover);
+
+    if (playModeActive)
+    {
+        Color stopColor = (Color){210, 90, 80, 255};
+        Color restartColor = (Color){90, 170, 220, 255};
+
+        Rectangle areaStop = {barX + 70.0f, 4.0f, 60.0f, 16.0f};
+        Rectangle areaRestart = {barX + 140.0f, 4.0f, 70.0f, 16.0f};
+
+        UIButtonConfig stopCfg = baseCfg;
+        stopCfg.textColor = stopColor;
+        stopCfg.textHoverColor = stopColor;
+        stopCfg.borderColor = stopColor;
+        stopCfg.borderHoverColor = stopColor;
+        UIButtonDraw(areaStop, "Stop", nullptr, &stopCfg, stopHover);
+
+        UIButtonConfig restartCfg = baseCfg;
+        restartCfg.textColor = restartColor;
+        restartCfg.textHoverColor = restartColor;
+        restartCfg.borderColor = restartColor;
+        restartCfg.borderHoverColor = restartColor;
+        UIButtonDraw(areaRestart, "Restart", nullptr, &restartCfg, restartHover);
+    }
+
+}
+
+bool IsPlayModeActive(void)
+{
+    return playModeActive;
+}
+
+void SetPlayModeActive(bool active)
+{
+    playModeActive = active;
+    if (!playModeActive)
+        playPaused = false;
+}
+
+bool IsPlayPaused(void)
+{
+    return playPaused;
+}
+
+void SetPlayPaused(bool paused)
+{
+    playPaused = paused;
+    if (playPaused && !playModeActive)
+        playPaused = false;
+}
+
+bool ConsumePlayStopRequested(void)
+{
+    bool v = playStopRequested;
+    playStopRequested = false;
+    return v;
+}
+
+bool ConsumePlayRestartRequested(void)
+{
+    bool v = playRestartRequested;
+    playRestartRequested = false;
+    return v;
+}
+
+bool IsTopBarMenuOpen(void)
+{
+    return addMenuOpen;
+}

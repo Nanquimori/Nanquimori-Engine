@@ -1,0 +1,52 @@
+{
+  "version": 4,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "mingw64",
+      "displayName": "MinGW (w64devkit)",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/.cmake/build-release",
+      "environment": {
+        "PATH": "C:/raylib/w64devkit/bin"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_MAKE_PROGRAM": "C:/raylib/w64devkit/bin/mingw32-make.exe",
+        "CMAKE_C_COMPILER": "C:/raylib/w64devkit/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/raylib/w64devkit/bin/g++.exe"
+      }
+    },
+    {
+      "name": "mingw64-debug",
+      "displayName": "MinGW (w64devkit) - Debug",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/.cmake/build-debug",
+      "environment": {
+        "PATH": "C:/raylib/w64devkit/bin"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_MAKE_PROGRAM": "C:/raylib/w64devkit/bin/mingw32-make.exe",
+        "CMAKE_C_COMPILER": "C:/raylib/w64devkit/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/raylib/w64devkit/bin/g++.exe"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "mingw64-build",
+      "displayName": "Build (MinGW w64devkit)",
+      "configurePreset": "mingw64"
+    },
+    {
+      "name": "mingw64-debug-build",
+      "displayName": "Build Debug (MinGW w64devkit)",
+      "configurePreset": "mingw64-debug"
+    }
+  ]
+}

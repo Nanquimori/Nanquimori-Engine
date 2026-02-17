@@ -1,0 +1,8 @@
+Look at target: mirar automaticamente na unidade selecionada.
+
+debug view de personagens, danos, veiculo, etc
+
+Conectar o painel às propriedades do objeto selecionado no outliner.
+Adicionar seções/abas (Transform, Render, Física, etc.).
+
+faça uma caixa de diálogo de confirmação do Motor que aparece quando você tenta fechar sem salvar as alterações recentes.

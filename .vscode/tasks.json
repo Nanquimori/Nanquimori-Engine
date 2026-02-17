@@ -1,0 +1,160 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake: Configure (MinGW w64devkit)",
+            "type": "shell",
+            "command": "C:/Program Files/CMake/bin/cmake.exe",
+            "args": [
+                "--fresh",
+                "--preset",
+                "mingw64"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "CMake: Build (MinGW w64devkit)",
+            "type": "shell",
+            "command": "C:/Program Files/CMake/bin/cmake.exe",
+            "args": [
+                "--build",
+                "--preset",
+                "mingw64-build"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "dependsOn": [
+                "CMake: Configure (MinGW w64devkit)"
+            ],
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "label": "CMake: Configure Debug (MinGW w64devkit)",
+            "type": "shell",
+            "command": "C:/Program Files/CMake/bin/cmake.exe",
+            "args": [
+                "--fresh",
+                "--preset",
+                "mingw64-debug"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "CMake: Build Debug (MinGW w64devkit)",
+            "type": "shell",
+            "command": "C:/Program Files/CMake/bin/cmake.exe",
+            "args": [
+                "--build",
+                "--preset",
+                "mingw64-debug-build"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "dependsOn": [
+                "CMake: Configure Debug (MinGW w64devkit)"
+            ],
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "label": "CMake: Sync Debug EXE to Workspace Build",
+            "type": "process",
+            "command": "C:/WINDOWS/System32/WindowsPowerShell/v1.0/powershell.exe",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\.vscode\\sync-workspace-exe.ps1",
+                "-Configuration",
+                "debug",
+                "-WorkspaceFolder",
+                "${workspaceFolder}"
+            ],
+            "dependsOn": [
+                "CMake: Build Debug (MinGW w64devkit)"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake: Sync Release EXE to Workspace Build",
+            "type": "process",
+            "command": "C:/WINDOWS/System32/WindowsPowerShell/v1.0/powershell.exe",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\.vscode\\sync-workspace-exe.ps1",
+                "-Configuration",
+                "release",
+                "-WorkspaceFolder",
+                "${workspaceFolder}"
+            ],
+            "dependsOn": [
+                "CMake: Build (MinGW w64devkit)"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake: Build & Run Debug (MinGW w64devkit)",
+            "type": "shell",
+            "command": "${workspaceFolder}\\.cmake\\build-debug\\NanquimoriEngine.exe",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": [
+                "CMake: Sync Debug EXE to Workspace Build"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake: Build & Run (MinGW w64devkit)",
+            "type": "shell",
+            "command": "${workspaceFolder}\\.cmake\\build-release\\NanquimoriEngine.exe",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": [
+                "CMake: Sync Release EXE to Workspace Build"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: gcc.exe arquivo de build ativo",
+            "command": "C:/raylib/w64devkit/bin/gcc.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+            ],
+            "options": {
+                "cwd": "C:/raylib/w64devkit/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Tarefa gerada pelo Depurador."
+        }
+    ]
+}

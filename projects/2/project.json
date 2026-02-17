@@ -1,0 +1,8 @@
+{
+"active":0,
+"scenes":[
+{"name":"Cena 1","selected":1,"objects":[
+{"id":1,"name":"horten_ho_229","pos":[0.0000,0.0000,0.0000],"rot":[0.0000,0.0000,0.0000],"parent":-1,"active":1,"model":"assets/horten_ho_229_1.glb","proto":0,"pbase":[130,130,130],"psec":[80,80,80],"ppack":0,"pcustom":"Custom","pcustombase":[29,94,131],"pcustomsec":[80,170,190],"pcustoms":"","pstatic":1,"prb":0,"pcollider":1,"pgravity":1,"pmass":1.000,"pshape":0,"psize":[1.000,1.000,1.000],"pterrain":0}
+]}
+]
+}

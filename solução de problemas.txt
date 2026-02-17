@@ -1,0 +1,23 @@
+
+
+
+Solução para o problema de carregar projeto
+o problema foi uma combinação de três coisas bem comuns em carregamento de arquivos:
+
+O que estava acontecendo (resumido)
+
+O parser antigo lia linha por linha (fgets)
+Se o JSON tivesse qualquer variação de formatação (ou até outro padrão de quebra de linha), o bloco de objetos podia não ser detectado e o código ignorava os modelos.
+
+Caracteres invisíveis entraram no código (\0 e quebras ruins)
+Esses caracteres invisíveis quebram o C na compilação e também atrapalham parsing.
+
+Caminhos relativos precisavam ser resolvidos corretamente
+Mesmo que o JSON tivesse model.glb, sem resolver o caminho completo corretamente, o LoadModel falhava sem carregar.
+
+Como evitamos isso agora
+
+O carregamento lê o arquivo inteiro, então não depende da quebra de linha.
+O parser busca as chaves diretamente e sempre encontra os objetos.
+Caminhos relativos são normalizados e resolvidos.
+Dica prática para o f
