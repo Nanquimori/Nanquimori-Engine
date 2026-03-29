@@ -35,5 +35,7 @@ typedef struct
 
 const UIStyle *GetUIStyle(void);
 Color UiTextForBackground(Color bg);
+void DrawBlender266Header(Rectangle bounds, const char *title, int textSize);
+void DrawBlender266CollapsibleHeader(Rectangle bounds, const char *title, int textSize, bool expanded, bool hovered);
 
 #endif // UI_STYLE_H

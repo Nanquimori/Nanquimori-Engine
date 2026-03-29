@@ -25,6 +25,7 @@ set(CMAKE_CXX_COMPILER_ARCHITECTURE_ID "x86_64")
 
 
 
+
 set(CMAKE_AR "C:/raylib/w64devkit/bin/ar.exe")
 set(CMAKE_CXX_COMPILER_AR "C:/raylib/w64devkit/bin/gcc-ar.exe")
 set(CMAKE_RANLIB "C:/raylib/w64devkit/bin/ranlib.exe")
@@ -97,12 +98,5 @@ set(CMAKE_CXX_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")
 set(CMAKE_CXX_COMPILER_CLANG_RESOURCE_DIR "")
 
 set(CMAKE_CXX_COMPILER_IMPORT_STD "")
-### Imported target for C++23 standard library
-set(CMAKE_CXX23_COMPILER_IMPORT_STD_NOT_FOUND_MESSAGE "Unsupported generator: MinGW Makefiles")
-
-
-### Imported target for C++26 standard library
-set(CMAKE_CXX26_COMPILER_IMPORT_STD_NOT_FOUND_MESSAGE "Unsupported generator: MinGW Makefiles")
-
-
-
+set(CMAKE_CXX_COMPILER_IMPORT_STD_ERROR_MESSAGE  "Unsupported generator: MinGW Makefiles")
+set(CMAKE_CXX_STDLIB_MODULES_JSON "")

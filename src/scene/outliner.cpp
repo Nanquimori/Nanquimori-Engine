@@ -88,6 +88,24 @@ static bool ShiftHeld(void)
     return IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
 }
 
+static bool CtrlHeld(void)
+{
+    return IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+}
+
+static bool outlinerScenesExpanded = true;
+static bool outlinerObjectExpanded = true;
+
+static bool DrawOutlinerSectionHeader(Rectangle header, const char *title, int textSize, bool *expanded, bool allowInput, Vector2 mouse)
+{
+    bool hover = CheckCollisionPointRec(mouse, header);
+    bool clicked = allowInput && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+    if (clicked)
+        *expanded = !(*expanded);
+    DrawBlender266CollapsibleHeader(header, title, textSize, *expanded, hover);
+    return clicked;
+}
+
 static void LimparSelecaoObjetos(void)
 {
     for (int i = 0; i < totalObjetos; i++)
@@ -694,6 +712,7 @@ static void DrawObjectSettings(float startY, float height)
 {
     const UIStyle *style = GetUIStyle();
     Color secondaryWhite = Fade(style->textPrimary, 0.72f);
+    Vector2 mouse = GetMousePosition();
     int screenH = GetScreenHeight();
     if (height <= 0 || startY >= screenH)
         return;
@@ -716,10 +735,16 @@ static void DrawObjectSettings(float startY, float height)
     int x = 0;
     int y = (int)(startY + 8.0f - objectSettingsScroll);
     Rectangle objectHeader = {(float)(x + 6), (float)y, (float)(PAINEL_LARGURA - 16), 22.0f};
-    DrawRectangleRec(objectHeader, style->itemBg);
-    DrawRectangle((int)objectHeader.x + 1, (int)objectHeader.y + 2, 4, (int)objectHeader.height - 4, style->accentSoft);
-    DrawText("Objeto", (int)objectHeader.x + 12, (int)objectHeader.y + 4, 13, style->accent);
+    DrawOutlinerSectionHeader(objectHeader, "Objeto", 13, &outlinerObjectExpanded, true, mouse);
     y += 24;
+    if (!outlinerObjectExpanded)
+    {
+        EndScissorMode();
+        objectSettingsMaxScroll = 0.0f;
+        objectSettingsScroll = 0.0f;
+        objectSettingsScrollDragging = false;
+        return;
+    }
 
     int selecionadoId = ObterObjetoSelecionadoId();
     if (selecionadoId <= 0)
@@ -880,9 +905,7 @@ void DrawOutliner(void)
     DrawRectangle(0, 0, PAINEL_LARGURA, GetScreenHeight(), COR_PAINEL);
     DrawLine(PAINEL_LARGURA, 0, PAINEL_LARGURA, GetScreenHeight(), COR_BORDA);
     Rectangle outlinerHeader = {6.0f, 6.0f, (float)(PAINEL_LARGURA - 12), 22.0f};
-    DrawRectangleRec(outlinerHeader, style->itemBg);
-    DrawRectangle((int)outlinerHeader.x + 1, (int)outlinerHeader.y + 2, 4, (int)outlinerHeader.height - 4, style->accent);
-    DrawText("Outliner", (int)outlinerHeader.x + 12, (int)outlinerHeader.y + 3, 14, style->accent);
+    DrawBlender266Header(outlinerHeader, "Outliner", 14);
     Vector2 mouse = GetMousePosition();
 
     int sceneCount = GetSceneCount();
@@ -902,7 +925,7 @@ void DrawOutliner(void)
         sceneSelected[activeScene] = true;
     dropSceneIndex = -1;
     int screenH = GetScreenHeight();
-    const int settingsHeight = 170;
+    const int settingsHeight = outlinerObjectExpanded ? 170 : 32;
     float settingsStartY = (float)(screenH - settingsHeight);
     const float outlinerTop = 34.0f;
     float outlinerViewH = settingsStartY - outlinerTop - 2.0f;
@@ -928,127 +951,131 @@ void DrawOutliner(void)
     int y = (int)(outlinerTop - outlinerScroll);
     BeginScissorMode(0, (int)outlinerTop, PAINEL_LARGURA, (int)outlinerViewH);
     Rectangle scenesHeader = {6.0f, (float)y, (float)(PAINEL_LARGURA - 16), 18.0f};
-    DrawRectangleRec(scenesHeader, style->itemBg);
-    DrawLine((int)scenesHeader.x, (int)(scenesHeader.y + scenesHeader.height), (int)(scenesHeader.x + scenesHeader.width), (int)(scenesHeader.y + scenesHeader.height), style->panelBorderSoft);
-    DrawText("Scenes", (int)scenesHeader.x + 8, (int)scenesHeader.y + 2, 12, style->accent);
+    bool scenesClicked = DrawOutlinerSectionHeader(scenesHeader, "Scenes", 12, &outlinerScenesExpanded, true, mouse);
+    if (scenesClicked && CtrlHeld() && outlinerScenesExpanded)
+        outlinerObjectExpanded = true;
     Rectangle scenesCountBadge = {scenesHeader.x + scenesHeader.width - 28.0f, scenesHeader.y + 2.0f, 22.0f, 14.0f};
-    DrawRectangleRec(scenesCountBadge, style->accentSoft);
-    DrawText(TextFormat("%d", sceneCount), (int)scenesCountBadge.x + 6, (int)scenesCountBadge.y + 2, 10, style->buttonTextHover);
+    DrawRectangleRec(scenesCountBadge, style->panelBgHover);
+    DrawRectangleLinesEx(scenesCountBadge, 1.0f, style->panelBorderSoft);
+    DrawText(TextFormat("%d", sceneCount), (int)scenesCountBadge.x + 6, (int)scenesCountBadge.y + 2, 10, style->textPrimary);
     y += 22;
 
-    for (int i = 0; i < sceneCount; i++)
+    if (outlinerScenesExpanded)
     {
-        Rectangle item = {6, (float)y, (float)(PAINEL_LARGURA - 18), 20.0f};
-        bool hover = CheckCollisionPointRec(mouse, item);
-        if (hover)
-            mouseSobreCena = true;
+        for (int i = 0; i < sceneCount; i++)
+        {
+            Rectangle item = {6, (float)y, (float)(PAINEL_LARGURA - 18), 20.0f};
+            bool hover = CheckCollisionPointRec(mouse, item);
+            if (hover)
+                mouseSobreCena = true;
 
-        bool ativo = (i == activeScene);
-        bool selecionada = sceneSelected[i];
-        Color fundo = ativo ? style->accent : (selecionada ? style->accentSoft : style->itemBg);
-        if (hover && !ativo && !selecionada)
-            fundo = style->itemHover;
-        if (arrastando && hover && i != activeScene)
-        {
-            fundo = COR_ITEM_DRAG;
-            dropSceneIndex = i;
-        }
-        DrawRectangleRec(item, fundo);
-        if (ativo || hover || selecionada)
-        {
-            Color bordaCena = ativo ? style->panelBorder : style->accentSoft;
-            DrawRectangleLinesEx(item, 1, bordaCena);
-        }
-        if (!ativo)
-        {
-            Color marcador = selecionada ? style->accent : (hover ? style->accent : style->accentSoft);
-            DrawRectangle((int)item.x + 1, (int)item.y + 1, 3, (int)item.height - 2, marcador);
-        }
-
-        int textX = (int)item.x + 6;
-        int sceneObjCount = GetSceneObjectCount(i);
-        char sceneLabel[96] = {0};
-        snprintf(sceneLabel, sizeof(sceneLabel), "%s (%d)", GetSceneName(i), sceneObjCount);
-        Color textColor = ativo ? style->buttonTextHover : (selecionada ? style->textPrimary : (hover ? style->textPrimary : style->textSecondary));
-        if (renomeandoCena && cenaEditandoIndex == i)
-        {
-            Rectangle sceneNameBox = {item.x + 4.0f, item.y + 1.0f, item.width - 8.0f, item.height - 2.0f};
-            TextInputConfig cfg = {0};
-            cfg.fontSize = 12;
-            cfg.padding = 3;
-            cfg.textColor = GetUIStyle()->inputText;
-            cfg.bgColor = COR_EDIT_BG;
-            cfg.borderColor = COR_BORDA;
-            cfg.selectionColor = GetUIStyle()->inputSelection;
-            cfg.caretColor = GetUIStyle()->caret;
-            cfg.allowInput = true;
-
-            int flags = TextInputDraw(sceneNameBox, bufferCena, (int)sizeof(bufferCena), &sceneNameInput, &cfg);
-            if (flags & (TEXT_INPUT_SUBMITTED | TEXT_INPUT_DEACTIVATED))
+            bool ativo = (i == activeScene);
+            bool selecionada = sceneSelected[i];
+            Color fundo = ativo ? style->accent : (selecionada ? style->accentSoft : style->itemBg);
+            if (hover && !ativo && !selecionada)
+                fundo = style->itemHover;
+            if (arrastando && hover && i != activeScene)
             {
-                if (bufferCena[0] != '\0')
-                {
-                    SwitchScene(i);
-                    RenameActiveScene(bufferCena);
-                }
-                renomeandoCena = false;
+                fundo = COR_ITEM_DRAG;
+                dropSceneIndex = i;
             }
-        }
-        else
-        {
-            DrawText(sceneLabel, textX, (int)item.y + 3, 12, textColor);
-        }
-
-        if (!renomeandoCena && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-        {
-            if (ShiftHeld())
+            DrawRectangleRec(item, fundo);
+            if (ativo || hover || selecionada)
             {
-                sceneSelected[i] = !sceneSelected[i];
-                renomeandoCena = false;
+                Color bordaCena = ativo ? style->panelBorder : style->accentSoft;
+                DrawRectangleLinesEx(item, 1, bordaCena);
+            }
+            if (!ativo)
+            {
+                Color marcador = selecionada ? style->accent : (hover ? style->accent : style->accentSoft);
+                DrawRectangle((int)item.x + 1, (int)item.y + 1, 3, (int)item.height - 2, marcador);
+            }
+
+            int textX = (int)item.x + 6;
+            int sceneObjCount = GetSceneObjectCount(i);
+            char sceneLabel[96] = {0};
+            snprintf(sceneLabel, sizeof(sceneLabel), "%s (%d)", GetSceneName(i), sceneObjCount);
+            Color textColor = ativo ? style->buttonTextHover : (selecionada ? style->textPrimary : (hover ? style->textPrimary : style->textSecondary));
+            if (renomeandoCena && cenaEditandoIndex == i)
+            {
+                Rectangle sceneNameBox = {item.x + 4.0f, item.y + 1.0f, item.width - 8.0f, item.height - 2.0f};
+                TextInputConfig cfg = {0};
+                cfg.fontSize = 12;
+                cfg.padding = 3;
+                cfg.textColor = GetUIStyle()->inputText;
+                cfg.bgColor = COR_EDIT_BG;
+                cfg.borderColor = COR_BORDA;
+                cfg.selectionColor = GetUIStyle()->inputSelection;
+                cfg.caretColor = GetUIStyle()->caret;
+                cfg.allowInput = true;
+
+                int flags = TextInputDraw(sceneNameBox, bufferCena, (int)sizeof(bufferCena), &sceneNameInput, &cfg);
+                if (flags & (TEXT_INPUT_SUBMITTED | TEXT_INPUT_DEACTIVATED))
+                {
+                    if (bufferCena[0] != '\0')
+                    {
+                        SwitchScene(i);
+                        RenameActiveScene(bufferCena);
+                    }
+                    renomeandoCena = false;
+                }
             }
             else
             {
-                double agora = GetTime();
-                LimparSelecaoCenas();
-                sceneSelected[i] = true;
-                SwitchScene(i);
-                sceneExpanded[i] = true;
-                if (ultimoCliqueCenaIndex == i && (agora - ultimoCliqueCena) < 0.3)
+                DrawText(sceneLabel, textX, (int)item.y + 3, 12, textColor);
+            }
+
+            if (!renomeandoCena && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+            {
+                if (ShiftHeld())
                 {
-                    renomeandoCena = true;
-                    cenaEditandoIndex = i;
-                    strncpy(bufferCena, GetSceneName(i), MAX_NOME);
-                    bufferCena[MAX_NOME] = '\0';
-                    TextInputInit(&sceneNameInput);
-                    sceneNameInput.active = true;
-                    sceneNameInput.caret = (int)strlen(bufferCena);
-                    sceneNameInput.selStart = 0;
-                    sceneNameInput.selEnd = sceneNameInput.caret;
+                    sceneSelected[i] = !sceneSelected[i];
+                    renomeandoCena = false;
                 }
                 else
                 {
-                    renomeandoCena = false;
+                    double agora = GetTime();
+                    LimparSelecaoCenas();
+                    sceneSelected[i] = true;
+                    SwitchScene(i);
+                    sceneExpanded[i] = true;
+                    if (ultimoCliqueCenaIndex == i && (agora - ultimoCliqueCena) < 0.3)
+                    {
+                        renomeandoCena = true;
+                        cenaEditandoIndex = i;
+                        strncpy(bufferCena, GetSceneName(i), MAX_NOME);
+                        bufferCena[MAX_NOME] = '\0';
+                        TextInputInit(&sceneNameInput);
+                        sceneNameInput.active = true;
+                        sceneNameInput.caret = (int)strlen(bufferCena);
+                        sceneNameInput.selStart = 0;
+                        sceneNameInput.selEnd = sceneNameInput.caret;
+                    }
+                    else
+                    {
+                        renomeandoCena = false;
+                    }
+                    ultimoCliqueCenaIndex = i;
+                    ultimoCliqueCena = agora;
                 }
-                ultimoCliqueCenaIndex = i;
-                ultimoCliqueCena = agora;
             }
-        }
 
-        if (hover && IsMouseButtonPressed(MOUSE_RIGHT_BUTTON))
-        {
-            menuCenaContextoAtivo = true;
-            menuCenaPos = mouse;
-            menuCenaIndex = i;
-        }
-
-        y += 22;
-
-        if (i == activeScene && sceneExpanded[i])
-        {
-            for (int j = 0; j < totalObjetos; j++)
+            if (hover && IsMouseButtonPressed(MOUSE_RIGHT_BUTTON))
             {
-                if (objetos[j].paiId == -1)
-                    y = DrawOutlinerItem(objetos[j].id, 1, y);
+                menuCenaContextoAtivo = true;
+                menuCenaPos = mouse;
+                menuCenaIndex = i;
+            }
+
+            y += 22;
+
+            if (i == activeScene && sceneExpanded[i])
+            {
+                for (int j = 0; j < totalObjetos; j++)
+                {
+                    if (objetos[j].paiId == -1)
+                        y = DrawOutlinerItem(objetos[j].id, 1, y);
+                }
             }
         }
     }

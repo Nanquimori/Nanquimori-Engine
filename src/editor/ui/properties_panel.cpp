@@ -18,14 +18,33 @@
 #define COR_EDIT_BG (GetUIStyle()->inputBg)
 #define COR_TEXTO_SECUNDARIO (GetUIStyle()->textSecondary)
 
-static void DrawSectionHeader(const char *title, int x, int *y)
+static bool propertiesObjectExpanded = true;
+static bool propertiesTransformExpanded = true;
+static bool propertiesPhysicsExpanded = true;
+static bool propertiesPrototypeExpanded = true;
+
+static bool CtrlHeld(void)
+{
+    return IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+}
+
+static bool DrawSectionHeader(const char *title, int x, int *y, bool *expanded, bool allowInput, Vector2 mouse)
 {
     Rectangle header = {(float)(x + 8), (float)(*y), (float)(PROPERTIES_PAINEL_LARGURA - 16), 18.0f};
-    const UIStyle *style = GetUIStyle();
-    DrawRectangleRec(header, style->itemBg);
-    DrawRectangle((int)header.x + 1, (int)header.y + 2, 4, (int)header.height - 4, style->accentSoft);
-    DrawText(title, (int)header.x + 10, (int)header.y + 2, 12, style->accent);
+    bool hover = CheckCollisionPointRec(mouse, header);
+    bool clicked = allowInput && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+    if (clicked)
+        *expanded = !(*expanded);
+    DrawBlender266CollapsibleHeader(header, title, 12, *expanded, hover);
     *y += 22;
+    return clicked;
+}
+
+static void FocusPropertiesSection(bool *expandedSection)
+{
+    propertiesTransformExpanded = (expandedSection == &propertiesTransformExpanded);
+    propertiesPhysicsExpanded = (expandedSection == &propertiesPhysicsExpanded);
+    propertiesPrototypeExpanded = (expandedSection == &propertiesPrototypeExpanded);
 }
 
 typedef struct
@@ -630,9 +649,7 @@ void DrawPropertiesPanel(void)
     DrawLine(x, 0, x, screenH, COR_BORDA);
     const UIStyle *style = GetUIStyle();
     Rectangle propertiesHeader = {(float)(x + 6), 6.0f, (float)(PROPERTIES_PAINEL_LARGURA - 12), 22.0f};
-    DrawRectangleRec(propertiesHeader, style->itemBg);
-    DrawRectangle((int)propertiesHeader.x + 1, (int)propertiesHeader.y + 2, 4, (int)propertiesHeader.height - 4, style->accent);
-    DrawText("Properties", (int)propertiesHeader.x + 12, (int)propertiesHeader.y + 3, 14, style->accent);
+    DrawBlender266Header(propertiesHeader, "Properties", 14);
 
     CleanupPhysEntries();
 
@@ -665,43 +682,65 @@ void DrawPropertiesPanel(void)
 
     int y = (int)(contentTop + 4 - propertiesScroll);
 
-    
-    DrawText("Objeto", x + 14, y, 16, style->accent);
-    y += 22;
+    bool objectClicked = DrawSectionHeader("Objeto", x, &y, &propertiesObjectExpanded, allowInput, mouse);
+    if (objectClicked && CtrlHeld() && propertiesObjectExpanded)
+    {
+        propertiesTransformExpanded = true;
+        propertiesPhysicsExpanded = true;
+        propertiesPrototypeExpanded = true;
+    }
+    if (!propertiesObjectExpanded)
+    {
+        if (transformEditSession)
+            FinalizeTransformSession();
+        if (transformObjectId != -1)
+        {
+            ResetTransformInputs();
+            transformObjectId = -1;
+        }
+    }
 
-    DrawSectionHeader("Transform", x, &y);
-    if (selIdx >= 0)
+    if (propertiesObjectExpanded && selIdx >= 0)
     {
         ObjetoCena *obj = &objetos[selIdx];
-        bool transformWasActive = AnyTransformInputActive();
-        Vector3 transformBeforePos = obj->posicao;
-        Vector3 transformBeforeRot = obj->rotacao;
-
-        if (transformObjectId != selId)
+        bool transformClicked = DrawSectionHeader("Transform", x, &y, &propertiesTransformExpanded, allowInput, mouse);
+        if (transformClicked && CtrlHeld() && propertiesTransformExpanded)
+            FocusPropertiesSection(&propertiesTransformExpanded);
+        if (propertiesTransformExpanded)
         {
-            if (transformEditSession)
+            bool transformWasActive = AnyTransformInputActive();
+            Vector3 transformBeforePos = obj->posicao;
+            Vector3 transformBeforeRot = obj->rotacao;
+
+            if (transformObjectId != selId)
+            {
+                if (transformEditSession)
+                    FinalizeTransformSession();
+                ResetTransformInputs();
+                SyncTransformBuffers(obj);
+                transformObjectId = selId;
+            }
+            else if (!AnyTransformInputActive())
+            {
+                SyncTransformBuffers(obj);
+            }
+
+            DrawVec3Inputs("Location", &obj->posicao, TRANSFORM_POS_X, x, &y, allowInput, false);
+            DrawVec3Inputs("Rotation", &obj->rotacao, TRANSFORM_ROT_X, x, &y, allowInput, true);
+            bool transformNowActive = AnyTransformInputActive();
+            if (!transformWasActive && transformNowActive)
+                BeginTransformSession(selId, transformBeforePos, transformBeforeRot);
+            if (transformEditSession && (!transformNowActive || transformEditId != selId))
                 FinalizeTransformSession();
-            ResetTransformInputs();
-            SyncTransformBuffers(obj);
-            transformObjectId = selId;
         }
-        else if (!AnyTransformInputActive())
-        {
-            SyncTransformBuffers(obj);
-        }
-
-        DrawVec3Inputs("Location", &obj->posicao, TRANSFORM_POS_X, x, &y, allowInput, false);
-        DrawVec3Inputs("Rotation", &obj->rotacao, TRANSFORM_ROT_X, x, &y, allowInput, true);
-        bool transformNowActive = AnyTransformInputActive();
-        if (!transformWasActive && transformNowActive)
-            BeginTransformSession(selId, transformBeforePos, transformBeforeRot);
-        if (transformEditSession && (!transformNowActive || transformEditId != selId))
-            FinalizeTransformSession();
 
         y += 6;
-        DrawSectionHeader("Fisica", x, &y);
-
-        PhysEntry *phys = EnsurePhysEntry(selId);
+        bool physicsClicked = DrawSectionHeader("Fisica", x, &y, &propertiesPhysicsExpanded, allowInput, mouse);
+        if (physicsClicked && CtrlHeld() && propertiesPhysicsExpanded)
+            FocusPropertiesSection(&propertiesPhysicsExpanded);
+        if (propertiesPhysicsExpanded)
+        {
+            PhysEntry *phys = EnsurePhysEntry(selId);
 
         DrawText("Tipo", x + 14, y, 12, style->accent);
         y += 18;
@@ -827,11 +866,16 @@ void DrawPropertiesPanel(void)
         {
             y += 28;
         }
+        }
 
         y += 6;
-        DrawSectionHeader("Prototype", x, &y);
+        bool prototypeClicked = DrawSectionHeader("Prototype", x, &y, &propertiesPrototypeExpanded, allowInput, mouse);
+        if (prototypeClicked && CtrlHeld() && propertiesPrototypeExpanded)
+            FocusPropertiesSection(&propertiesPrototypeExpanded);
+        if (propertiesPrototypeExpanded)
+        {
 
-        DrawText("Prototype", contentLeft, y, 12, COR_TEXTO);
+        DrawText("Enabled", contentLeft, y, 12, COR_TEXTO);
         Rectangle protoToggle = {(float)(contentRight - 16), (float)(y - 2), 16.0f, 16.0f};
         DrawRectangleLinesEx(protoToggle, 1, COR_BORDA);
         if (obj->protoEnabled)
@@ -1063,7 +1107,8 @@ void DrawPropertiesPanel(void)
             y += 16;
         }
     }
-    else
+    }
+    else if (propertiesObjectExpanded)
     {
         if (transformEditSession)
             FinalizeTransformSession();

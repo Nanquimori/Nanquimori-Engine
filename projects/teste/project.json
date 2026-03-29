@@ -1,0 +1,10 @@
+{
+"active":0,
+"camera":{"pos":[11.1929,12.9574,26.3115],"target":[0.0000,0.0000,0.0000]},
+"editor":{"showCollisions":0,"ray2D":1,"ray3D":0},
+"scenes":[
+{"name":"Cena 1","selected":1,"objects":[
+{"id":1,"name":"untitled","pos":[0.0000,0.0000,0.0000],"rot":[0.0000,0.0000,0.0000],"parent":-1,"active":1,"model":"assets/untitled_1.obj","proto":1,"pbase":[112,112,112],"psec":[58,58,58],"ppack":0,"pcustom":"Custom","pcustombase":[168,36,36],"pcustomsec":[88,88,88],"pcustoms":"","pstatic":1,"prb":0,"pcollider":1,"pgravity":1,"pmass":1.000,"pshape":0,"psize":[1.000,1.000,1.000],"pterrain":0}
+]}
+]
+}

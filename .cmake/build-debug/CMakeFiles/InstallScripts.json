@@ -1,11 +1,11 @@
 {
 	"InstallScripts" : 
 	[
-		"C:/Users/andre/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/cmake_install.cmake",
-		"C:/Users/andre/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/raylib/cmake_install.cmake",
-		"C:/Users/andre/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/raylib/raylib/cmake_install.cmake",
-		"C:/Users/andre/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/raylib/raylib/external/glfw/cmake_install.cmake",
-		"C:/Users/andre/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/raylib/raylib/external/glfw/src/cmake_install.cmake"
+		"C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/cmake_install.cmake",
+		"C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/raylib/cmake_install.cmake",
+		"C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/raylib/raylib/cmake_install.cmake",
+		"C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/raylib/raylib/external/glfw/cmake_install.cmake",
+		"C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/raylib/raylib/external/glfw/src/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

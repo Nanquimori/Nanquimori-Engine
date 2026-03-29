@@ -1,6 +1,6 @@
 CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/camera_controller.cpp.obj: \
- C:\Users\andre\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\viewport\camera_controller.cpp \
- C:\Users\andre\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\viewport\camera_controller.h \
+ C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\viewport\camera_controller.cpp \
+ C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\viewport\camera_controller.h \
  C:/raylib/raylib/src/raylib.h \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stdarg.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/stdarg.h \

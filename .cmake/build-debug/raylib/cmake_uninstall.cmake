@@ -1,8 +1,8 @@
-if(NOT EXISTS "C:/Users/andre/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/install_manifest.txt")
-  message(FATAL_ERROR "Cannot find install manifest: C:/Users/andre/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/install_manifest.txt")
+if(NOT EXISTS "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/install_manifest.txt")
+  message(FATAL_ERROR "Cannot find install manifest: C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/install_manifest.txt")
 endif()
 
-file(READ "C:/Users/andre/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/install_manifest.txt" files)
+file(READ "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/install_manifest.txt" files)
 string(REGEX REPLACE "\n" ";" files "${files}")
 foreach(file ${files})
   message(STATUS "Uninstalling $ENV{DESTDIR}${file}")

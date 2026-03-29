@@ -1,6 +1,6 @@
 CMakeFiles/NanquimoriEngine.dir/src/app/application.cpp.obj: \
- C:\Users\andre\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\app\application.cpp \
- C:\Users\andre\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\app\application.h \
+ C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\app\application.cpp \
+ C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\app\application.h \
  C:/raylib/raylib/src/raylib.h \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stdarg.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/stdarg.h \
@@ -10,21 +10,21 @@ CMakeFiles/NanquimoriEngine.dir/src/app/application.cpp.obj: \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/_mingw_mac.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/_mingw_secapi.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/sdks/_mingw_ddk.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/viewport/gizmo.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/viewport/camera_controller.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/outliner.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/assets/model_manager.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/file_explorer.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/text_input.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/help_panel.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/splash_screen.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/info_panel.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/top_bar.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/properties_panel.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/ui_style.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/scene_manager.h \
- C:/Users/andre/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/outliner.h \
- C:\Users\andre\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\app\window_icon_win32.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/viewport/gizmo.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/viewport/camera_controller.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/outliner.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/assets/model_manager.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/file_explorer.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/text_input.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/help_panel.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/splash_screen.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/info_panel.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/top_bar.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/properties_panel.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/ui_style.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/scene_manager.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/outliner.h \
+ C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\app\window_icon_win32.h \
  C:/raylib/raylib/src/raymath.h \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/math.h \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/cmath \

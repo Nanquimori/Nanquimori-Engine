@@ -23,6 +23,7 @@ set(CMAKE_C_COMPILER_ARCHITECTURE_ID "x86_64")
 
 
 
+
 set(CMAKE_AR "C:/raylib/w64devkit/bin/ar.exe")
 set(CMAKE_C_COMPILER_AR "C:/raylib/w64devkit/bin/gcc-ar.exe")
 set(CMAKE_RANLIB "C:/raylib/w64devkit/bin/ranlib.exe")
