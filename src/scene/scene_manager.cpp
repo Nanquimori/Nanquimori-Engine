@@ -35,6 +35,43 @@ static Vector3 projectCameraPos = {6.0f, 6.0f, 6.0f};
 static Vector3 projectCameraTarget = {0.0f, 0.0f, 0.0f};
 static bool loadedProjectCameraPending = false;
 
+static constexpr int PROTO_PACK_LAYOUT_VERSION = 3;
+
+static Color DefaultPrototypeCustomBaseColor(void)
+{
+    return (Color){112, 112, 112, 255};
+}
+
+static Color DefaultPrototypeCustomSecondaryColor(void)
+{
+    return (Color){58, 58, 58, 255};
+}
+
+static int NormalizeLoadedProtoPackIndex(int packIndex, int packLayoutVersion)
+{
+    if (packIndex < 0)
+        return 0;
+    if (packLayoutVersion >= PROTO_PACK_LAYOUT_VERSION)
+        return packIndex;
+    if (packLayoutVersion >= 2)
+    {
+        if (packIndex == 2)
+            return 5;
+        if (packIndex == 3)
+            return 2;
+        if (packIndex == 4)
+            return 3;
+        if (packIndex >= 5)
+            return packIndex + 1;
+        return packIndex;
+    }
+    if (packIndex == 2)
+        return 5;
+    if (packIndex >= 3)
+        return packIndex + 3;
+    return packIndex;
+}
+
 static void EnsureProjectPaths(void);
 static bool IsPathAbsolute(const char *path);
 static void LoadRecentProjects(void);
@@ -968,7 +1005,7 @@ bool SaveProject(void)
 
             fprintf(f,
                     "{\"id\":%d,\"name\":\"%s\",\"pos\":[%.4f,%.4f,%.4f],\"rot\":[%.4f,%.4f,%.4f],\"parent\":%d,\"active\":%d,\"model\":\"%s\","
-                    "\"proto\":%d,\"pbase\":[%d,%d,%d],\"psec\":[%d,%d,%d],\"ppack\":%d,\"pcustom\":\"%s\","
+                    "\"proto\":%d,\"pbase\":[%d,%d,%d],\"psec\":[%d,%d,%d],\"ppack\":%d,\"ppackv\":%d,\"pcustom\":\"%s\","
                     "\"pcustombase\":[%d,%d,%d],\"pcustomsec\":[%d,%d,%d],\"pcustoms\":\"%s\","
                     "\"pstatic\":%d,\"prb\":%d,\"pcollider\":%d,\"pgravity\":%d,\"pmass\":%.3f,\"pshape\":%d,\"psize\":[%.3f,%.3f,%.3f],\"pterrain\":%d}%s\n",
                     o->id,
@@ -982,6 +1019,7 @@ bool SaveProject(void)
                     (int)o->protoBaseColor.r, (int)o->protoBaseColor.g, (int)o->protoBaseColor.b,
                     (int)o->protoSecondaryColor.r, (int)o->protoSecondaryColor.g, (int)o->protoSecondaryColor.b,
                     o->protoPack,
+                    PROTO_PACK_LAYOUT_VERSION,
                     pcustomEsc,
                     (int)o->protoCustomBase.r, (int)o->protoCustomBase.g, (int)o->protoCustomBase.b,
                     (int)o->protoCustomSecondary.r, (int)o->protoCustomSecondary.g, (int)o->protoCustomSecondary.b,
@@ -1243,6 +1281,7 @@ bool LoadProject(const char *path)
                 int pcbr = -1, pcbg = -1, pcbb = -1;
                 int pcsr = -1, pcsg = -1, pcsb = -1;
                 int ppack = 0;
+                int ppackVersion = 0;
                 int pstatic = 1, prb = 0, pcollider = 1, pgravity = 1, pterrain = 0;
                 float pmass = 1.0f;
                 float psx = 1.0f, psy = 1.0f, psz = 1.0f;
@@ -1283,6 +1322,9 @@ bool LoadProject(const char *path)
                     const char *ppackPtr = strstr(objLine, "\"ppack\":");
                     if (ppackPtr)
                         sscanf(ppackPtr, "\"ppack\":%d", &ppack);
+                    const char *ppackVersionPtr = strstr(objLine, "\"ppackv\":");
+                    if (ppackVersionPtr)
+                        sscanf(ppackVersionPtr, "\"ppackv\":%d", &ppackVersion);
                     ExtractJsonString(objLine, "\"pcustom\":\"", pcustomEsc, sizeof(pcustomEsc));
                     ExtractJsonString(objLine, "\"pcustoms\":\"", pcustomsEsc, sizeof(pcustomsEsc));
                     const char *pcbasePtr = strstr(objLine, "\"pcustombase\":[");
@@ -1325,8 +1367,7 @@ bool LoadProject(const char *path)
                     o->paiId = parent;
                     o->ativo = active != 0;
                     o->selecionado = false;
-                    if (ppack < 0)
-                        ppack = 0;
+                    ppack = NormalizeLoadedProtoPackIndex(ppack, ppackVersion);
                     o->protoEnabled = proto != 0;
                     o->protoBaseColor = (Color){ClampByte(pbr), ClampByte(pbg), ClampByte(pbb), 255};
                     o->protoSecondaryColor = (Color){ClampByte(psr), ClampByte(psg), ClampByte(psb), 255};
@@ -1341,11 +1382,11 @@ bool LoadProject(const char *path)
                     if (pcbr >= 0 && pcbg >= 0 && pcbb >= 0)
                         o->protoCustomBase = (Color){ClampByte(pcbr), ClampByte(pcbg), ClampByte(pcbb), 255};
                     else
-                        o->protoCustomBase = (Color){168, 36, 36, 255};
+                        o->protoCustomBase = DefaultPrototypeCustomBaseColor();
                     if (pcsr >= 0 && pcsg >= 0 && pcsb >= 0)
                         o->protoCustomSecondary = (Color){ClampByte(pcsr), ClampByte(pcsg), ClampByte(pcsb), 255};
                     else
-                        o->protoCustomSecondary = (Color){88, 88, 88, 255};
+                        o->protoCustomSecondary = DefaultPrototypeCustomSecondaryColor();
                     o->physStatic = pstatic != 0;
                     o->physRigidbody = prb != 0;
                     o->physCollider = pcollider != 0;

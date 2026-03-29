@@ -38,6 +38,16 @@ static int proximoId = 1;
 static AcaoUndo undoStack[MAX_UNDO];
 static int undoTopo = 0;
 
+static Color DefaultPrototypeCustomBaseColor(void)
+{
+    return (Color){112, 112, 112, 255};
+}
+
+static Color DefaultPrototypeCustomSecondaryColor(void)
+{
+    return (Color){58, 58, 58, 255};
+}
+
 static bool menuAtivo = false;
 static int menuObjetoId = -1;
 static Vector2 menuPos;
@@ -299,8 +309,8 @@ int RegistrarObjeto(const char *nome, Vector3 posicao, int paiId)
     obj->protoPack = 0;
     strncpy(obj->protoCustomName, "Custom", sizeof(obj->protoCustomName) - 1);
     obj->protoCustomName[sizeof(obj->protoCustomName) - 1] = '\0';
-    obj->protoCustomBase = (Color){168, 36, 36, 255};
-    obj->protoCustomSecondary = (Color){88, 88, 88, 255};
+    obj->protoCustomBase = DefaultPrototypeCustomBaseColor();
+    obj->protoCustomSecondary = DefaultPrototypeCustomSecondaryColor();
     obj->protoCustomCount = 0;
     obj->physStatic = true;
     obj->physRigidbody = false;

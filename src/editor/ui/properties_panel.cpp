@@ -148,12 +148,12 @@ static Color MakeSecondary(Color base)
 
 static Color DefaultCustomBase(void)
 {
-    return (Color){168, 36, 36, 255};
+    return (Color){112, 112, 112, 255};
 }
 
 static Color DefaultCustomSecondary(void)
 {
-    return (Color){88, 88, 88, 255};
+    return (Color){58, 58, 58, 255};
 }
 
 static void DrawCheckerPreview(Rectangle rect, Color a, Color b)
@@ -186,6 +186,9 @@ static void GetPackColors(const ProtoPack *p, Color *baseOut, Color *secondaryOu
 static const ProtoPack protoPacks[] = {
     {"GRAY", (Color){112, 112, 112, 255}, true, false},
     {"RED", (Color){184, 38, 36, 255}, true, false},
+    {"BLUE", (Color){46, 104, 214, 255}, true, false},
+    {"GREEN", (Color){58, 148, 78, 255}, false, false},
+    {"YELLOW", (Color){214, 176, 46, 255}, false, false},
     {"CUSTOM", (Color){112, 112, 112, 255}, false, true}
 };
 
@@ -369,19 +372,18 @@ static void SaveCustomPacks(void)
 
 static int GetCustomEditorIndex(void)
 {
-    return 2;
+    return (int)(sizeof(protoPacks) / sizeof(protoPacks[0])) - 1;
 }
 
 static int GetStaticPackCount(void)
 {
-    return 2;
+    return (int)(sizeof(protoPacks) / sizeof(protoPacks[0]));
 }
 
 static int GetPackCount(const ObjetoCena *obj)
 {
     (void)obj;
-    int baseCount = GetCustomEditorIndex() + 1;
-    return baseCount + protoCustomPackCount;
+    return GetStaticPackCount() + protoCustomPackCount;
 }
 
 static bool IsCustomEditorPack(int index)
@@ -391,13 +393,13 @@ static bool IsCustomEditorPack(int index)
 
 static bool IsCustomEntryPack(const ObjetoCena *obj, int index)
 {
-    int baseCount = GetCustomEditorIndex() + 1;
+    int baseCount = GetStaticPackCount();
     return (index >= baseCount) && (index < baseCount + protoCustomPackCount);
 }
 
 static int GetCustomEntryIndex(const ObjetoCena *obj, int index)
 {
-    int baseCount = GetCustomEditorIndex() + 1;
+    int baseCount = GetStaticPackCount();
     int entry = index - baseCount;
     if (entry < 0 || entry >= protoCustomPackCount)
         return -1;
@@ -408,19 +410,18 @@ static void GetPackDisplay(const ObjetoCena *obj, int index, const char **nameOu
 {
     if (!obj)
         return;
-    if (index < GetStaticPackCount())
-    {
-        const ProtoPack *p = &protoPacks[index];
-        if (nameOut) *nameOut = p->name;
-        GetPackColors(p, baseOut, secondaryOut, nullptr, nullptr);
-        return;
-    }
-
     if (IsCustomEditorPack(index))
     {
         if (nameOut) *nameOut = (obj->protoCustomName[0] != '\0') ? obj->protoCustomName : "Custom";
         if (baseOut) *baseOut = obj->protoCustomBase;
         if (secondaryOut) *secondaryOut = obj->protoCustomSecondary;
+        return;
+    }
+    if (index < GetStaticPackCount())
+    {
+        const ProtoPack *p = &protoPacks[index];
+        if (nameOut) *nameOut = p->name;
+        GetPackColors(p, baseOut, secondaryOut, nullptr, nullptr);
         return;
     }
 
@@ -440,17 +441,17 @@ static void ApplyProtoPackIndex(ObjetoCena *obj, int index)
         return;
     obj->protoPack = index;
 
-    if (index < GetStaticPackCount())
-    {
-        const ProtoPack *p = &protoPacks[index];
-        GetPackColors(p, &obj->protoBaseColor, &obj->protoSecondaryColor, nullptr, nullptr);
-        return;
-    }
-
     if (IsCustomEditorPack(index))
     {
         obj->protoBaseColor = obj->protoCustomBase;
         obj->protoSecondaryColor = obj->protoCustomSecondary;
+        return;
+    }
+
+    if (index < GetStaticPackCount())
+    {
+        const ProtoPack *p = &protoPacks[index];
+        GetPackColors(p, &obj->protoBaseColor, &obj->protoSecondaryColor, nullptr, nullptr);
         return;
     }
 
