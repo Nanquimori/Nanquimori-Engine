@@ -14,6 +14,15 @@ static int TextWidthN(const char *text, int count, int fontSize)
     return MeasureText(tmp, fontSize);
 }
 
+static int ClampInt(int value, int minValue, int maxValue)
+{
+    if (value < minValue)
+        return minValue;
+    if (value > maxValue)
+        return maxValue;
+    return value;
+}
+
 static int TextIndexFromX(const char *text, int fontSize, float x)
 {
     int len = (int)strlen(text);
@@ -87,6 +96,7 @@ void TextInputInit(TextInputState *state)
     state->caret = 0;
     state->selStart = 0;
     state->selEnd = 0;
+    state->scrollX = 0.0f;
     state->mouseSelecting = false;
     state->repeatKey = 0;
     state->repeatTimer = 0.0f;
@@ -129,7 +139,7 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
             if (!state->active)
                 flags |= TEXT_INPUT_ACTIVATED;
             state->active = true;
-            float localX = mouse.x - (box.x + (float)cfg.padding);
+            float localX = mouse.x - (box.x + (float)cfg.padding) + state->scrollX;
             int idx = TextIndexFromX(buffer, cfg.fontSize, localX);
             state->caret = idx;
             state->selStart = idx;
@@ -147,7 +157,7 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
 
     if (state->mouseSelecting)
     {
-        float localX = mouse.x - (box.x + (float)cfg.padding);
+        float localX = mouse.x - (box.x + (float)cfg.padding) + state->scrollX;
         int idx = TextIndexFromX(buffer, cfg.fontSize, localX);
         state->selEnd = idx;
         state->caret = idx;
@@ -158,8 +168,35 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
     DrawRectangleRec(box, cfg.bgColor);
     DrawRectangleLinesEx(box, 1, cfg.borderColor);
 
+    int len = (int)strlen(buffer);
+    state->caret = ClampInt(state->caret, 0, len);
+    state->selStart = ClampInt(state->selStart, 0, len);
+    state->selEnd = ClampInt(state->selEnd, 0, len);
+
     int textX = (int)box.x + cfg.padding;
-    int textY = (int)box.y + cfg.padding;
+    int textY = (int)(box.y + box.height * 0.5f - (float)cfg.fontSize * 0.5f);
+    int innerW = (int)box.width - cfg.padding * 2;
+    if (innerW < 1)
+        innerW = 1;
+
+    int caretPixel = TextWidthN(buffer, state->caret, cfg.fontSize);
+    if (!state->active)
+    {
+        if (state->scrollX < 0.0f)
+            state->scrollX = 0.0f;
+    }
+    else
+    {
+        if ((float)caretPixel - state->scrollX > (float)(innerW - 2))
+            state->scrollX = (float)caretPixel - (float)(innerW - 2);
+        if ((float)caretPixel - state->scrollX < 0.0f)
+            state->scrollX = (float)caretPixel;
+        if (state->scrollX < 0.0f)
+            state->scrollX = 0.0f;
+    }
+
+    Rectangle clipRect = {(float)(textX), box.y + 1.0f, (float)innerW, box.height - 2.0f};
+    BeginScissorMode((int)clipRect.x, (int)clipRect.y, (int)clipRect.width, (int)clipRect.height);
 
     if (state->active)
     {
@@ -173,7 +210,7 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
         }
         if (selStart != selEnd)
         {
-            int selX = textX + TextWidthN(buffer, selStart, cfg.fontSize);
+            int selX = textX + TextWidthN(buffer, selStart, cfg.fontSize) - (int)state->scrollX;
             int selW = TextWidthN(buffer, selEnd, cfg.fontSize) - TextWidthN(buffer, selStart, cfg.fontSize);
             if (selW < 2) selW = 2;
             Rectangle sel = {(float)(selX - 2), (float)(textY - 2), (float)(selW + 4), (float)(cfg.fontSize + 4)};
@@ -181,17 +218,18 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
         }
     }
 
-    DrawText(buffer, textX, textY, cfg.fontSize, cfg.textColor);
+    DrawText(buffer, textX - (int)state->scrollX, textY, cfg.fontSize, cfg.textColor);
 
     if (state->active)
     {
-        int cx = textX + TextWidthN(buffer, state->caret, cfg.fontSize);
+        int cx = textX + TextWidthN(buffer, state->caret, cfg.fontSize) - (int)state->scrollX;
         DrawLine(cx, textY - 1, cx, textY + cfg.fontSize + 1, cfg.caretColor);
     }
 
+    EndScissorMode();
+
     if (state->active && cfg.allowInput)
     {
-        int len = (int)strlen(buffer);
         int selStart = state->selStart;
         int selEnd = state->selEnd;
         if (selStart > selEnd)

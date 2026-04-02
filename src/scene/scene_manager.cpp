@@ -34,6 +34,9 @@ static char pendingProjectIconPath[512] = {0};
 static Vector3 projectCameraPos = {6.0f, 6.0f, 6.0f};
 static Vector3 projectCameraTarget = {0.0f, 0.0f, 0.0f};
 static bool loadedProjectCameraPending = false;
+static ProjectExportSettings projectExportSettings = {0};
+static bool recentProjectsEnabled = true;
+static bool sceneManagerBootstrapEnabled = true;
 
 static constexpr int PROTO_PACK_LAYOUT_VERSION = 3;
 
@@ -77,6 +80,9 @@ static bool IsPathAbsolute(const char *path);
 static void LoadRecentProjects(void);
 static void SaveRecentProjects(void);
 static void AddRecentProject(const char *path);
+static void SanitizeName(const char *src, char *dst, size_t dstSize);
+static bool ExtractJsonString(const char *line, const char *key, char *out, size_t outSize);
+static void ResetProjectExportSettings(ProjectExportSettings *settings);
 
 static bool NormalizeRecentProjectPath(const char *in, char *out, size_t outSize)
 {
@@ -181,6 +187,9 @@ static bool PathEquals(const char *a, const char *b)
 
 static void SaveRecentProjects(void)
 {
+    if (!recentProjectsEnabled)
+        return;
+
     char path[512] = {0};
     GetRecentProjectsFilePath(path, sizeof(path));
     if (path[0] == '\0')
@@ -200,6 +209,13 @@ static void SaveRecentProjects(void)
 
 static void LoadRecentProjects(void)
 {
+    if (!recentProjectsEnabled)
+    {
+        recentProjectsLoaded = true;
+        recentProjectCount = 0;
+        return;
+    }
+
     if (recentProjectsLoaded)
         return;
     recentProjectsLoaded = true;
@@ -245,6 +261,9 @@ static void LoadRecentProjects(void)
 
 static void AddRecentProject(const char *path)
 {
+    if (!recentProjectsEnabled)
+        return;
+
     if (!path || path[0] == '\0')
         return;
     char normalized[512] = {0};
@@ -441,9 +460,13 @@ void InitSceneManager(void)
     cenaAtiva = -1;
     projectPath[0] = '\0';
     projectDir[0] = '\0';
+    ResetProjectExportSettings(&projectExportSettings);
     projectCameraPos = (Vector3){6.0f, 6.0f, 6.0f};
     projectCameraTarget = (Vector3){0.0f, 0.0f, 0.0f};
     loadedProjectCameraPending = false;
+
+    if (!sceneManagerBootstrapEnabled)
+        return;
 
     if (LoadProject("projects/Project 1/project.json"))
         return;
@@ -759,6 +782,122 @@ static void GetDirectoryFromPath(const char *path, char *out, size_t outSize)
     out[len] = '\0';
 }
 
+static void NormalizePathSeparators(char *path)
+{
+    if (!path)
+        return;
+#ifdef _WIN32
+    for (size_t i = 0; path[i] != '\0'; i++)
+        if (path[i] == '/')
+            path[i] = '\\';
+#else
+    for (size_t i = 0; path[i] != '\0'; i++)
+        if (path[i] == '\\')
+            path[i] = '/';
+#endif
+}
+
+static void GetPathLeafName(const char *path, char *out, size_t outSize)
+{
+    if (!out || outSize == 0)
+        return;
+    out[0] = '\0';
+    if (!path || path[0] == '\0')
+        return;
+
+    const char *lastSlash = strrchr(path, '/');
+    const char *lastBack = strrchr(path, '\\');
+    const char *last = lastSlash;
+    if (lastBack && (!last || lastBack > last))
+        last = lastBack;
+
+    const char *leaf = last ? last + 1 : path;
+    if (leaf[0] == '\0' && last && last > path)
+    {
+        size_t len = (size_t)(last - path);
+        while (len > 0 && path[len - 1] != '/' && path[len - 1] != '\\')
+            len--;
+        leaf = path + len;
+    }
+
+    strncpy(out, leaf, outSize - 1);
+    out[outSize - 1] = '\0';
+}
+
+static void ResetProjectExportSettings(ProjectExportSettings *settings)
+{
+    if (!settings)
+        return;
+    memset(settings, 0, sizeof(*settings));
+    settings->windowWidth = 1280;
+    settings->windowHeight = 720;
+    settings->showConsole = false;
+    settings->startFullscreen = false;
+    settings->resizableWindow = true;
+    settings->showStartupHud = false;
+}
+
+static void ApplyDefaultExportSettings(ProjectExportSettings *settings)
+{
+    if (!settings)
+        return;
+
+    char defaultName[64] = {0};
+    if (projectDir[0] != '\0')
+        GetPathLeafName(projectDir, defaultName, sizeof(defaultName));
+    if (defaultName[0] == '\0' && projectPath[0] != '\0')
+        GetPathLeafName(projectPath, defaultName, sizeof(defaultName));
+    if (defaultName[0] == '\0')
+        strncpy(defaultName, "Meu Jogo", sizeof(defaultName) - 1);
+
+    char *dot = strrchr(defaultName, '.');
+    if (dot)
+        *dot = '\0';
+
+    if (settings->gameName[0] == '\0')
+    {
+        strncpy(settings->gameName, defaultName, sizeof(settings->gameName) - 1);
+        settings->gameName[sizeof(settings->gameName) - 1] = '\0';
+    }
+
+    if (settings->exeName[0] == '\0')
+    {
+        SanitizeName(settings->gameName[0] ? settings->gameName : defaultName,
+                     settings->exeName, sizeof(settings->exeName));
+    }
+    if (settings->exeName[0] == '\0')
+        strncpy(settings->exeName, "jogo", sizeof(settings->exeName) - 1);
+
+    if (settings->iconPath[0] == '\0' && projectDir[0] != '\0')
+    {
+        char projectIcon[512] = {0};
+        snprintf(projectIcon, sizeof(projectIcon), "%s/icon.png", projectDir);
+        NormalizePathSeparators(projectIcon);
+        if (FileExists(projectIcon))
+        {
+            strncpy(settings->iconPath, "icon.png", sizeof(settings->iconPath) - 1);
+            settings->iconPath[sizeof(settings->iconPath) - 1] = '\0';
+        }
+    }
+
+    if (settings->outputDir[0] == '\0')
+    {
+        char safeExeName[64] = {0};
+        SanitizeName(settings->exeName, safeExeName, sizeof(safeExeName));
+        if (safeExeName[0] == '\0')
+            strncpy(safeExeName, "jogo", sizeof(safeExeName) - 1);
+
+        snprintf(settings->outputDir, sizeof(settings->outputDir), "export/%s", safeExeName);
+        settings->outputDir[sizeof(settings->outputDir) - 1] = '\0';
+        NormalizePathSeparators(settings->outputDir);
+    }
+
+    if (settings->windowWidth < 320)
+        settings->windowWidth = 1280;
+    if (settings->windowHeight < 240)
+        settings->windowHeight = 720;
+}
+
 static void EnsureProjectPaths(void)
 {
     if (projectPath[0] != '\0' && projectDir[0] != '\0')
@@ -909,6 +1048,8 @@ bool SaveProject(void)
     if (projectPath[0] == '\0' || projectDir[0] == '\0')
         return false;
 
+    ApplyDefaultExportSettings(&projectExportSettings);
+
     if (!EnsureAssetsDirAt(projectDir))
         return false;
 
@@ -925,6 +1066,23 @@ bool SaveProject(void)
             PropertiesShowCollisions() ? 1 : 0,
             IsRaycast2DVisible() ? 1 : 0,
             IsRaycast3DVisible() ? 1 : 0);
+    char exportGameNameEsc[128] = {0};
+    char exportExeNameEsc[128] = {0};
+    char exportIconEsc[640] = {0};
+    char exportOutputEsc[640] = {0};
+    EscapeJsonString(projectExportSettings.gameName, exportGameNameEsc, sizeof(exportGameNameEsc));
+    EscapeJsonString(projectExportSettings.exeName, exportExeNameEsc, sizeof(exportExeNameEsc));
+    EscapeJsonString(projectExportSettings.iconPath, exportIconEsc, sizeof(exportIconEsc));
+    EscapeJsonString(projectExportSettings.outputDir, exportOutputEsc, sizeof(exportOutputEsc));
+    fprintf(f, "\"export\":{\"gameName\":\"%s\",\"exeName\":\"%s\",\"icon\":\"%s\",\"output\":\"%s\"},\n",
+            exportGameNameEsc, exportExeNameEsc, exportIconEsc, exportOutputEsc);
+    fprintf(f, "\"exportRuntime\":{\"width\":%d,\"height\":%d,\"console\":%d,\"fullscreen\":%d,\"resizable\":%d,\"hud\":%d},\n",
+            projectExportSettings.windowWidth,
+            projectExportSettings.windowHeight,
+            projectExportSettings.showConsole ? 1 : 0,
+            projectExportSettings.startFullscreen ? 1 : 0,
+            projectExportSettings.resizableWindow ? 1 : 0,
+            projectExportSettings.showStartupHud ? 1 : 0);
     fprintf(f, "\"scenes\":[\n");
 
     for (int s = 0; s < totalCenas; s++)
@@ -1108,6 +1266,117 @@ static bool ExtractJsonString(const char *line, const char *key, char *out, size
     return true;
 }
 
+bool LoadProjectExportSettingsFromFile(const char *projectJsonPath, ProjectExportSettings *out)
+{
+    if (!projectJsonPath || projectJsonPath[0] == '\0' || !out)
+        return false;
+
+    ResetProjectExportSettings(out);
+
+    FILE *f = fopen(projectJsonPath, "rb");
+    if (!f)
+        return false;
+
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (size <= 0)
+    {
+        fclose(f);
+        return false;
+    }
+
+    char *buffer = (char *)malloc((size_t)size + 1);
+    if (!buffer)
+    {
+        fclose(f);
+        return false;
+    }
+
+    size_t read = fread(buffer, 1, (size_t)size, f);
+    buffer[read] = '\0';
+    fclose(f);
+
+    char projectJsonDir[512] = {0};
+    GetDirectoryFromPath(projectJsonPath, projectJsonDir, sizeof(projectJsonDir));
+    char previousProjectDir[256] = {0};
+    char previousProjectPath[256] = {0};
+    strncpy(previousProjectDir, projectDir, sizeof(previousProjectDir) - 1);
+    previousProjectDir[sizeof(previousProjectDir) - 1] = '\0';
+    strncpy(previousProjectPath, projectPath, sizeof(previousProjectPath) - 1);
+    previousProjectPath[sizeof(previousProjectPath) - 1] = '\0';
+    strncpy(projectDir, projectJsonDir, sizeof(projectDir) - 1);
+    projectDir[sizeof(projectDir) - 1] = '\0';
+    strncpy(projectPath, projectJsonPath, sizeof(projectPath) - 1);
+    projectPath[sizeof(projectPath) - 1] = '\0';
+
+    const char *exportPtr = strstr(buffer, "\"export\":{");
+    if (exportPtr)
+    {
+        char exportGameNameEsc[128] = {0};
+        char exportExeNameEsc[128] = {0};
+        char exportIconEsc[512] = {0};
+        char exportOutputEsc[512] = {0};
+
+        if (ExtractJsonString(exportPtr, "\"gameName\":\"", exportGameNameEsc, sizeof(exportGameNameEsc)))
+            UnescapeJsonString(exportGameNameEsc, out->gameName, sizeof(out->gameName));
+        if (ExtractJsonString(exportPtr, "\"exeName\":\"", exportExeNameEsc, sizeof(exportExeNameEsc)))
+            UnescapeJsonString(exportExeNameEsc, out->exeName, sizeof(out->exeName));
+        if (ExtractJsonString(exportPtr, "\"icon\":\"", exportIconEsc, sizeof(exportIconEsc)))
+            UnescapeJsonString(exportIconEsc, out->iconPath, sizeof(out->iconPath));
+        if (ExtractJsonString(exportPtr, "\"output\":\"", exportOutputEsc, sizeof(exportOutputEsc)))
+            UnescapeJsonString(exportOutputEsc, out->outputDir, sizeof(out->outputDir));
+    }
+
+    const char *exportRuntimePtr = strstr(buffer, "\"exportRuntime\":{");
+    if (exportRuntimePtr)
+    {
+        int width = out->windowWidth;
+        int height = out->windowHeight;
+        int console = out->showConsole ? 1 : 0;
+        int fullscreen = out->startFullscreen ? 1 : 0;
+        int resizable = out->resizableWindow ? 1 : 0;
+        int hud = out->showStartupHud ? 1 : 0;
+
+        const char *widthPtr = strstr(exportRuntimePtr, "\"width\":");
+        const char *heightPtr = strstr(exportRuntimePtr, "\"height\":");
+        const char *consolePtr = strstr(exportRuntimePtr, "\"console\":");
+        const char *fullscreenPtr = strstr(exportRuntimePtr, "\"fullscreen\":");
+        const char *resizablePtr = strstr(exportRuntimePtr, "\"resizable\":");
+        const char *hudPtr = strstr(exportRuntimePtr, "\"hud\":");
+
+        if (widthPtr)
+            sscanf(widthPtr, "\"width\":%d", &width);
+        if (heightPtr)
+            sscanf(heightPtr, "\"height\":%d", &height);
+        if (consolePtr)
+            sscanf(consolePtr, "\"console\":%d", &console);
+        if (fullscreenPtr)
+            sscanf(fullscreenPtr, "\"fullscreen\":%d", &fullscreen);
+        if (resizablePtr)
+            sscanf(resizablePtr, "\"resizable\":%d", &resizable);
+        if (hudPtr)
+            sscanf(hudPtr, "\"hud\":%d", &hud);
+
+        out->windowWidth = width;
+        out->windowHeight = height;
+        out->showConsole = (console != 0);
+        out->startFullscreen = (fullscreen != 0);
+        out->resizableWindow = (resizable != 0);
+        out->showStartupHud = (hud != 0);
+    }
+
+    ApplyDefaultExportSettings(out);
+
+    strncpy(projectDir, previousProjectDir, sizeof(projectDir) - 1);
+    projectDir[sizeof(projectDir) - 1] = '\0';
+    strncpy(projectPath, previousProjectPath, sizeof(projectPath) - 1);
+    projectPath[sizeof(projectPath) - 1] = '\0';
+
+    free(buffer);
+    return true;
+}
+
 bool LoadProject(const char *path)
 {
     if (!path || path[0] == '\0')
@@ -1139,6 +1408,7 @@ bool LoadProject(const char *path)
 
     totalCenas = 0;
     cenaAtiva = -1;
+    ResetProjectExportSettings(&projectExportSettings);
 
     int activeFromFile = 0;
     loadedProjectCameraPending = false;
@@ -1199,6 +1469,63 @@ bool LoadProject(const char *path)
         SetRaycast2DVisible(ray2D != 0);
         SetRaycast3DVisible(ray3D != 0);
     }
+
+    // Ler configuracoes de exportacao (compativel: pode nao existir em projetos antigos)
+    const char *exportPtr = strstr(buffer, "\"export\":{");
+    if (exportPtr)
+    {
+        char exportGameNameEsc[128] = {0};
+        char exportExeNameEsc[128] = {0};
+        char exportIconEsc[512] = {0};
+        char exportOutputEsc[512] = {0};
+
+        if (ExtractJsonString(exportPtr, "\"gameName\":\"", exportGameNameEsc, sizeof(exportGameNameEsc)))
+            UnescapeJsonString(exportGameNameEsc, projectExportSettings.gameName, sizeof(projectExportSettings.gameName));
+        if (ExtractJsonString(exportPtr, "\"exeName\":\"", exportExeNameEsc, sizeof(exportExeNameEsc)))
+            UnescapeJsonString(exportExeNameEsc, projectExportSettings.exeName, sizeof(projectExportSettings.exeName));
+        if (ExtractJsonString(exportPtr, "\"icon\":\"", exportIconEsc, sizeof(exportIconEsc)))
+            UnescapeJsonString(exportIconEsc, projectExportSettings.iconPath, sizeof(projectExportSettings.iconPath));
+        if (ExtractJsonString(exportPtr, "\"output\":\"", exportOutputEsc, sizeof(exportOutputEsc)))
+            UnescapeJsonString(exportOutputEsc, projectExportSettings.outputDir, sizeof(projectExportSettings.outputDir));
+    }
+    const char *exportRuntimePtr = strstr(buffer, "\"exportRuntime\":{");
+    if (exportRuntimePtr)
+    {
+        int width = projectExportSettings.windowWidth;
+        int height = projectExportSettings.windowHeight;
+        int console = projectExportSettings.showConsole ? 1 : 0;
+        int fullscreen = projectExportSettings.startFullscreen ? 1 : 0;
+        int resizable = projectExportSettings.resizableWindow ? 1 : 0;
+        int hud = projectExportSettings.showStartupHud ? 1 : 0;
+
+        const char *widthPtr = strstr(exportRuntimePtr, "\"width\":");
+        const char *heightPtr = strstr(exportRuntimePtr, "\"height\":");
+        const char *consolePtr = strstr(exportRuntimePtr, "\"console\":");
+        const char *fullscreenPtr = strstr(exportRuntimePtr, "\"fullscreen\":");
+        const char *resizablePtr = strstr(exportRuntimePtr, "\"resizable\":");
+        const char *hudPtr = strstr(exportRuntimePtr, "\"hud\":");
+
+        if (widthPtr)
+            sscanf(widthPtr, "\"width\":%d", &width);
+        if (heightPtr)
+            sscanf(heightPtr, "\"height\":%d", &height);
+        if (consolePtr)
+            sscanf(consolePtr, "\"console\":%d", &console);
+        if (fullscreenPtr)
+            sscanf(fullscreenPtr, "\"fullscreen\":%d", &fullscreen);
+        if (resizablePtr)
+            sscanf(resizablePtr, "\"resizable\":%d", &resizable);
+        if (hudPtr)
+            sscanf(hudPtr, "\"hud\":%d", &hud);
+
+        projectExportSettings.windowWidth = width;
+        projectExportSettings.windowHeight = height;
+        projectExportSettings.showConsole = (console != 0);
+        projectExportSettings.startFullscreen = (fullscreen != 0);
+        projectExportSettings.resizableWindow = (resizable != 0);
+        projectExportSettings.showStartupHud = (hud != 0);
+    }
+    ApplyDefaultExportSettings(&projectExportSettings);
 
     // Parse de cenas e objetos
     const char *cur = buffer;
@@ -1507,6 +1834,40 @@ bool ConsumeLoadedProjectCameraState(Vector3 *position, Vector3 *target)
         *target = projectCameraTarget;
     loadedProjectCameraPending = false;
     return true;
+}
+
+void GetProjectExportSettings(ProjectExportSettings *out)
+{
+    if (!out)
+        return;
+    *out = projectExportSettings;
+    ApplyDefaultExportSettings(out);
+}
+
+void SetProjectExportSettings(const ProjectExportSettings *settings)
+{
+    if (!settings)
+        return;
+    projectExportSettings = *settings;
+    ApplyDefaultExportSettings(&projectExportSettings);
+}
+
+void SetRecentProjectsEnabled(bool enabled)
+{
+    recentProjectsEnabled = enabled;
+    if (!recentProjectsEnabled)
+    {
+        recentProjectCount = 0;
+        recentProjectsLoaded = true;
+        return;
+    }
+
+    recentProjectsLoaded = false;
+}
+
+void SetSceneManagerBootstrapEnabled(bool enabled)
+{
+    sceneManagerBootstrapEnabled = enabled;
 }
 
 

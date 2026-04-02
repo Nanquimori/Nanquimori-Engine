@@ -7,6 +7,13 @@
 #define MAX_FILEPATH_SIZE 1024
 #define MAX_BUFFER_TEXTO 256
 
+typedef enum
+{
+    FILE_EXPLORER_PICK_NONE = 0,
+    FILE_EXPLORER_PICK_MODEL_IMPORT,
+    FILE_EXPLORER_PICK_EXPORT_ICON
+} FileExplorerPickPurpose;
+
 typedef struct
 {
     bool aberto;
@@ -24,6 +31,8 @@ typedef struct
     int itemHoverFile;
     int itemHoverImport;
     bool menuFileAbertoEsteFrame;
+    FileExplorerPickPurpose pickPurpose;
+    FileExplorerPickPurpose selectedPurpose;
     bool modoProjetoAbrir;
     bool modoProjetoSalvar;
     char bufferNomeProjeto[64];
@@ -44,8 +53,10 @@ void DrawFileMenu(void);
 bool FileExplorerArquivoSelecionado(char *saida);
 void OpenProjectExplorer(void);
 void OpenProjectSaveAs(void);
+void OpenExportIconExplorer(void);
 void UnloadFileExplorer(void);
 void ToggleFileMenu(void);
 bool IsFileMenuOpen(void);
+bool FileExplorerConsumeSelectedExportIconPath(char *saida);
 
 #endif // FILE_EXPLORER_H
