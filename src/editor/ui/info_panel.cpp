@@ -14,7 +14,7 @@
 
 static InfoPanel infoPanel = {0};
 static bool raycastLineVisible = false;
-static bool raycast2DVisible = true;
+static bool raycast2DVisible = false;
 static bool raycast3DVisible = false;
 
 // Cores (mantidas como antes para contraste entre rótulos e valores)
@@ -41,7 +41,7 @@ void InitInfoPanel(void)
     infoPanel.physicsMs = 0.0f;
     infoPanel.renderMs = 0.0f;
     raycastLineVisible = false;
-    raycast2DVisible = true;
+    raycast2DVisible = false;
     raycast3DVisible = false;
 }
 

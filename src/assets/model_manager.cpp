@@ -737,6 +737,35 @@ static void DrawModelPrototype(Model *model, int objectId, Color baseColor, Colo
     free(oldShaders);
 }
 
+static BoundingBox TransformBoundingBox(BoundingBox localBox, Matrix transform)
+{
+    Vector3 corners[8] = {
+        {localBox.min.x, localBox.min.y, localBox.min.z},
+        {localBox.max.x, localBox.min.y, localBox.min.z},
+        {localBox.min.x, localBox.max.y, localBox.min.z},
+        {localBox.max.x, localBox.max.y, localBox.min.z},
+        {localBox.min.x, localBox.min.y, localBox.max.z},
+        {localBox.max.x, localBox.min.y, localBox.max.z},
+        {localBox.min.x, localBox.max.y, localBox.max.z},
+        {localBox.max.x, localBox.max.y, localBox.max.z}};
+
+    Vector3 first = Vector3Transform(corners[0], transform);
+    BoundingBox worldBox = {first, first};
+
+    for (int i = 1; i < 8; i++)
+    {
+        Vector3 point = Vector3Transform(corners[i], transform);
+        worldBox.min.x = fminf(worldBox.min.x, point.x);
+        worldBox.min.y = fminf(worldBox.min.y, point.y);
+        worldBox.min.z = fminf(worldBox.min.z, point.z);
+        worldBox.max.x = fmaxf(worldBox.max.x, point.x);
+        worldBox.max.y = fmaxf(worldBox.max.y, point.y);
+        worldBox.max.z = fmaxf(worldBox.max.z, point.z);
+    }
+
+    return worldBox;
+}
+
 void InitModelManager(void)
 {
     modelManager.modelCount = 0;
@@ -958,6 +987,40 @@ void RenderModels(void)
     }
 }
 
+void DrawSelectedObjectOrigins(Camera camera)
+{
+    const int primarySelectedId = ObterObjetoSelecionadoId();
+    const Color activeColor = (Color){255, 219, 84, 255};
+    const Color selectedColor = (Color){242, 132, 34, 255};
+    const Color borderColor = (Color){30, 30, 30, 230};
+
+    Vector3 forward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
+
+    for (int i = 0; i < totalObjetos; i++)
+    {
+        ObjetoCena *obj = &objetos[i];
+        if (!obj->ativo || !obj->selecionado)
+            continue;
+
+        Vector3 toObj = Vector3Subtract(obj->posicao, camera.position);
+        if (Vector3DotProduct(toObj, forward) <= 0.0f)
+            continue;
+
+        Vector2 screen = GetWorldToScreen(obj->posicao, camera);
+        if (screen.x < 0.0f || screen.x > (float)GetScreenWidth() ||
+            screen.y < 0.0f || screen.y > (float)GetScreenHeight())
+            continue;
+
+        bool active = (obj->id == primarySelectedId);
+        float radius = active ? 6.5f : 5.0f;
+        Color fill = active ? activeColor : selectedColor;
+
+        DrawCircleV(screen, radius + 2.0f, borderColor);
+        DrawCircleV(screen, radius, fill);
+        DrawCircleLines((int)screen.x, (int)screen.y, radius + 2.0f, Fade(BLACK, 0.65f));
+    }
+}
+
 
 void RenderPrototypePreview(const ObjetoCena *obj, RenderTexture2D *target)
 {
@@ -1144,11 +1207,12 @@ int AddPrimitiveObject(PrimitiveModelType type)
     return idObjeto;
 }
 
-bool RaycastModels(Ray ray, Vector3 *hitPos, float *hitDist)
+static bool RaycastModelsInternal(Ray ray, Vector3 *hitPos, float *hitDist, int *hitObjectId)
 {
     bool hitAny = false;
     float bestDist = 0.0f;
     Vector3 bestPos = {0};
+    int bestObjectId = -1;
 
     for (int i = 0; i < modelManager.modelCount; i++)
     {
@@ -1183,6 +1247,12 @@ bool RaycastModels(Ray ray, Vector3 *hitPos, float *hitDist)
         if (rot.x != 0.0f || rot.y != 0.0f || rot.z != 0.0f)
             world = MatrixMultiply(world, MatrixRotateXYZ(rot));
         Matrix transform = MatrixMultiply(world, model.transform);
+        BoundingBox localBounds = GetModelBoundingBox(model);
+        BoundingBox worldBounds = TransformBoundingBox(localBounds, transform);
+        RayCollision boxHit = GetRayCollisionBox(ray, worldBounds);
+        if (!boxHit.hit)
+            continue;
+
         for (int m = 0; m < model.meshCount; m++)
         {
             RayCollision rc = GetRayCollisionMesh(ray, model.meshes[m], transform);
@@ -1193,6 +1263,7 @@ bool RaycastModels(Ray ray, Vector3 *hitPos, float *hitDist)
                     hitAny = true;
                     bestDist = rc.distance;
                     bestPos = rc.point;
+                    bestObjectId = lm->idObjeto;
                 }
             }
         }
@@ -1204,7 +1275,23 @@ bool RaycastModels(Ray ray, Vector3 *hitPos, float *hitDist)
             *hitPos = bestPos;
         if (hitDist)
             *hitDist = bestDist;
+        if (hitObjectId)
+            *hitObjectId = bestObjectId;
+    }
+    else if (hitObjectId)
+    {
+        *hitObjectId = -1;
     }
 
     return hitAny;
+}
+
+bool RaycastModels(Ray ray, Vector3 *hitPos, float *hitDist)
+{
+    return RaycastModelsInternal(ray, hitPos, hitDist, nullptr);
+}
+
+bool RaycastModelsEx(Ray ray, Vector3 *hitPos, float *hitDist, int *hitObjectId)
+{
+    return RaycastModelsInternal(ray, hitPos, hitDist, hitObjectId);
 }

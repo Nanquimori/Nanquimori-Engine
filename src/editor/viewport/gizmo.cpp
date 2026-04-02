@@ -1,5 +1,6 @@
 #include "gizmo.h"
 #include "scene/outliner.h"
+#include "assets/model_manager.h"
 #include "editor/ui/properties_panel.h"
 #include "editor/viewport/camera_controller.h"
 #include "raymath.h"
@@ -263,15 +264,177 @@ static GizmoMode gizmoMode = GIZMO_MODE_MOVE;
 #define GIZMO_UNDO_MAX 32
 typedef struct
 {
-    int id;
-    Vector3 pos;
-    Vector3 rot;
+    int count;
+    int ids[MAX_OBJETOS];
+    Vector3 pos[MAX_OBJETOS];
+    Vector3 rot[MAX_OBJETOS];
+} GizmoSelectionSnapshot;
+
+typedef struct
+{
+    GizmoSelectionSnapshot before;
+    GizmoSelectionSnapshot after;
 } GizmoUndoEntry;
 
 static GizmoUndoEntry gizmoUndoStack[GIZMO_UNDO_MAX];
 static int gizmoUndoTop = 0;
 static GizmoUndoEntry gizmoRedoStack[GIZMO_UNDO_MAX];
 static int gizmoRedoTop = 0;
+static GizmoSelectionSnapshot gizmoDragSelection = {0};
+
+static bool Vector3EqualsExact(Vector3 a, Vector3 b)
+{
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
+static void PushGizmoEntry(GizmoUndoEntry *stack, int *top, GizmoUndoEntry entry)
+{
+    if (*top < GIZMO_UNDO_MAX)
+        stack[(*top)++] = entry;
+    else
+    {
+        for (int i = 0; i < GIZMO_UNDO_MAX - 1; i++)
+            stack[i] = stack[i + 1];
+        stack[GIZMO_UNDO_MAX - 1] = entry;
+    }
+}
+
+static void CaptureSelectedSnapshot(GizmoSelectionSnapshot *snapshot, int primaryId)
+{
+    if (!snapshot)
+        return;
+
+    *snapshot = (GizmoSelectionSnapshot){0};
+
+    int primaryIdx = BuscarIndicePorId(primaryId);
+    if (primaryId > 0 && primaryIdx != -1)
+    {
+        snapshot->ids[snapshot->count] = primaryId;
+        snapshot->pos[snapshot->count] = objetos[primaryIdx].posicao;
+        snapshot->rot[snapshot->count] = objetos[primaryIdx].rotacao;
+        snapshot->count++;
+    }
+
+    for (int i = 0; i < totalObjetos && snapshot->count < MAX_OBJETOS; i++)
+    {
+        if (!objetos[i].selecionado || objetos[i].id == primaryId)
+            continue;
+        snapshot->ids[snapshot->count] = objetos[i].id;
+        snapshot->pos[snapshot->count] = objetos[i].posicao;
+        snapshot->rot[snapshot->count] = objetos[i].rotacao;
+        snapshot->count++;
+    }
+}
+
+static void CaptureSnapshotForIds(GizmoSelectionSnapshot *snapshot, const GizmoSelectionSnapshot *sourceIds)
+{
+    if (!snapshot || !sourceIds)
+        return;
+
+    *snapshot = (GizmoSelectionSnapshot){0};
+    for (int i = 0; i < sourceIds->count && snapshot->count < MAX_OBJETOS; i++)
+    {
+        int idx = BuscarIndicePorId(sourceIds->ids[i]);
+        if (idx == -1)
+            continue;
+        snapshot->ids[snapshot->count] = sourceIds->ids[i];
+        snapshot->pos[snapshot->count] = objetos[idx].posicao;
+        snapshot->rot[snapshot->count] = objetos[idx].rotacao;
+        snapshot->count++;
+    }
+}
+
+static bool SnapshotChanged(const GizmoSelectionSnapshot *before, const GizmoSelectionSnapshot *after)
+{
+    if (!before || !after)
+        return false;
+    if (before->count != after->count)
+        return true;
+
+    for (int i = 0; i < before->count; i++)
+    {
+        if (before->ids[i] != after->ids[i])
+            return true;
+        if (!Vector3EqualsExact(before->pos[i], after->pos[i]))
+            return true;
+        if (!Vector3EqualsExact(before->rot[i], after->rot[i]))
+            return true;
+    }
+    return false;
+}
+
+static void ApplySnapshot(const GizmoSelectionSnapshot *snapshot)
+{
+    if (!snapshot)
+        return;
+
+    for (int i = 0; i < snapshot->count; i++)
+    {
+        int idx = BuscarIndicePorId(snapshot->ids[i]);
+        if (idx == -1)
+            continue;
+        objetos[idx].posicao = snapshot->pos[i];
+        objetos[idx].rotacao = snapshot->rot[i];
+    }
+
+    SetSelectedModelByObjetoId(ObterObjetoSelecionadoId());
+}
+
+static void ApplyMoveFromStart(const GizmoSelectionSnapshot *snapshot, Vector3 axis, float delta)
+{
+    if (!snapshot)
+        return;
+
+    for (int i = 0; i < snapshot->count; i++)
+    {
+        int idx = BuscarIndicePorId(snapshot->ids[i]);
+        if (idx == -1)
+            continue;
+        objetos[idx].posicao = (Vector3){
+            snapshot->pos[i].x + axis.x * delta,
+            snapshot->pos[i].y + axis.y * delta,
+            snapshot->pos[i].z + axis.z * delta};
+    }
+}
+
+static void ApplyMoveStep(const GizmoSelectionSnapshot *snapshot, Vector3 axis, float deltaStep)
+{
+    if (!snapshot)
+        return;
+
+    for (int i = 0; i < snapshot->count; i++)
+    {
+        int idx = BuscarIndicePorId(snapshot->ids[i]);
+        if (idx == -1)
+            continue;
+        objetos[idx].posicao = (Vector3){
+            objetos[idx].posicao.x + axis.x * deltaStep,
+            objetos[idx].posicao.y + axis.y * deltaStep,
+            objetos[idx].posicao.z + axis.z * deltaStep};
+    }
+}
+
+static void ApplyRotationFromStart(const GizmoSelectionSnapshot *snapshot, int axisIndex, float angle)
+{
+    if (!snapshot)
+        return;
+
+    for (int i = 0; i < snapshot->count; i++)
+    {
+        int idx = BuscarIndicePorId(snapshot->ids[i]);
+        if (idx == -1)
+            continue;
+
+        Vector3 newRot = snapshot->rot[i];
+        if (axisIndex == 0)
+            newRot.x += angle;
+        else if (axisIndex == 1)
+            newRot.y += angle;
+        else
+            newRot.z += angle;
+        objetos[idx].rotacao = newRot;
+    }
+}
 
 void UpdateMoveGizmo(Camera cam)
 {
@@ -286,20 +449,8 @@ void UpdateMoveGizmo(Camera cam)
         if (gizmoUndoTop > 0)
         {
             GizmoUndoEntry entry = gizmoUndoStack[--gizmoUndoTop];
-            int idxUndo = BuscarIndicePorId(entry.id);
-            if (idxUndo != -1)
-            {
-                if (gizmoRedoTop < GIZMO_UNDO_MAX)
-                    gizmoRedoStack[gizmoRedoTop++] = (GizmoUndoEntry){entry.id, objetos[idxUndo].posicao, objetos[idxUndo].rotacao};
-                else
-                {
-                    for (int i = 0; i < GIZMO_UNDO_MAX - 1; i++)
-                        gizmoRedoStack[i] = gizmoRedoStack[i + 1];
-                    gizmoRedoStack[GIZMO_UNDO_MAX - 1] = (GizmoUndoEntry){entry.id, objetos[idxUndo].posicao, objetos[idxUndo].rotacao};
-                }
-                objetos[idxUndo].posicao = entry.pos;
-                objetos[idxUndo].rotacao = entry.rot;
-            }
+            ApplySnapshot(&entry.before);
+            PushGizmoEntry(gizmoRedoStack, &gizmoRedoTop, entry);
         }
     }
 
@@ -310,20 +461,8 @@ void UpdateMoveGizmo(Camera cam)
         if (gizmoRedoTop > 0)
         {
             GizmoUndoEntry entry = gizmoRedoStack[--gizmoRedoTop];
-            int idxRedo = BuscarIndicePorId(entry.id);
-            if (idxRedo != -1)
-            {
-                if (gizmoUndoTop < GIZMO_UNDO_MAX)
-                    gizmoUndoStack[gizmoUndoTop++] = (GizmoUndoEntry){entry.id, objetos[idxRedo].posicao, objetos[idxRedo].rotacao};
-                else
-                {
-                    for (int i = 0; i < GIZMO_UNDO_MAX - 1; i++)
-                        gizmoUndoStack[i] = gizmoUndoStack[i + 1];
-                    gizmoUndoStack[GIZMO_UNDO_MAX - 1] = (GizmoUndoEntry){entry.id, objetos[idxRedo].posicao, objetos[idxRedo].rotacao};
-                }
-                objetos[idxRedo].posicao = entry.pos;
-                objetos[idxRedo].rotacao = entry.rot;
-            }
+            ApplySnapshot(&entry.after);
+            PushGizmoEntry(gizmoUndoStack, &gizmoUndoTop, entry);
         }
     }
 
@@ -396,6 +535,7 @@ void UpdateMoveGizmo(Camera cam)
             gizmoLastT = bestT;
             gizmoStartPos = pos;
             gizmoStartRot = rot;
+            CaptureSelectedSnapshot(&gizmoDragSelection, selId);
             if (gizmoMode == GIZMO_MODE_ROTATE)
             {
                 Vector3 axis = AxisDir(gizmoAxis);
@@ -423,20 +563,14 @@ void UpdateMoveGizmo(Camera cam)
                     {
                         float delta = t - gizmoStartT;
                         delta = floorf(delta / GIZMO_SNAP_STEP + 0.5f) * GIZMO_SNAP_STEP;
-                        objetos[idx].posicao = (Vector3){
-                            gizmoStartPos.x + axis.x * delta,
-                            gizmoStartPos.y + axis.y * delta,
-                            gizmoStartPos.z + axis.z * delta};
+                        ApplyMoveFromStart(&gizmoDragSelection, axis, delta);
                     }
                     else
                     {
                         float deltaStep = t - gizmoLastT;
                         if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))
                             deltaStep *= GIZMO_SLOW_FACTOR;
-                        objetos[idx].posicao = (Vector3){
-                            objetos[idx].posicao.x + axis.x * deltaStep,
-                            objetos[idx].posicao.y + axis.y * deltaStep,
-                            objetos[idx].posicao.z + axis.z * deltaStep};
+                        ApplyMoveStep(&gizmoDragSelection, axis, deltaStep);
                     }
                     gizmoLastT = t;
                 }
@@ -457,41 +591,24 @@ void UpdateMoveGizmo(Camera cam)
                 if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))
                     angle = floorf(angle / GIZMO_ROT_SNAP + 0.5f) * GIZMO_ROT_SNAP;
 
-                Vector3 newRot = gizmoStartRot;
-                if (gizmoAxis == 0)
-                    newRot.x = gizmoStartRot.x + angle;
-                else if (gizmoAxis == 1)
-                    newRot.y = gizmoStartRot.y + angle;
-                else
-                    newRot.z = gizmoStartRot.z + angle;
-                objetos[idx].rotacao = newRot;
+                ApplyRotationFromStart(&gizmoDragSelection, gizmoAxis, angle);
             }
         }
         else
         {
             gizmoDragging = false;
             gizmoAxis = -1;
-            if (idx != -1)
+            if (gizmoDragSelection.count > 0)
             {
-                Vector3 cur = objetos[idx].posicao;
-                Vector3 curRot = objetos[idx].rotacao;
-                bool changed = (cur.x != gizmoStartPos.x || cur.y != gizmoStartPos.y || cur.z != gizmoStartPos.z) ||
-                               (curRot.x != gizmoStartRot.x || curRot.y != gizmoStartRot.y || curRot.z != gizmoStartRot.z);
-                if (changed)
+                GizmoSelectionSnapshot after = {0};
+                CaptureSnapshotForIds(&after, &gizmoDragSelection);
+                if (SnapshotChanged(&gizmoDragSelection, &after))
                 {
-                    if (gizmoUndoTop < GIZMO_UNDO_MAX)
-                    {
-                        gizmoUndoStack[gizmoUndoTop++] = (GizmoUndoEntry){selId, gizmoStartPos, gizmoStartRot};
-                    }
-                    else
-                    {
-                        for (int i = 0; i < GIZMO_UNDO_MAX - 1; i++)
-                            gizmoUndoStack[i] = gizmoUndoStack[i + 1];
-                        gizmoUndoStack[GIZMO_UNDO_MAX - 1] = (GizmoUndoEntry){selId, gizmoStartPos, gizmoStartRot};
-                    }
+                    PushGizmoEntry(gizmoUndoStack, &gizmoUndoTop, (GizmoUndoEntry){gizmoDragSelection, after});
                     gizmoRedoTop = 0;
                 }
             }
+            gizmoDragSelection = (GizmoSelectionSnapshot){0};
         }
     }
 }

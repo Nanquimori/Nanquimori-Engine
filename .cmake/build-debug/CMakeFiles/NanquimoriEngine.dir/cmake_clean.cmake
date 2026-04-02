@@ -34,6 +34,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/camera_controller.cpp.obj.d"
   "CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/gizmo.cpp.obj"
   "CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/gizmo.cpp.obj.d"
+  "CMakeFiles/NanquimoriEngine.dir/src/physics/nanquimori_physics.cpp.obj"
+  "CMakeFiles/NanquimoriEngine.dir/src/physics/nanquimori_physics.cpp.obj.d"
   "CMakeFiles/NanquimoriEngine.dir/src/scene/outliner.cpp.obj"
   "CMakeFiles/NanquimoriEngine.dir/src/scene/outliner.cpp.obj.d"
   "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_manager.cpp.obj"

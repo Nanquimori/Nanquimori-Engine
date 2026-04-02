@@ -23,6 +23,7 @@ file(GLOB_RECURSE NANQUIMORI_SOURCES
     "${PROJECT_SOURCE_DIR}/src/app/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/editor/ui/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/editor/viewport/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/physics/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/scene/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/assets/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/tools/*.cpp"

@@ -4,8 +4,8 @@
 #include "raylib.h"
 
 #define PAINEL_LARGURA 280
-#define MAX_OBJETOS 64
-#define MAX_UNDO 32
+#define MAX_OBJETOS 512
+#define MAX_UNDO 128
 #define MAX_NOME 31
 #define MAX_PROTO_CUSTOM 16
 
@@ -58,6 +58,9 @@ const char *ObterNomeObjeto(int id);
 bool ObjetoExisteNoOutliner(const char *nome);
 int ObterObjetoSelecionadoId(void);
 void SelecionarObjetoPorId(int id);
+void AdicionarObjetoSelecionadoPorId(int id);
+Vector3 ObterDeslocamentoPadraoDuplicacao(void);
+bool DuplicarObjetosSelecionados(Vector3 deslocamento);
 int ObterProximoId(void);
 void DefinirProximoId(int id);
 

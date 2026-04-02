@@ -662,6 +662,30 @@ src/editor/viewport/gizmo.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/gizmo.cpp.s
 .PHONY : src/editor/viewport/gizmo.cpp.s
 
+src/physics/nanquimori_physics.obj: src/physics/nanquimori_physics.cpp.obj
+.PHONY : src/physics/nanquimori_physics.obj
+
+# target to build an object file
+src/physics/nanquimori_physics.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/physics/nanquimori_physics.cpp.obj
+.PHONY : src/physics/nanquimori_physics.cpp.obj
+
+src/physics/nanquimori_physics.i: src/physics/nanquimori_physics.cpp.i
+.PHONY : src/physics/nanquimori_physics.i
+
+# target to preprocess a source file
+src/physics/nanquimori_physics.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/physics/nanquimori_physics.cpp.i
+.PHONY : src/physics/nanquimori_physics.cpp.i
+
+src/physics/nanquimori_physics.s: src/physics/nanquimori_physics.cpp.s
+.PHONY : src/physics/nanquimori_physics.s
+
+# target to generate assembly for a file
+src/physics/nanquimori_physics.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/physics/nanquimori_physics.cpp.s
+.PHONY : src/physics/nanquimori_physics.cpp.s
+
 src/scene/outliner.obj: src/scene/outliner.cpp.obj
 .PHONY : src/scene/outliner.obj
 
@@ -781,6 +805,9 @@ help:
 	@echo ... src/editor/viewport/gizmo.obj
 	@echo ... src/editor/viewport/gizmo.i
 	@echo ... src/editor/viewport/gizmo.s
+	@echo ... src/physics/nanquimori_physics.obj
+	@echo ... src/physics/nanquimori_physics.i
+	@echo ... src/physics/nanquimori_physics.s
 	@echo ... src/scene/outliner.obj
 	@echo ... src/scene/outliner.i
 	@echo ... src/scene/outliner.s

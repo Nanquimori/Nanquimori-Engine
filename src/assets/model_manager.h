@@ -4,8 +4,8 @@
 #include "raylib.h"
 #include "scene/outliner.h"
 
-#define MAX_MODELS 16
-#define MAX_MODEL_CACHE 128
+#define MAX_MODELS MAX_OBJETOS
+#define MAX_MODEL_CACHE 512
 
 typedef struct
 {
@@ -50,9 +50,11 @@ void RemoverModeloPorNome(const char *nome);
 void RemoverModeloPorIdObjeto(int idObjeto);
 void RestaurarModeloPorFilepath(const char *filepath, const char *nome);
 void RenderModels(void);
+void DrawSelectedObjectOrigins(Camera camera);
 void UnloadAllModels(void);
 void ClearActiveModels(void);
 bool RaycastModels(Ray ray, Vector3 *hitPos, float *hitDist);
+bool RaycastModelsEx(Ray ray, Vector3 *hitPos, float *hitDist, int *hitObjectId);
 void SetSelectedModelByObjetoId(int idObjeto);
 void CarregarModeloParaObjeto(const char *filepath, const char *nome, int idObjeto);
 void RenderPrototypePreview(const ObjetoCena *obj, RenderTexture2D *target);

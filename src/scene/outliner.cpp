@@ -1,8 +1,11 @@
 #include "outliner.h"
 #include "scene_manager.h"
+#include "assets/model_manager.h"
 #include "editor/ui/properties_panel.h"
 #include "editor/ui/text_input.h"
 #include "editor/ui/ui_style.h"
+#include <ctype.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -58,6 +61,8 @@ static int dropSceneIndex = -1;
 static bool arrastando = false;
 static int objetoArrastadoId = -1;
 static int alvoArrasteId = -1;
+static Vector2 arrasteInicioMouse = {0};
+static bool cliqueSemShiftPendenteSelecaoUnica = false;
 
 static bool renomeando = false;
 static int renomearObjetoId = -1;
@@ -90,8 +95,20 @@ static bool objectSettingsScrollDragging = false;
 static float objectSettingsScrollDragOffset = 0.0f;
 static int objetoSelecionadoPrincipalId = -1;
 
-extern void SetSelectedModelByObjetoId(int idObjeto);
 static int ObterPaiId(int id);
+static bool TemAncestralSelecionado(int id);
+static bool EhDescendenteId(int paiId, int filhoId);
+static void PushUndo(AcaoUndo acao);
+static int ColetarIdsSelecionados(int *selectedIds, int maxCount);
+int BuscarIndicePorId(int id);
+
+static bool ArrasteUltrapassouLimite(Vector2 inicio, Vector2 atual)
+{
+    const float limite = 4.0f;
+    float dx = atual.x - inicio.x;
+    float dy = atual.y - inicio.y;
+    return (dx * dx + dy * dy) >= (limite * limite);
+}
 
 static bool ShiftHeld(void)
 {
@@ -135,6 +152,503 @@ static int PrimeiroObjetoSelecionadoId(void)
         if (objetos[i].selecionado)
             return objetos[i].id;
     return -1;
+}
+
+static int IndexInIdList(int id, const int *ids, int count)
+{
+    for (int i = 0; i < count; i++)
+    {
+        if (ids[i] == id)
+            return i;
+    }
+    return -1;
+}
+
+static void ColetarSubarvoreIdsDuplicacao(int id, int *ids, int *count, int maxCount)
+{
+    if (!ids || !count || *count >= maxCount)
+        return;
+    if (IndexInIdList(id, ids, *count) != -1)
+        return;
+
+    ids[(*count)++] = id;
+    for (int i = 0; i < totalObjetos; i++)
+    {
+        if (objetos[i].paiId == id)
+            ColetarSubarvoreIdsDuplicacao(objetos[i].id, ids, count, maxCount);
+    }
+}
+
+static int MapearIdDuplicado(int oldId, const int *oldIds, const int *newIds, int count)
+{
+    for (int i = 0; i < count; i++)
+    {
+        if (oldIds[i] == oldId)
+            return newIds[i];
+    }
+    return -1;
+}
+
+static void NormalizeDuplicateNameBase(const char *sourceName, char *outBase, size_t outSize)
+{
+    if (!outBase || outSize == 0)
+        return;
+    outBase[0] = '\0';
+
+    const char *fallback = (sourceName && sourceName[0] != '\0') ? sourceName : "Object";
+    strncpy(outBase, fallback, outSize - 1);
+    outBase[outSize - 1] = '\0';
+
+    int len = (int)strlen(outBase);
+    while (len > 0 && outBase[len - 1] == ' ')
+        outBase[--len] = '\0';
+
+    // Limpa nomes legados como "Cube Copy" e "Cube Copy 2".
+    bool removedCopy = true;
+    while (removedCopy && len > 0)
+    {
+        removedCopy = false;
+        int end = len;
+        while (end > 0 && isdigit((unsigned char)outBase[end - 1]))
+            end--;
+        if (end < len && end > 0 && outBase[end - 1] == ' ')
+        {
+            len = end - 1;
+            outBase[len] = '\0';
+            while (len > 0 && outBase[len - 1] == ' ')
+                outBase[--len] = '\0';
+        }
+
+        if (len >= 5 && strcmp(&outBase[len - 5], " Copy") == 0)
+        {
+            len -= 5;
+            outBase[len] = '\0';
+            while (len > 0 && outBase[len - 1] == ' ')
+                outBase[--len] = '\0';
+            removedCopy = true;
+        }
+    }
+
+    // Se o nome ja termina com numero, trata esse numero como sufixo de instancia.
+    int end = len;
+    while (end > 0 && isdigit((unsigned char)outBase[end - 1]))
+        end--;
+    if (end < len && end > 0 && outBase[end - 1] == ' ')
+    {
+        len = end - 1;
+        outBase[len] = '\0';
+        while (len > 0 && outBase[len - 1] == ' ')
+            outBase[--len] = '\0';
+    }
+
+    if (outBase[0] == '\0')
+    {
+        strncpy(outBase, "Object", outSize - 1);
+        outBase[outSize - 1] = '\0';
+    }
+}
+
+static void BuildDuplicateObjectName(const char *sourceName, char *outName, size_t outSize)
+{
+    if (!outName || outSize == 0)
+        return;
+    outName[0] = '\0';
+
+    char base[32] = {0};
+    NormalizeDuplicateNameBase(sourceName, base, sizeof(base));
+
+    int highestSuffix = -1;
+    for (int i = 0; i < totalObjetos; i++)
+    {
+        const char *name = objetos[i].nome;
+        size_t baseLen = strlen(base);
+        if (strcmp(name, base) == 0)
+        {
+            if (highestSuffix < 0)
+                highestSuffix = 0;
+            continue;
+        }
+        if (strncmp(name, base, baseLen) != 0)
+            continue;
+        if (name[baseLen] != ' ')
+            continue;
+
+        const char *suffix = name + baseLen + 1;
+        if (*suffix == '\0')
+            continue;
+        bool allDigits = true;
+        for (int c = 0; suffix[c] != '\0'; c++)
+        {
+            if (!isdigit((unsigned char)suffix[c]))
+            {
+                allDigits = false;
+                break;
+            }
+        }
+        if (!allDigits)
+            continue;
+
+        int value = atoi(suffix);
+        if (value > highestSuffix)
+            highestSuffix = value;
+    }
+
+    if (highestSuffix < 0)
+    {
+        strncpy(outName, base, outSize - 1);
+        outName[outSize - 1] = '\0';
+        if (!ObjetoExisteNoOutliner(outName))
+            return;
+        highestSuffix = 0;
+    }
+
+    for (int i = highestSuffix + 1; i < 1000; i++)
+    {
+        snprintf(outName, outSize, "%s %d", base, i);
+        outName[outSize - 1] = '\0';
+        if (!ObjetoExisteNoOutliner(outName))
+            return;
+    }
+
+    snprintf(outName, outSize, "Object %d", ObterProximoId());
+    outName[outSize - 1] = '\0';
+}
+
+static int ColetarIdsSelecionados(int *selectedIds, int maxCount)
+{
+    if (!selectedIds || maxCount <= 0)
+        return 0;
+
+    int selectedCount = 0;
+    for (int i = 0; i < totalObjetos && selectedCount < maxCount; i++)
+    {
+        if (!objetos[i].selecionado)
+            continue;
+        selectedIds[selectedCount++] = objetos[i].id;
+    }
+    return selectedCount;
+}
+
+static int ColetarRaizesSelecionadas(int *rootIds, int maxCount)
+{
+    if (!rootIds || maxCount <= 0)
+        return 0;
+
+    int rootCount = 0;
+    for (int i = 0; i < totalObjetos && rootCount < maxCount; i++)
+    {
+        if (!objetos[i].selecionado)
+            continue;
+        if (TemAncestralSelecionado(objetos[i].id))
+            continue;
+        rootIds[rootCount++] = objetos[i].id;
+    }
+    return rootCount;
+}
+
+static int ColetarIdsDeArraste(int draggedId, int *dragIds, int maxCount)
+{
+    if (!dragIds || maxCount <= 0)
+        return 0;
+
+    int draggedIdx = BuscarIndicePorId(draggedId);
+    if (draggedIdx == -1)
+        return 0;
+
+    if (!objetos[draggedIdx].selecionado)
+    {
+        dragIds[0] = draggedId;
+        return 1;
+    }
+
+    int dragCount = ColetarRaizesSelecionadas(dragIds, maxCount);
+    if (dragCount <= 0)
+    {
+        dragIds[0] = draggedId;
+        return 1;
+    }
+
+    return dragCount;
+}
+
+static bool PodeSoltarGrupoNoAlvo(const int *dragIds, int dragCount, int targetId)
+{
+    if (!dragIds || dragCount <= 0 || targetId <= 0)
+        return false;
+
+    for (int i = 0; i < dragCount; i++)
+    {
+        if (dragIds[i] <= 0)
+            continue;
+        if (dragIds[i] == targetId || EhDescendenteId(dragIds[i], targetId))
+            return false;
+    }
+
+    return true;
+}
+
+static bool AlgumObjetoDaListaTemPai(const int *ids, int count)
+{
+    if (!ids || count <= 0)
+        return false;
+
+    for (int i = 0; i < count; i++)
+    {
+        int idx = BuscarIndicePorId(ids[i]);
+        if (idx != -1 && objetos[idx].paiId != -1)
+            return true;
+    }
+
+    return false;
+}
+
+static int DesparentarObjetosPorIds(const int *ids, int count)
+{
+    if (!ids || count <= 0)
+        return 0;
+
+    int changedCount = 0;
+    for (int i = 0; i < count; i++)
+    {
+        int idx = BuscarIndicePorId(ids[i]);
+        if (idx == -1 || objetos[idx].paiId == -1)
+            continue;
+
+        PushUndo((AcaoUndo){
+            ACAO_REPARENT,
+            ids[i],
+            objetos[idx].paiId,
+            {0}});
+
+        objetos[idx].paiId = -1;
+        changedCount++;
+    }
+
+    return changedCount;
+}
+
+static void DesparentarObjetosDoContexto(int contextId)
+{
+    int idxContext = BuscarIndicePorId(contextId);
+    if (idxContext == -1)
+        return;
+
+    if (!objetos[idxContext].selecionado)
+    {
+        DesparentarObjetosPorIds(&contextId, 1);
+        return;
+    }
+
+    int selectedIds[MAX_OBJETOS] = {0};
+    int selectedCount = ColetarIdsSelecionados(selectedIds, MAX_OBJETOS);
+    if (selectedCount <= 0)
+        return;
+
+    DesparentarObjetosPorIds(selectedIds, selectedCount);
+}
+
+static void MoverObjetosDoContextoParaCena(int contextId, int cenaIndex)
+{
+    int idxContext = BuscarIndicePorId(contextId);
+    if (idxContext == -1)
+        return;
+
+    int moveIds[MAX_OBJETOS] = {0};
+    int moveCount = 0;
+
+    if (objetos[idxContext].selecionado)
+        moveCount = ColetarRaizesSelecionadas(moveIds, MAX_OBJETOS);
+
+    if (moveCount <= 0)
+    {
+        moveIds[0] = contextId;
+        moveCount = 1;
+    }
+
+    for (int i = 0; i < moveCount; i++)
+        MoveObjetoParaCena(moveIds[i], cenaIndex);
+}
+
+static bool DuplicarObjetosPorLista(const int *sourceIds, int sourceCount,
+                                    const int *selectionIds, int selectionCount,
+                                    int activeSourceId, Vector3 deslocamento)
+{
+    if (!sourceIds || sourceCount <= 0)
+        return false;
+
+    int duplicateModelCount = 0;
+    int validSourceCount = 0;
+
+    for (int i = 0; i < sourceCount; i++)
+    {
+        int idx = BuscarIndicePorId(sourceIds[i]);
+        if (idx == -1)
+            continue;
+
+        PropertiesSyncToObjeto(&objetos[idx]);
+        if (objetos[idx].caminhoModelo[0] != '\0')
+            duplicateModelCount++;
+        validSourceCount++;
+    }
+
+    if (validSourceCount <= 0)
+        return false;
+    if (totalObjetos + validSourceCount > MAX_OBJETOS)
+    {
+        TraceLog(LOG_WARNING, "Nao foi possivel duplicar: limite maximo de objetos atingido.");
+        return false;
+    }
+
+    if (modelManager.modelCount + duplicateModelCount > MAX_MODELS)
+    {
+        TraceLog(LOG_WARNING, "Nao foi possivel duplicar: limite maximo de modelos ativos atingido.");
+        return false;
+    }
+
+    int oldIds[MAX_OBJETOS] = {0};
+    int newIds[MAX_OBJETOS] = {0};
+    int createdCount = 0;
+
+    for (int i = 0; i < sourceCount; i++)
+    {
+        int idx = BuscarIndicePorId(sourceIds[i]);
+        if (idx == -1)
+            continue;
+
+        ObjetoCena src = objetos[idx];
+        char duplicateName[32] = {0};
+        BuildDuplicateObjectName(src.nome, duplicateName, sizeof(duplicateName));
+
+        Vector3 newPos = {
+            src.posicao.x + deslocamento.x,
+            src.posicao.y + deslocamento.y,
+            src.posicao.z + deslocamento.z};
+
+        int newId = RegistrarObjeto(duplicateName, newPos, -1);
+        int newIdx = BuscarIndicePorId(newId);
+        if (newId <= 0 || newIdx == -1)
+            continue;
+
+        objetos[newIdx] = src;
+        objetos[newIdx].id = newId;
+        strncpy(objetos[newIdx].nome, duplicateName, MAX_NOME);
+        objetos[newIdx].nome[MAX_NOME] = '\0';
+        objetos[newIdx].posicao = newPos;
+        objetos[newIdx].paiId = -1;
+        objetos[newIdx].selecionado = false;
+
+        oldIds[createdCount] = src.id;
+        newIds[createdCount] = newId;
+        createdCount++;
+    }
+
+    if (createdCount <= 0)
+        return false;
+
+    for (int i = 0; i < createdCount; i++)
+    {
+        int srcIdx = BuscarIndicePorId(oldIds[i]);
+        int dstIdx = BuscarIndicePorId(newIds[i]);
+        if (srcIdx == -1 || dstIdx == -1)
+            continue;
+
+        int mappedParent = MapearIdDuplicado(objetos[srcIdx].paiId, oldIds, newIds, createdCount);
+        objetos[dstIdx].paiId = (mappedParent != -1) ? mappedParent : -1;
+
+        PropertiesSyncFromObjeto(&objetos[dstIdx]);
+        if (objetos[dstIdx].caminhoModelo[0] != '\0')
+            CarregarModeloParaObjeto(objetos[dstIdx].caminhoModelo, objetos[dstIdx].nome, objetos[dstIdx].id);
+    }
+
+    LimparSelecaoObjetos();
+
+    int firstSelectedDuplicateId = -1;
+    for (int i = 0; i < selectionCount; i++)
+    {
+        int duplicatedId = MapearIdDuplicado(selectionIds[i], oldIds, newIds, createdCount);
+        int idx = BuscarIndicePorId(duplicatedId);
+        if (idx == -1)
+            continue;
+
+        objetos[idx].selecionado = true;
+        if (firstSelectedDuplicateId == -1)
+            firstSelectedDuplicateId = duplicatedId;
+    }
+
+    int duplicatedActiveId = MapearIdDuplicado(activeSourceId, oldIds, newIds, createdCount);
+    int activeIdx = BuscarIndicePorId(duplicatedActiveId);
+    if (activeIdx != -1 && objetos[activeIdx].selecionado)
+        objetoSelecionadoPrincipalId = duplicatedActiveId;
+    else if (firstSelectedDuplicateId != -1)
+        objetoSelecionadoPrincipalId = firstSelectedDuplicateId;
+    else
+    {
+        int idx = BuscarIndicePorId(newIds[0]);
+        if (idx != -1)
+        {
+            objetos[idx].selecionado = true;
+            objetoSelecionadoPrincipalId = newIds[0];
+        }
+    }
+
+    SetSelectedModelByObjetoId(ObterObjetoSelecionadoId());
+    return true;
+}
+
+static bool DuplicarObjetosPorRaizes(const int *rootIds, int rootCount, Vector3 deslocamento)
+{
+    if (!rootIds || rootCount <= 0)
+        return false;
+
+    int sourceIds[MAX_OBJETOS] = {0};
+    int sourceCount = 0;
+
+    for (int i = 0; i < rootCount; i++)
+    {
+        if (BuscarIndicePorId(rootIds[i]) == -1)
+            continue;
+        ColetarSubarvoreIdsDuplicacao(rootIds[i], sourceIds, &sourceCount, MAX_OBJETOS);
+    }
+
+    if (sourceCount <= 0)
+        return false;
+
+    int activeRootId = rootIds[0];
+    if (IndexInIdList(objetoSelecionadoPrincipalId, rootIds, rootCount) != -1)
+        activeRootId = objetoSelecionadoPrincipalId;
+
+    return DuplicarObjetosPorLista(sourceIds, sourceCount, rootIds, rootCount, activeRootId, deslocamento);
+}
+
+Vector3 ObterDeslocamentoPadraoDuplicacao(void)
+{
+    return (Vector3){0.0f, 0.0f, 0.0f};
+}
+
+static bool DuplicarObjetosDoContexto(int contextId, Vector3 deslocamento)
+{
+    int idxContext = BuscarIndicePorId(contextId);
+    if (idxContext == -1)
+        return false;
+
+    int selectedIds[MAX_OBJETOS] = {0};
+    int selectedCount = ColetarIdsSelecionados(selectedIds, MAX_OBJETOS);
+
+    // Mantem o comportamento da viewport: se ha multiseleção ativa,
+    // a duplicação sempre considera o conjunto selecionado inteiro.
+    if (selectedCount > 1 && objetos[idxContext].selecionado)
+        return DuplicarObjetosPorLista(selectedIds, selectedCount, selectedIds, selectedCount,
+                                       objetoSelecionadoPrincipalId, deslocamento);
+
+    // Se o objeto do menu faz parte da seleção atual, duplica essa seleção.
+    if (selectedCount == 1 && objetos[idxContext].selecionado)
+        return DuplicarObjetosPorRaizes(selectedIds, selectedCount, deslocamento);
+
+    // Caso contrário, duplica apenas o objeto contextual.
+    selectedIds[0] = contextId;
+    selectedCount = 1;
+
+    return DuplicarObjetosPorRaizes(selectedIds, selectedCount, deslocamento);
 }
 
 static void DeleteSelectedScenesFromContext(int contextIndex)
@@ -265,6 +779,8 @@ void InitOutliner(void)
     undoTopo = 0;
     menuAtivo = false;
     arrastando = false;
+    cliqueSemShiftPendenteSelecaoUnica = false;
+    arrasteInicioMouse = (Vector2){0};
     renomeando = false;
     outlinerScroll = 0.0f;
     outlinerMaxScroll = 0.0f;
@@ -523,18 +1039,36 @@ static int DrawOutlinerItem(int id, int nivel, int y)
                 SetSelectedModelByObjetoId(ObterObjetoSelecionadoId());
                 arrastando = false;
                 objetoArrastadoId = -1;
+                cliqueSemShiftPendenteSelecaoUnica = false;
             }
             else
             {
-                SelecionarObjetoPorId(id);
+                int selectedIds[MAX_OBJETOS] = {0};
+                int selectedCount = ColetarIdsSelecionados(selectedIds, MAX_OBJETOS);
+                bool cliqueEmSelecionadoComGrupo = objetos[index].selecionado && selectedCount > 1;
+
+                if (!cliqueEmSelecionadoComGrupo)
+                    SelecionarObjetoPorId(id);
+                else
+                    objetoSelecionadoPrincipalId = id;
                 SetSelectedModelByObjetoId(id);
                 objetoArrastadoId = id;
                 arrastando = true;
+                arrasteInicioMouse = mouse;
+                cliqueSemShiftPendenteSelecaoUnica = cliqueEmSelecionadoComGrupo;
             }
         }
 
         if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON))
         {
+            if (!objetos[index].selecionado)
+                SelecionarObjetoPorId(id);
+            else
+                objetoSelecionadoPrincipalId = id;
+            SetSelectedModelByObjetoId(id);
+            arrastando = false;
+            objetoArrastadoId = -1;
+            cliqueSemShiftPendenteSelecaoUnica = false;
             menuAtivo = true;
             menuObjetoId = id;
             menuPos = mouse;
@@ -554,26 +1088,50 @@ static void ProcessarDragDrop(void)
 {
     if (arrastando && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
     {
-        if (dropSceneIndex != -1 && dropSceneIndex != GetActiveSceneIndex())
+        bool dragConfirmado = ArrasteUltrapassouLimite(arrasteInicioMouse, GetMousePosition());
+
+        if (cliqueSemShiftPendenteSelecaoUnica && !dragConfirmado)
         {
-            MoveObjetoParaCena(objetoArrastadoId, dropSceneIndex);
+            SelecionarObjetoPorId(objetoArrastadoId);
+            SetSelectedModelByObjetoId(objetoArrastadoId);
+            arrastando = false;
+            objetoArrastadoId = -1;
+            alvoArrasteId = -1;
+            cliqueSemShiftPendenteSelecaoUnica = false;
+            return;
+        }
+
+        int dragIds[MAX_OBJETOS] = {0};
+        int dragCount = ColetarIdsDeArraste(objetoArrastadoId, dragIds, MAX_OBJETOS);
+
+        if (dropSceneIndex != -1)
+        {
+            if (dropSceneIndex == GetActiveSceneIndex())
+                DesparentarObjetosPorIds(dragIds, dragCount);
+            else
+            {
+                for (int i = 0; i < dragCount; i++)
+                    MoveObjetoParaCena(dragIds[i], dropSceneIndex);
+            }
             arrastando = false;
             objetoArrastadoId = -1;
             alvoArrasteId = -1;
             dropSceneIndex = -1;
+            cliqueSemShiftPendenteSelecaoUnica = false;
             return;
         }
 
-        if (alvoArrasteId != -1 &&
-            alvoArrasteId != objetoArrastadoId &&
-            !EhDescendenteId(objetoArrastadoId, alvoArrasteId))
+        if (dragConfirmado && PodeSoltarGrupoNoAlvo(dragIds, dragCount, alvoArrasteId))
         {
-            int idx = BuscarIndicePorId(objetoArrastadoId);
-            if (idx != -1)
+            for (int i = 0; i < dragCount; i++)
             {
+                int idx = BuscarIndicePorId(dragIds[i]);
+                if (idx == -1 || objetos[idx].paiId == alvoArrasteId)
+                    continue;
+
                 PushUndo((AcaoUndo){
                     ACAO_REPARENT,
-                    objetoArrastadoId,
+                    dragIds[i],
                     objetos[idx].paiId,
                     {0}});
 
@@ -584,20 +1142,30 @@ static void ProcessarDragDrop(void)
         arrastando = false;
         objetoArrastadoId = -1;
         alvoArrasteId = -1;
+        cliqueSemShiftPendenteSelecaoUnica = false;
     }
 }
 
 static void DrawContextMenu(void)
 {
     const float itemH = 26.0f;
+    const Vector3 duplicateOffset = ObterDeslocamentoPadraoDuplicacao();
     int idxMenu = BuscarIndicePorId(menuObjetoId);
-    bool canUnparent = (idxMenu != -1 && objetos[idxMenu].paiId != -1);
-    int menuItems = canUnparent ? 4 : 3;
+    int selectedIds[MAX_OBJETOS] = {0};
+    int selectedCount = ColetarIdsSelecionados(selectedIds, MAX_OBJETOS);
+    bool contextUsesSelection = (idxMenu != -1 && objetos[idxMenu].selecionado && selectedCount > 1);
+    bool canUnparent = false;
+    if (contextUsesSelection)
+        canUnparent = AlgumObjetoDaListaTemPai(selectedIds, selectedCount);
+    else
+        canUnparent = (idxMenu != -1 && objetos[idxMenu].paiId != -1);
+    int menuItems = canUnparent ? 5 : 4;
     Rectangle menu = {(float)menuPos.x, (float)menuPos.y, 190.0f, itemH * menuItems};
     Rectangle itemRename = {menu.x, menu.y, menu.width, itemH};
-    Rectangle itemMove = {menu.x, menu.y + itemH, menu.width, itemH};
-    Rectangle itemUnparent = {menu.x, menu.y + itemH * 2.0f, menu.width, itemH};
-    Rectangle itemDelete = {menu.x, menu.y + itemH * (canUnparent ? 3.0f : 2.0f), menu.width, itemH};
+    Rectangle itemDuplicate = {menu.x, menu.y + itemH, menu.width, itemH};
+    Rectangle itemMove = {menu.x, menu.y + itemH * 2.0f, menu.width, itemH};
+    Rectangle itemUnparent = {menu.x, menu.y + itemH * 3.0f, menu.width, itemH};
+    Rectangle itemDelete = {menu.x, menu.y + itemH * (canUnparent ? 4.0f : 3.0f), menu.width, itemH};
 
     Vector2 mouse = GetMousePosition();
     const UIStyle *style = GetUIStyle();
@@ -605,11 +1173,14 @@ static void DrawContextMenu(void)
     DrawRectangleRec(menu, COR_MENU);
 
     bool hoverRename = CheckCollisionPointRec(mouse, itemRename);
+    bool hoverDuplicate = CheckCollisionPointRec(mouse, itemDuplicate);
     bool hoverMove = CheckCollisionPointRec(mouse, itemMove);
     bool hoverUnparent = canUnparent && CheckCollisionPointRec(mouse, itemUnparent);
     bool hoverDelete = CheckCollisionPointRec(mouse, itemDelete);
     if (hoverRename)
         DrawRectangleRec(itemRename, style->accent);
+    if (hoverDuplicate)
+        DrawRectangleRec(itemDuplicate, style->accent);
     if (hoverMove)
         DrawRectangleRec(itemMove, style->accent);
     if (hoverUnparent)
@@ -618,12 +1189,13 @@ static void DrawContextMenu(void)
         DrawRectangleRec(itemDelete, style->accent);
 
     DrawText("Renomear", (int)itemRename.x + 10, (int)itemRename.y + 6, 14, hoverRename ? style->buttonTextHover : COR_TEXTO);
+    DrawText("Duplicar", (int)itemDuplicate.x + 10, (int)itemDuplicate.y + 6, 14, hoverDuplicate ? style->buttonTextHover : COR_TEXTO);
     DrawText("Mover para Cena", (int)itemMove.x + 10, (int)itemMove.y + 6, 14, hoverMove ? style->buttonTextHover : COR_TEXTO);
     if (canUnparent)
         DrawText("Desparentar", (int)itemUnparent.x + 10, (int)itemUnparent.y + 6, 14, hoverUnparent ? style->buttonTextHover : COR_TEXTO);
     DrawText("Deletar", (int)itemDelete.x + 10, (int)itemDelete.y + 6, 14, hoverDelete ? style->buttonTextHover : COR_TEXTO);
 
-    Rectangle submenu = {menu.x + menu.width + 2, menu.y + itemH, 170.0f, (float)(GetSceneCount() * 22)};
+    Rectangle submenu = {menu.x + menu.width + 2, itemMove.y, 170.0f, (float)(GetSceneCount() * 22)};
     menuMoverHoverScene = -1;
     bool mouseNoSubmenu = CheckCollisionPointRec(mouse, submenu);
     if (CheckCollisionPointRec(mouse, itemMove) || mouseNoSubmenu)
@@ -669,15 +1241,19 @@ static void DrawContextMenu(void)
             }
             menuAtivo = false;
         }
+        else if (CheckCollisionPointRec(mouse, itemDuplicate))
+        {
+            DuplicarObjetosDoContexto(menuObjetoId, duplicateOffset);
+            menuAtivo = false;
+        }
         else if (menuMoverCenaAtivo && menuMoverHoverScene != -1 && menuMoverHoverScene != GetActiveSceneIndex())
         {
-            MoveObjetoParaCena(menuObjetoId, menuMoverHoverScene);
+            MoverObjetosDoContextoParaCena(menuObjetoId, menuMoverHoverScene);
             menuAtivo = false;
         }
         else if (canUnparent && CheckCollisionPointRec(mouse, itemUnparent))
         {
-            if (idxMenu != -1)
-                objetos[idxMenu].paiId = -1;
+            DesparentarObjetosDoContexto(menuObjetoId);
             menuAtivo = false;
         }
         else if (CheckCollisionPointRec(mouse, itemDelete))
@@ -773,6 +1349,9 @@ static void DrawObjectSettings(float startY, float height)
         else
         {
             SincronizarNomeSelecionadoProp(selecionadoId, objetos[idx].nome);
+            int selectedIds[MAX_OBJETOS] = {0};
+            int selectedCount = ColetarIdsSelecionados(selectedIds, MAX_OBJETOS);
+            bool selectedHasAnyParent = AlgumObjetoDaListaTemPai(selectedIds, selectedCount);
 
             DrawText("Nome", x + 14, y, 14, COR_TEXTO);
             y += 18;
@@ -829,19 +1408,20 @@ static void DrawObjectSettings(float startY, float height)
                          x + 14, y, 14, secondaryWhite);
             }
 
-            if (objetos[idx].paiId != -1)
+            if (selectedHasAnyParent)
             {
                 y += 22;
                 Rectangle btn = {(float)(x + 14), (float)y, (float)(PAINEL_LARGURA - 28), 22.0f};
                 Color btnCor = COR_ITEM_SEL;
                 DrawRectangleRec(btn, btnCor);
                 DrawRectangleLinesEx(btn, 1, COR_BORDA);
-                DrawText("Desparentar", (int)btn.x + 8, (int)btn.y + 4, 14, UiTextForBackground(btnCor));
+                const char *unparentLabel = (selectedCount > 1) ? "Desparentar selecionados" : "Desparentar";
+                DrawText(unparentLabel, (int)btn.x + 8, (int)btn.y + 4, 14, UiTextForBackground(btnCor));
 
                 if (CheckCollisionPointRec(mouse, btn) &&
                     IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
                 {
-                    objetos[idx].paiId = -1;
+                    DesparentarObjetosPorIds(selectedIds, selectedCount);
                 }
 
                 y += 30;
@@ -954,7 +1534,7 @@ void DrawOutliner(void)
     else if (mouseEmOutliner && wheel != 0.0f)
         outlinerScroll -= wheel * 24.0f;
 
-    if (mouseEmSettings)
+    if (mouseEmSettings || menuAtivo || menuCenaContextoAtivo)
         bloquearCliqueOutliner = true;
     bool mouseSobreCena = false;
 
@@ -984,7 +1564,7 @@ void DrawOutliner(void)
             Color fundo = ativo ? style->accent : (selecionada ? style->accentSoft : style->itemBg);
             if (hover && !ativo && !selecionada)
                 fundo = style->itemHover;
-            if (arrastando && hover && i != activeScene)
+            if (arrastando && hover)
             {
                 fundo = COR_ITEM_DRAG;
                 dropSceneIndex = i;
@@ -1143,7 +1723,7 @@ void DrawOutliner(void)
         outlinerScrollDragging = false;
     }
 
-    if (!mouseEmSettings)
+    if (!mouseEmSettings && !menuAtivo && !menuCenaContextoAtivo)
         bloquearCliqueOutliner = false;
 
     if (menuCenaContextoAtivo)
@@ -1290,6 +1870,30 @@ void SelecionarObjetoPorId(int id)
         objetos[idx].selecionado = true;
         objetoSelecionadoPrincipalId = id;
     }
+}
+
+void AdicionarObjetoSelecionadoPorId(int id)
+{
+    int idx = BuscarIndicePorId(id);
+    if (idx == -1)
+        return;
+
+    objetos[idx].selecionado = true;
+    objetoSelecionadoPrincipalId = id;
+}
+
+bool DuplicarObjetosSelecionados(Vector3 deslocamento)
+{
+    int selectedIds[MAX_OBJETOS] = {0};
+    int selectedCount = ColetarIdsSelecionados(selectedIds, MAX_OBJETOS);
+    if (selectedCount <= 0)
+        return false;
+
+    if (selectedCount > 1)
+        return DuplicarObjetosPorLista(selectedIds, selectedCount, selectedIds, selectedCount,
+                                       objetoSelecionadoPrincipalId, deslocamento);
+
+    return DuplicarObjetosPorRaizes(selectedIds, selectedCount, deslocamento);
 }
 
 int ObterProximoId(void)

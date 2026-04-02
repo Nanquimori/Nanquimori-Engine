@@ -119,6 +119,32 @@ if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
 endif()
 
 # NANQUIMORI_SOURCES at CMakeLists.txt:21 (file)
+file(GLOB_RECURSE NEW_GLOB LIST_DIRECTORIES false "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/physics/*.cpp")
+set(OLD_GLOB
+  "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/physics/nanquimori_physics.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  set(NEW_ONLY ${NEW_GLOB})
+  set(OLD_ONLY ${OLD_GLOB})
+  list(REMOVE_ITEM NEW_ONLY ${OLD_GLOB})
+  list(REMOVE_ITEM OLD_ONLY ${NEW_GLOB})
+  if(NEW_ONLY)
+    message("The following files were added:")
+    foreach(VAR_FILE IN LISTS NEW_ONLY)
+      message("  +${VAR_FILE}")
+    endforeach()
+  endif()
+  if(OLD_ONLY)
+    message("The following files were removed:")
+    foreach(VAR_FILE IN LISTS OLD_ONLY)
+      message("  -${VAR_FILE}")
+    endforeach()
+  endif()
+  file(TOUCH_NOCREATE "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/cmake.verify_globs")
+endif()
+
+# NANQUIMORI_SOURCES at CMakeLists.txt:21 (file)
 file(GLOB_RECURSE NEW_GLOB LIST_DIRECTORIES false "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/scene/*.cpp")
 set(OLD_GLOB
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/scene/outliner.cpp"

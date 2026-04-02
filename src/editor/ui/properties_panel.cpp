@@ -777,13 +777,17 @@ void DrawPropertiesPanel(void)
 
         Rectangle colliderToggle = {(float)(x + 14), (float)y, 14.0f, 14.0f};
         Rectangle colliderRow = {(float)(x + 14), (float)y - 2.0f, (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f};
-        bool colliderOn = (phys && phys->collider);
+        bool colliderOn = (phys && (phys->collider || phys->terrain));
         DrawRectangleLinesEx(colliderToggle, 1, COR_BORDA);
         if (colliderOn)
             DrawRectangle((int)colliderToggle.x + 3, (int)colliderToggle.y + 3, 8, 8, COR_ITEM_SEL);
         DrawText("Collider", x + 34, y - 2, 12, colliderOn ? activeCheckText : COR_TEXTO_SECUNDARIO);
         if (allowInput && CheckCollisionPointRec(mouse, colliderRow) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && phys)
-            phys->collider = !phys->collider;
+        {
+            phys->collider = !colliderOn;
+            if (!phys->collider)
+                phys->terrain = false;
+        }
         y += 18;
 
         Rectangle gravityToggle = {(float)(x + 14), (float)y, 14.0f, 14.0f};
@@ -797,7 +801,7 @@ void DrawPropertiesPanel(void)
             phys->gravity = !phys->gravity;
         y += 18;
 
-        if (phys && phys->collider)
+        if (phys && (phys->collider || phys->terrain))
         {
             DrawText("Collision", x + 14, y, 12, COR_TEXTO);
             y += 18;
@@ -811,7 +815,6 @@ void DrawPropertiesPanel(void)
                 showCollisionDebug = !showCollisionDebug;
             y += 18;
 
-            phys->shapeType = COLLISION_SHAPE_MESH_BOUNDS;
             DrawText("Collision Mode", x + 14, y, 12, COR_TEXTO);
             y += 18;
 
@@ -1272,7 +1275,7 @@ bool PropertiesHasCollider(int index)
     if (index <= 0)
         return false;
     PhysEntry *phys = EnsurePhysEntry(index);
-    return phys ? phys->collider : false;
+    return phys ? (phys->collider || phys->terrain) : false;
 }
 
 bool PropertiesIsTerrain(int index)
@@ -1300,7 +1303,7 @@ int PropertiesGetCollisionShape(int index)
     PhysEntry *phys = EnsurePhysEntry(index);
     if (!phys)
         return COLLISION_SHAPE_MESH_BOUNDS;
-    return COLLISION_SHAPE_MESH_BOUNDS;
+    return phys->shapeType;
 }
 
 Vector3 PropertiesGetCollisionSize(int index)
