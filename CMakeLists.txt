@@ -18,7 +18,7 @@ if (NOT RAYLIB_PATH)
 endif()
 
 # Collect sources
-file(GLOB_RECURSE NANQUIMORI_COMMON_SOURCES
+file(GLOB_RECURSE NANQUIMORI_SOURCES
     CONFIGURE_DEPENDS
     "${PROJECT_SOURCE_DIR}/src/app/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/editor/ui/*.cpp"
@@ -26,63 +26,38 @@ file(GLOB_RECURSE NANQUIMORI_COMMON_SOURCES
     "${PROJECT_SOURCE_DIR}/src/physics/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/scene/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/assets/*.cpp"
-    "${PROJECT_SOURCE_DIR}/src/runtime/*.cpp"
     "${PROJECT_SOURCE_DIR}/src/tools/*.cpp"
 )
 
-set(NANQUIMORI_EDITOR_MAIN "${PROJECT_SOURCE_DIR}/src/app/main.cpp")
-set(NANQUIMORI_RUNTIME_MAIN "${PROJECT_SOURCE_DIR}/src/runtime/game_main.cpp")
-list(REMOVE_ITEM NANQUIMORI_COMMON_SOURCES "${NANQUIMORI_EDITOR_MAIN}")
-list(REMOVE_ITEM NANQUIMORI_COMMON_SOURCES "${NANQUIMORI_RUNTIME_MAIN}")
+add_executable(NanquimoriEngine ${NANQUIMORI_SOURCES})
 
-add_executable(NanquimoriEngine ${NANQUIMORI_COMMON_SOURCES} "${NANQUIMORI_EDITOR_MAIN}")
-if (WIN32)
-    add_executable(NanquimoriPlayer WIN32 ${NANQUIMORI_COMMON_SOURCES} "${NANQUIMORI_RUNTIME_MAIN}")
-else()
-    add_executable(NanquimoriPlayer ${NANQUIMORI_COMMON_SOURCES} "${NANQUIMORI_RUNTIME_MAIN}")
-endif()
-
-foreach(target NanquimoriEngine NanquimoriPlayer)
-    target_include_directories(${target} PRIVATE
-        "${PROJECT_SOURCE_DIR}/src"
-    )
-endforeach()
+target_include_directories(NanquimoriEngine PRIVATE
+    "${PROJECT_SOURCE_DIR}/src"
+)
 
 # Try to use local raylib checkout if present; otherwise expect a system install
 if (EXISTS "${RAYLIB_PATH}/CMakeLists.txt")
     add_subdirectory("${RAYLIB_PATH}" "${CMAKE_BINARY_DIR}/raylib")
-    foreach(target NanquimoriEngine NanquimoriPlayer)
-        target_link_libraries(${target} PRIVATE raylib)
-    endforeach()
+    target_link_libraries(NanquimoriEngine PRIVATE raylib)
 else()
     find_package(raylib CONFIG REQUIRED)
-    foreach(target NanquimoriEngine NanquimoriPlayer)
-        target_link_libraries(${target} PRIVATE raylib)
-    endforeach()
+    target_link_libraries(NanquimoriEngine PRIVATE raylib)
 endif()
 
 # Windows-specific settings
 if (WIN32)
     enable_language(RC)
-    function(nanquimori_attach_icon target icon_path)
-        if (EXISTS "${icon_path}")
-            set(NANQUIMORI_APP_ICON "${icon_path}")
-            set(NANQUIMORI_APP_ICON_RC "${CMAKE_CURRENT_BINARY_DIR}/${target}_icon.rc")
-            configure_file(
-                "${PROJECT_SOURCE_DIR}/src/app/nanquimori_icon.rc.in"
-                "${NANQUIMORI_APP_ICON_RC}"
-                @ONLY
-            )
-            target_sources(${target} PRIVATE "${NANQUIMORI_APP_ICON_RC}")
-        else()
-            message(WARNING "Windows icon not found: ${icon_path}")
-        endif()
-    endfunction()
-
-    nanquimori_attach_icon(NanquimoriEngine "${PROJECT_SOURCE_DIR}/icons/N.ico")
-    nanquimori_attach_icon(NanquimoriPlayer "${PROJECT_SOURCE_DIR}/icons/N.ico")
-
-    foreach(target NanquimoriEngine NanquimoriPlayer)
-        target_compile_definitions(${target} PRIVATE _CRT_SECURE_NO_WARNINGS)
-    endforeach()
+    set(NANQUIMORI_APP_ICON "${PROJECT_SOURCE_DIR}/icons/N.ico")
+    if (EXISTS "${NANQUIMORI_APP_ICON}")
+        set(NANQUIMORI_APP_ICON_RC "${CMAKE_CURRENT_BINARY_DIR}/nanquimori_icon.rc")
+        configure_file(
+            "${PROJECT_SOURCE_DIR}/src/app/nanquimori_icon.rc.in"
+            "${NANQUIMORI_APP_ICON_RC}"
+            @ONLY
+        )
+        target_sources(NanquimoriEngine PRIVATE "${NANQUIMORI_APP_ICON_RC}")
+    else()
+        message(WARNING "Windows icon not found: ${NANQUIMORI_APP_ICON}")
+    endif()
+    target_compile_definitions(NanquimoriEngine PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()

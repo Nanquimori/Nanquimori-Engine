@@ -188,8 +188,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
   "CMakeFiles/4.3.0-rc2/CMakeRCCompiler.cmake"
   "CMakeFiles/4.3.0-rc2/CMakeCXXCompiler.cmake"
   "CMakeFiles/4.3.0-rc2/CMakeCXXCompiler.cmake"
-  "NanquimoriEngine_icon.rc"
-  "NanquimoriPlayer_icon.rc"
+  "nanquimori_icon.rc"
   "CMakeFiles/CMakeDirectoryInformation.cmake"
   "CMakeFiles/4.3.0-rc2/CMakeCCompiler.cmake"
   "CMakeFiles/4.3.0-rc2/CMakeCCompiler.cmake"
@@ -211,7 +210,6 @@ set(CMAKE_MAKEFILE_PRODUCTS
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/NanquimoriEngine.dir/DependInfo.cmake"
-  "CMakeFiles/NanquimoriPlayer.dir/DependInfo.cmake"
   "raylib/CMakeFiles/uninstall.dir/DependInfo.cmake"
   "raylib/raylib/CMakeFiles/raylib.dir/DependInfo.cmake"
   "raylib/raylib/external/glfw/src/CMakeFiles/glfw.dir/DependInfo.cmake"

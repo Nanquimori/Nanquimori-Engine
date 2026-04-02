@@ -1,6 +1,5 @@
 #include "ui_button.h"
 #include "ui_style.h"
-#include <string.h>
 
 static int DefaultInt(int value, int fallback)
 {
@@ -15,44 +14,6 @@ static float DefaultFloat(float value, float fallback)
 static Color DefaultColor(Color value, Color fallback)
 {
     return (value.a == 0) ? fallback : value;
-}
-
-static void FitTextToWidth(const char *text, char *out, size_t outSize, int fontSize, float maxWidth)
-{
-    if (!out || outSize == 0)
-        return;
-    out[0] = '\0';
-    if (!text)
-        return;
-
-    strncpy(out, text, outSize - 1);
-    out[outSize - 1] = '\0';
-
-    if (maxWidth <= 0.0f || MeasureText(out, fontSize) <= maxWidth)
-        return;
-
-    const char *ellipsis = "...";
-    int ellipsisW = MeasureText(ellipsis, fontSize);
-    if ((float)ellipsisW > maxWidth)
-    {
-        out[0] = '\0';
-        return;
-    }
-
-    size_t len = strlen(out);
-    while (len > 0)
-    {
-        out[len - 1] = '\0';
-        if ((float)(MeasureText(out, fontSize) + ellipsisW) <= maxWidth)
-            break;
-        len--;
-    }
-
-    size_t baseLen = strlen(out);
-    if (baseLen + 3 >= outSize)
-        baseLen = outSize - 4;
-    memcpy(out + baseLen, ellipsis, 3);
-    out[baseLen + 3] = '\0';
 }
 
 UIButtonState UIButtonGetState(Rectangle rect)
@@ -106,21 +67,13 @@ void UIButtonDraw(Rectangle rect, const char *text, const Texture2D *icon, const
 
     if (label[0] != '\0')
     {
-        char fittedLabel[256] = {0};
-        float availableW = rect.width - (cursorX - rect.x) - (float)cfg.padding;
-        if (cfg.centerText && !hasIcon)
-            availableW = rect.width - (float)cfg.padding * 2.0f;
-        FitTextToWidth(label, fittedLabel, sizeof(fittedLabel), cfg.fontSize, availableW);
-
         float textY = rect.y + rect.height * 0.5f - cfg.fontSize * 0.5f;
         float textX = cursorX;
         if (cfg.centerText && !hasIcon)
         {
-            float textW = (float)MeasureText(fittedLabel, cfg.fontSize);
+            float textW = (float)MeasureText(label, cfg.fontSize);
             textX = rect.x + rect.width * 0.5f - textW * 0.5f;
         }
-        BeginScissorMode((int)rect.x + 1, (int)rect.y + 1, (int)rect.width - 2, (int)rect.height - 2);
-        DrawText(fittedLabel, (int)textX, (int)textY, cfg.fontSize, txtColor);
-        EndScissorMode();
+        DrawText(label, (int)textX, (int)textY, cfg.fontSize, txtColor);
     }
 }

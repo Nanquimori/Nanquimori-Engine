@@ -1,7 +1,6 @@
 ﻿#include "file_explorer.h"
 #include "scene/scene_manager.h"
 #include "scene/outliner.h"
-#include "export_dialog.h"
 #include "ui_button.h"
 #include "ui_style.h"
 #include <string.h>
@@ -71,12 +70,6 @@ bool MatchFiltroExtensao(const char *caminho, int filtro)
         return strcmp(ext, "gltf") == 0 || strcmp(ext, "GLTF") == 0;
     case 4: // .fbx
         return strcmp(ext, "fbx") == 0 || strcmp(ext, "FBY") == 0;
-    case 5: // .ico / imagens
-        return strcmp(ext, "ico") == 0 || strcmp(ext, "ICO") == 0 ||
-               strcmp(ext, "png") == 0 || strcmp(ext, "PNG") == 0 ||
-               strcmp(ext, "bmp") == 0 || strcmp(ext, "BMP") == 0 ||
-               strcmp(ext, "jpg") == 0 || strcmp(ext, "JPG") == 0 ||
-               strcmp(ext, "jpeg") == 0 || strcmp(ext, "JPEG") == 0;
     default:
         return true;
     }
@@ -169,8 +162,6 @@ void InitFileExplorer(void)
     fileExplorer.itemHoverFile = -1;
     fileExplorer.itemHoverImport = -1;
     fileExplorer.menuFileAbertoEsteFrame = false;
-    fileExplorer.pickPurpose = FILE_EXPLORER_PICK_NONE;
-    fileExplorer.selectedPurpose = FILE_EXPLORER_PICK_NONE;
     fileExplorer.modoProjetoAbrir = false;
     fileExplorer.modoProjetoSalvar = false;
     TextCopy(fileExplorer.bufferNomeProjeto, "");
@@ -191,7 +182,6 @@ void OpenFileExplorer(int filtro)
     fileExplorer.modoEdicao = true;
     fileExplorer.modoEdicaoCaminho = false;
     fileExplorer.extensaoFiltro = filtro;
-    fileExplorer.pickPurpose = FILE_EXPLORER_PICK_MODEL_IMPORT;
     TextCopy(fileExplorer.bufferTexto, "");
     TextCopy(fileExplorer.bufferCaminho, fileExplorer.caminhoAtual);
     fileExplorer.modoProjetoAbrir = false;
@@ -214,7 +204,6 @@ void CloseFileExplorer(void)
     fileExplorer.modoEdicaoCaminho = false;
     fileExplorer.modoProjetoAbrir = false;
     fileExplorer.modoProjetoSalvar = false;
-    fileExplorer.pickPurpose = FILE_EXPLORER_PICK_NONE;
     TextCopy(fileExplorer.bufferTexto, "");
     TextCopy(fileExplorer.bufferCaminho, fileExplorer.caminhoAtual);
     pathFeedbackInvalid = false;
@@ -230,7 +219,6 @@ void OpenProjectExplorer(void)
     fileExplorer.modoEdicao = true;
     fileExplorer.modoEdicaoCaminho = false;
     fileExplorer.extensaoFiltro = 0;
-    fileExplorer.pickPurpose = FILE_EXPLORER_PICK_NONE;
     TextCopy(fileExplorer.bufferTexto, "");
     fileExplorer.modoProjetoAbrir = true;
     fileExplorer.modoProjetoSalvar = false;
@@ -259,39 +247,9 @@ void OpenProjectSaveAs(void)
     fileExplorer.modoEdicaoCaminho = false;
     fileExplorer.modoProjetoAbrir = false;
     fileExplorer.modoProjetoSalvar = true;
-    fileExplorer.pickPurpose = FILE_EXPLORER_PICK_NONE;
     TextCopy(fileExplorer.bufferNomeProjeto, "");
     TextInputInit(&fileExplorer.inputNomeProjeto);
     fileExplorer.inputNomeProjeto.active = true;
-}
-
-void OpenExportIconExplorer(void)
-{
-    fileExplorer.aberto = true;
-    fileExplorer.modoEdicao = true;
-    fileExplorer.modoEdicaoCaminho = false;
-    fileExplorer.extensaoFiltro = 5;
-    fileExplorer.pickPurpose = FILE_EXPLORER_PICK_EXPORT_ICON;
-    TextCopy(fileExplorer.bufferTexto, "");
-    fileExplorer.modoProjetoAbrir = false;
-    fileExplorer.modoProjetoSalvar = false;
-    TextInputInit(&fileExplorer.inputCaminho);
-    TextInputInit(&fileExplorer.inputBusca);
-    fileExplorer.inputBusca.active = true;
-
-    const char *projectDir = GetProjectDir();
-    if (projectDir && projectDir[0] != '\0')
-        TextCopy(fileExplorer.caminhoAtual, projectDir);
-    else
-        TextCopy(fileExplorer.caminhoAtual, GetWorkingDirectory());
-    TextCopy(fileExplorer.bufferCaminho, fileExplorer.caminhoAtual);
-    pathFeedbackInvalid = false;
-    pathFeedbackUntil = 0.0;
-
-    if (fileExplorer.arquivosCarregados)
-        UnloadDirectoryFiles(fileExplorer.arquivos);
-    fileExplorer.arquivos = LoadDirectoryFiles(fileExplorer.caminhoAtual);
-    fileExplorer.arquivosCarregados = true;
 }
 
 void UpdateFileExplorer(void)
@@ -452,7 +410,6 @@ void UpdateFileExplorer(void)
                 }
                 else
                 {
-                    fileExplorer.selectedPurpose = fileExplorer.pickPurpose;
                     CloseFileExplorer();
                     return;
                 }
@@ -546,10 +503,7 @@ void DrawFileExplorer(void)
 
     // Barra superior do explorador
     DrawRectangle(painelX, painelY, painelLargura, BARRA_SUPERIOR, GetUIStyle()->panelBgAlt);
-    const char *title = fileExplorer.modoProjetoAbrir ? "Open Project" : "Import Model";
-    if (fileExplorer.pickPurpose == FILE_EXPLORER_PICK_EXPORT_ICON)
-        title = "Escolher Icone do Executavel";
-    DrawText(title, painelX + 16, painelY + 5, 13, GetUIStyle()->accent);
+    DrawText(fileExplorer.modoProjetoAbrir ? "Open Project" : "Import Model", painelX + 16, painelY + 5, 13, GetUIStyle()->accent);
     DrawText("PATH", painelX + 16, painelY + 24, 10, COR_TEXTO_SUAVE);
 
     TextInputConfig cfg = {0};
@@ -660,29 +614,10 @@ void DrawFileExplorer(void)
 
 bool FileExplorerArquivoSelecionado(char *saida)
 {
-    if (fileExplorer.selectedPurpose != FILE_EXPLORER_PICK_MODEL_IMPORT)
-        return false;
-
     if (fileExplorer.caminhoSelecionado[0] != '\0')
     {
         TextCopy(saida, fileExplorer.caminhoSelecionado);
         TextCopy(fileExplorer.caminhoSelecionado, "");
-        fileExplorer.selectedPurpose = FILE_EXPLORER_PICK_NONE;
-        return true;
-    }
-    return false;
-}
-
-bool FileExplorerConsumeSelectedExportIconPath(char *saida)
-{
-    if (fileExplorer.selectedPurpose != FILE_EXPLORER_PICK_EXPORT_ICON)
-        return false;
-
-    if (fileExplorer.caminhoSelecionado[0] != '\0')
-    {
-        TextCopy(saida, fileExplorer.caminhoSelecionado);
-        TextCopy(fileExplorer.caminhoSelecionado, "");
-        fileExplorer.selectedPurpose = FILE_EXPLORER_PICK_NONE;
         return true;
     }
     return false;
@@ -718,13 +653,12 @@ void UpdateFileMenu(void)
     // Menu principal File
     const float menuX = (float)PAINEL_LARGURA + 8.0f;
     const float menuY = 24.0f;
-    Rectangle menuFileRect = {menuX, menuY, 200.0f, 96.0f};
+    Rectangle menuFileRect = {menuX, menuY, 200.0f, 72.0f};
 
     // Itens do menu
     Rectangle itemImport = {menuFileRect.x, menuFileRect.y, menuFileRect.width, 24.0f};
     Rectangle itemOpen = {menuFileRect.x, menuFileRect.y + 24.0f, menuFileRect.width, 24.0f};
     Rectangle itemSave = {menuFileRect.x, menuFileRect.y + 48.0f, menuFileRect.width, 24.0f};
-    Rectangle itemExport = {menuFileRect.x, menuFileRect.y + 72.0f, menuFileRect.width, 24.0f};
 
     // Área do submenu
     const float submenuItemH = 24.0f;
@@ -747,11 +681,6 @@ void UpdateFileMenu(void)
     else if (CheckCollisionPointRec(mouse, itemSave))
     {
         fileExplorer.itemHoverFile = 2;
-        fileExplorer.mostrarSubmenuImport = false;
-    }
-    else if (CheckCollisionPointRec(mouse, itemExport))
-    {
-        fileExplorer.itemHoverFile = 3;
         fileExplorer.mostrarSubmenuImport = false;
     }
     else if (!CheckCollisionPointRec(mouse, menuFileRect))
@@ -803,11 +732,6 @@ void UpdateFileMenu(void)
                 OpenProjectSaveAs();
             fileExplorer.mostrarMenuFile = false;
         }
-        else if (fileExplorer.itemHoverFile == 3)
-        {
-            OpenExportDialog();
-            fileExplorer.mostrarMenuFile = false;
-        }
         else if (!CheckCollisionPointRec(mouse, menuFileRect))
         {
             fileExplorer.mostrarMenuFile = false;
@@ -828,14 +752,13 @@ void DrawFileMenu(void)
     const UIStyle *style = GetUIStyle();
 
     // Menu principal File
-    Rectangle menuFileRect = {menuX, menuY, 200.0f, 96.0f};
+    Rectangle menuFileRect = {menuX, menuY, 200.0f, 72.0f};
     DrawRectangleRec(menuFileRect, style->panelBg);
 
     // Itens do menu
     Rectangle itemImport = {menuFileRect.x, menuFileRect.y, menuFileRect.width, 24.0f};
     Rectangle itemOpen = {menuFileRect.x, menuFileRect.y + 24.0f, menuFileRect.width, 24.0f};
     Rectangle itemSave = {menuFileRect.x, menuFileRect.y + 48.0f, menuFileRect.width, 24.0f};
-    Rectangle itemExport = {menuFileRect.x, menuFileRect.y + 72.0f, menuFileRect.width, 24.0f};
 
     // Área do submenu
     const float submenuItemH = 24.0f;
@@ -846,17 +769,14 @@ void DrawFileMenu(void)
     bool hoverImport = fileExplorer.itemHoverFile == 0;
     bool hoverOpen = fileExplorer.itemHoverFile == 1;
     bool hoverSave = fileExplorer.itemHoverFile == 2;
-    bool hoverExport = fileExplorer.itemHoverFile == 3;
 
     DrawRectangleRec(itemImport, hoverImport ? style->buttonBgHover : style->buttonBg);
     DrawRectangleRec(itemOpen, hoverOpen ? style->buttonBgHover : style->buttonBg);
     DrawRectangleRec(itemSave, hoverSave ? style->buttonBgHover : style->buttonBg);
-    DrawRectangleRec(itemExport, hoverExport ? style->buttonBgHover : style->buttonBg);
 
     DrawText("Import Model", (int)(itemImport.x + 10), (int)(itemImport.y + 6), 12, hoverImport ? style->buttonTextHover : style->buttonText);
     DrawText("Open Project", (int)(itemOpen.x + 10), (int)(itemOpen.y + 6), 12, hoverOpen ? style->buttonTextHover : style->buttonText);
     DrawText("Save Project", (int)(itemSave.x + 10), (int)(itemSave.y + 6), 12, hoverSave ? style->buttonTextHover : style->buttonText);
-    DrawText("Configurar Build", (int)(itemExport.x + 10), (int)(itemExport.y + 6), 12, hoverExport ? style->buttonTextHover : style->buttonText);
 
     // Seta para indicar submenu
     DrawText(">", (int)(itemImport.x + menuFileRect.width - 20), (int)(itemImport.y + 6), 12, hoverImport ? style->buttonTextHover : style->buttonText);

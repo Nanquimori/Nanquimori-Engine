@@ -17,7 +17,6 @@ typedef struct
     int caret;
     int selStart;
     int selEnd;
-    float scrollX;
     bool mouseSelecting;
     int repeatKey;
     float repeatTimer;
