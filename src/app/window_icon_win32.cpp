@@ -3,9 +3,11 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <stdio.h>
 
 static HICON gWindowIconSmall = NULL;
 static HICON gWindowIconBig = NULL;
+static bool gConsoleStreamsReady = false;
 
 void ApplyWin32WindowIcon(void *windowHandle, const char *iconPath)
 {
@@ -54,6 +56,61 @@ void ReleaseWin32WindowIcon(void)
     }
 }
 
+void SetWin32ConsoleVisible(bool visible)
+{
+    HWND consoleWindow = GetConsoleWindow();
+    if (visible)
+    {
+        if (!consoleWindow)
+        {
+            if (!AttachConsole(ATTACH_PARENT_PROCESS))
+                AllocConsole();
+
+            consoleWindow = GetConsoleWindow();
+            if (consoleWindow && !gConsoleStreamsReady)
+            {
+                freopen("CONOUT$", "w", stdout);
+                freopen("CONOUT$", "w", stderr);
+                freopen("CONIN$", "r", stdin);
+                gConsoleStreamsReady = true;
+            }
+        }
+
+        if (consoleWindow)
+            ShowWindow(consoleWindow, SW_SHOW);
+    }
+    else if (consoleWindow)
+    {
+        ShowWindow(consoleWindow, SW_HIDE);
+    }
+}
+
+void SetWin32WindowBounds(void *windowHandle, int x, int y, int width, int height, bool topmost)
+{
+    if (!windowHandle || width <= 0 || height <= 0)
+        return;
+
+    HWND hwnd = (HWND)windowHandle;
+    SetWindowPos(hwnd,
+                 topmost ? HWND_TOPMOST : HWND_NOTOPMOST,
+                 x,
+                 y,
+                 width,
+                 height,
+                 SWP_SHOWWINDOW | SWP_FRAMECHANGED);
+    SetForegroundWindow(hwnd);
+}
+
+void SetWin32WindowMaximized(void *windowHandle, bool maximized)
+{
+    if (!windowHandle)
+        return;
+
+    HWND hwnd = (HWND)windowHandle;
+    ShowWindow(hwnd, maximized ? SW_MAXIMIZE : SW_RESTORE);
+    SetForegroundWindow(hwnd);
+}
+
 #else
 
 void ApplyWin32WindowIcon(void *windowHandle, const char *iconPath)
@@ -64,6 +121,27 @@ void ApplyWin32WindowIcon(void *windowHandle, const char *iconPath)
 
 void ReleaseWin32WindowIcon(void)
 {
+}
+
+void SetWin32ConsoleVisible(bool visible)
+{
+    (void)visible;
+}
+
+void SetWin32WindowBounds(void *windowHandle, int x, int y, int width, int height, bool topmost)
+{
+    (void)windowHandle;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)topmost;
+}
+
+void SetWin32WindowMaximized(void *windowHandle, bool maximized)
+{
+    (void)windowHandle;
+    (void)maximized;
 }
 
 #endif

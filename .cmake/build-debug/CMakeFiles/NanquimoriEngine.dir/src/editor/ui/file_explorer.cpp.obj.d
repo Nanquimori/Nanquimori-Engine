@@ -14,6 +14,7 @@ CMakeFiles/NanquimoriEngine.dir/src/editor/ui/file_explorer.cpp.obj: \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/scene_manager.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/outliner.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/outliner.h \
+ C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\export_dialog.h \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\ui_button.h \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\ui_style.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/string.h \

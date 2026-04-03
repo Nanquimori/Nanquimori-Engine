@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\NanquimoriPlayer.dir/objects.a
+C:\raylib\w64devkit\bin\ar.exe qc CMakeFiles\NanquimoriPlayer.dir/objects.a @CMakeFiles\NanquimoriPlayer.dir\objects1.rsp
+C:\raylib\w64devkit\bin\g++.exe -g -mwindows -Wl,--whole-archive CMakeFiles\NanquimoriPlayer.dir/objects.a -Wl,--no-whole-archive -o NanquimoriPlayer.exe -Wl,--out-implib,libNanquimoriPlayer.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\NanquimoriPlayer.dir\linkLibs.rsp

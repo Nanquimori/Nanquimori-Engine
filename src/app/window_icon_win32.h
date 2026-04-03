@@ -3,5 +3,8 @@
 
 void ApplyWin32WindowIcon(void *windowHandle, const char *iconPath);
 void ReleaseWin32WindowIcon(void);
+void SetWin32ConsoleVisible(bool visible);
+void SetWin32WindowBounds(void *windowHandle, int x, int y, int width, int height, bool topmost);
+void SetWin32WindowMaximized(void *windowHandle, bool maximized);
 
 #endif // WINDOW_ICON_WIN32_H

@@ -195,6 +195,19 @@ NanquimoriEngine/fast:
 .PHONY : NanquimoriEngine/fast
 
 #=============================================================================
+# Target rules for targets named NanquimoriPlayer
+
+# Build rule for target.
+NanquimoriPlayer: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 NanquimoriPlayer
+.PHONY : NanquimoriPlayer
+
+# fast build rule for target.
+NanquimoriPlayer/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/build
+.PHONY : NanquimoriPlayer/fast
+
+#=============================================================================
 # Target rules for targets named uninstall
 
 # Build rule for target.
@@ -246,13 +259,21 @@ update_mappings/fast:
 	$(MAKE) $(MAKESILENT) -f raylib\raylib\external\glfw\src\CMakeFiles\update_mappings.dir\build.make raylib/raylib/external/glfw/src/CMakeFiles/update_mappings.dir/build
 .PHONY : update_mappings/fast
 
-nanquimori_icon.obj: nanquimori_icon.rc.obj
-.PHONY : nanquimori_icon.obj
+NanquimoriEngine_icon.obj: NanquimoriEngine_icon.rc.obj
+.PHONY : NanquimoriEngine_icon.obj
 
 # target to build an object file
-nanquimori_icon.rc.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/nanquimori_icon.rc.obj
-.PHONY : nanquimori_icon.rc.obj
+NanquimoriEngine_icon.rc.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/NanquimoriEngine_icon.rc.obj
+.PHONY : NanquimoriEngine_icon.rc.obj
+
+NanquimoriPlayer_icon.obj: NanquimoriPlayer_icon.rc.obj
+.PHONY : NanquimoriPlayer_icon.obj
+
+# target to build an object file
+NanquimoriPlayer_icon.rc.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/NanquimoriPlayer_icon.rc.obj
+.PHONY : NanquimoriPlayer_icon.rc.obj
 
 src/app/application.obj: src/app/application.cpp.obj
 .PHONY : src/app/application.obj
@@ -260,6 +281,7 @@ src/app/application.obj: src/app/application.cpp.obj
 # target to build an object file
 src/app/application.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/application.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/application.cpp.obj
 .PHONY : src/app/application.cpp.obj
 
 src/app/application.i: src/app/application.cpp.i
@@ -268,6 +290,7 @@ src/app/application.i: src/app/application.cpp.i
 # target to preprocess a source file
 src/app/application.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/application.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/application.cpp.i
 .PHONY : src/app/application.cpp.i
 
 src/app/application.s: src/app/application.cpp.s
@@ -276,7 +299,62 @@ src/app/application.s: src/app/application.cpp.s
 # target to generate assembly for a file
 src/app/application.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/application.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/application.cpp.s
 .PHONY : src/app/application.cpp.s
+
+src/app/exe_icon_win32.obj: src/app/exe_icon_win32.cpp.obj
+.PHONY : src/app/exe_icon_win32.obj
+
+# target to build an object file
+src/app/exe_icon_win32.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/exe_icon_win32.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/exe_icon_win32.cpp.obj
+.PHONY : src/app/exe_icon_win32.cpp.obj
+
+src/app/exe_icon_win32.i: src/app/exe_icon_win32.cpp.i
+.PHONY : src/app/exe_icon_win32.i
+
+# target to preprocess a source file
+src/app/exe_icon_win32.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/exe_icon_win32.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/exe_icon_win32.cpp.i
+.PHONY : src/app/exe_icon_win32.cpp.i
+
+src/app/exe_icon_win32.s: src/app/exe_icon_win32.cpp.s
+.PHONY : src/app/exe_icon_win32.s
+
+# target to generate assembly for a file
+src/app/exe_icon_win32.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/exe_icon_win32.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/exe_icon_win32.cpp.s
+.PHONY : src/app/exe_icon_win32.cpp.s
+
+src/app/game_exporter.obj: src/app/game_exporter.cpp.obj
+.PHONY : src/app/game_exporter.obj
+
+# target to build an object file
+src/app/game_exporter.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/game_exporter.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/game_exporter.cpp.obj
+.PHONY : src/app/game_exporter.cpp.obj
+
+src/app/game_exporter.i: src/app/game_exporter.cpp.i
+.PHONY : src/app/game_exporter.i
+
+# target to preprocess a source file
+src/app/game_exporter.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/game_exporter.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/game_exporter.cpp.i
+.PHONY : src/app/game_exporter.cpp.i
+
+src/app/game_exporter.s: src/app/game_exporter.cpp.s
+.PHONY : src/app/game_exporter.s
+
+# target to generate assembly for a file
+src/app/game_exporter.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/game_exporter.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/game_exporter.cpp.s
+.PHONY : src/app/game_exporter.cpp.s
 
 src/app/main.obj: src/app/main.cpp.obj
 .PHONY : src/app/main.obj
@@ -308,6 +386,7 @@ src/app/window_icon_win32.obj: src/app/window_icon_win32.cpp.obj
 # target to build an object file
 src/app/window_icon_win32.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/window_icon_win32.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/window_icon_win32.cpp.obj
 .PHONY : src/app/window_icon_win32.cpp.obj
 
 src/app/window_icon_win32.i: src/app/window_icon_win32.cpp.i
@@ -316,6 +395,7 @@ src/app/window_icon_win32.i: src/app/window_icon_win32.cpp.i
 # target to preprocess a source file
 src/app/window_icon_win32.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/window_icon_win32.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/window_icon_win32.cpp.i
 .PHONY : src/app/window_icon_win32.cpp.i
 
 src/app/window_icon_win32.s: src/app/window_icon_win32.cpp.s
@@ -324,6 +404,7 @@ src/app/window_icon_win32.s: src/app/window_icon_win32.cpp.s
 # target to generate assembly for a file
 src/app/window_icon_win32.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/app/window_icon_win32.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/app/window_icon_win32.cpp.s
 .PHONY : src/app/window_icon_win32.cpp.s
 
 src/assets/model_manager.obj: src/assets/model_manager.cpp.obj
@@ -332,6 +413,7 @@ src/assets/model_manager.obj: src/assets/model_manager.cpp.obj
 # target to build an object file
 src/assets/model_manager.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/assets/model_manager.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/assets/model_manager.cpp.obj
 .PHONY : src/assets/model_manager.cpp.obj
 
 src/assets/model_manager.i: src/assets/model_manager.cpp.i
@@ -340,6 +422,7 @@ src/assets/model_manager.i: src/assets/model_manager.cpp.i
 # target to preprocess a source file
 src/assets/model_manager.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/assets/model_manager.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/assets/model_manager.cpp.i
 .PHONY : src/assets/model_manager.cpp.i
 
 src/assets/model_manager.s: src/assets/model_manager.cpp.s
@@ -348,6 +431,7 @@ src/assets/model_manager.s: src/assets/model_manager.cpp.s
 # target to generate assembly for a file
 src/assets/model_manager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/assets/model_manager.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/assets/model_manager.cpp.s
 .PHONY : src/assets/model_manager.cpp.s
 
 src/editor/ui/color_picker.obj: src/editor/ui/color_picker.cpp.obj
@@ -356,6 +440,7 @@ src/editor/ui/color_picker.obj: src/editor/ui/color_picker.cpp.obj
 # target to build an object file
 src/editor/ui/color_picker.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/color_picker.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/color_picker.cpp.obj
 .PHONY : src/editor/ui/color_picker.cpp.obj
 
 src/editor/ui/color_picker.i: src/editor/ui/color_picker.cpp.i
@@ -364,6 +449,7 @@ src/editor/ui/color_picker.i: src/editor/ui/color_picker.cpp.i
 # target to preprocess a source file
 src/editor/ui/color_picker.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/color_picker.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/color_picker.cpp.i
 .PHONY : src/editor/ui/color_picker.cpp.i
 
 src/editor/ui/color_picker.s: src/editor/ui/color_picker.cpp.s
@@ -372,6 +458,7 @@ src/editor/ui/color_picker.s: src/editor/ui/color_picker.cpp.s
 # target to generate assembly for a file
 src/editor/ui/color_picker.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/color_picker.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/color_picker.cpp.s
 .PHONY : src/editor/ui/color_picker.cpp.s
 
 src/editor/ui/drag_float_input.obj: src/editor/ui/drag_float_input.cpp.obj
@@ -380,6 +467,7 @@ src/editor/ui/drag_float_input.obj: src/editor/ui/drag_float_input.cpp.obj
 # target to build an object file
 src/editor/ui/drag_float_input.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/drag_float_input.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/drag_float_input.cpp.obj
 .PHONY : src/editor/ui/drag_float_input.cpp.obj
 
 src/editor/ui/drag_float_input.i: src/editor/ui/drag_float_input.cpp.i
@@ -388,6 +476,7 @@ src/editor/ui/drag_float_input.i: src/editor/ui/drag_float_input.cpp.i
 # target to preprocess a source file
 src/editor/ui/drag_float_input.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/drag_float_input.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/drag_float_input.cpp.i
 .PHONY : src/editor/ui/drag_float_input.cpp.i
 
 src/editor/ui/drag_float_input.s: src/editor/ui/drag_float_input.cpp.s
@@ -396,7 +485,35 @@ src/editor/ui/drag_float_input.s: src/editor/ui/drag_float_input.cpp.s
 # target to generate assembly for a file
 src/editor/ui/drag_float_input.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/drag_float_input.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/drag_float_input.cpp.s
 .PHONY : src/editor/ui/drag_float_input.cpp.s
+
+src/editor/ui/export_dialog.obj: src/editor/ui/export_dialog.cpp.obj
+.PHONY : src/editor/ui/export_dialog.obj
+
+# target to build an object file
+src/editor/ui/export_dialog.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/export_dialog.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/export_dialog.cpp.obj
+.PHONY : src/editor/ui/export_dialog.cpp.obj
+
+src/editor/ui/export_dialog.i: src/editor/ui/export_dialog.cpp.i
+.PHONY : src/editor/ui/export_dialog.i
+
+# target to preprocess a source file
+src/editor/ui/export_dialog.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/export_dialog.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/export_dialog.cpp.i
+.PHONY : src/editor/ui/export_dialog.cpp.i
+
+src/editor/ui/export_dialog.s: src/editor/ui/export_dialog.cpp.s
+.PHONY : src/editor/ui/export_dialog.s
+
+# target to generate assembly for a file
+src/editor/ui/export_dialog.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/export_dialog.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/export_dialog.cpp.s
+.PHONY : src/editor/ui/export_dialog.cpp.s
 
 src/editor/ui/file_explorer.obj: src/editor/ui/file_explorer.cpp.obj
 .PHONY : src/editor/ui/file_explorer.obj
@@ -404,6 +521,7 @@ src/editor/ui/file_explorer.obj: src/editor/ui/file_explorer.cpp.obj
 # target to build an object file
 src/editor/ui/file_explorer.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/file_explorer.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/file_explorer.cpp.obj
 .PHONY : src/editor/ui/file_explorer.cpp.obj
 
 src/editor/ui/file_explorer.i: src/editor/ui/file_explorer.cpp.i
@@ -412,6 +530,7 @@ src/editor/ui/file_explorer.i: src/editor/ui/file_explorer.cpp.i
 # target to preprocess a source file
 src/editor/ui/file_explorer.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/file_explorer.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/file_explorer.cpp.i
 .PHONY : src/editor/ui/file_explorer.cpp.i
 
 src/editor/ui/file_explorer.s: src/editor/ui/file_explorer.cpp.s
@@ -420,6 +539,7 @@ src/editor/ui/file_explorer.s: src/editor/ui/file_explorer.cpp.s
 # target to generate assembly for a file
 src/editor/ui/file_explorer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/file_explorer.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/file_explorer.cpp.s
 .PHONY : src/editor/ui/file_explorer.cpp.s
 
 src/editor/ui/help_panel.obj: src/editor/ui/help_panel.cpp.obj
@@ -428,6 +548,7 @@ src/editor/ui/help_panel.obj: src/editor/ui/help_panel.cpp.obj
 # target to build an object file
 src/editor/ui/help_panel.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/help_panel.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/help_panel.cpp.obj
 .PHONY : src/editor/ui/help_panel.cpp.obj
 
 src/editor/ui/help_panel.i: src/editor/ui/help_panel.cpp.i
@@ -436,6 +557,7 @@ src/editor/ui/help_panel.i: src/editor/ui/help_panel.cpp.i
 # target to preprocess a source file
 src/editor/ui/help_panel.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/help_panel.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/help_panel.cpp.i
 .PHONY : src/editor/ui/help_panel.cpp.i
 
 src/editor/ui/help_panel.s: src/editor/ui/help_panel.cpp.s
@@ -444,6 +566,7 @@ src/editor/ui/help_panel.s: src/editor/ui/help_panel.cpp.s
 # target to generate assembly for a file
 src/editor/ui/help_panel.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/help_panel.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/help_panel.cpp.s
 .PHONY : src/editor/ui/help_panel.cpp.s
 
 src/editor/ui/info_panel.obj: src/editor/ui/info_panel.cpp.obj
@@ -452,6 +575,7 @@ src/editor/ui/info_panel.obj: src/editor/ui/info_panel.cpp.obj
 # target to build an object file
 src/editor/ui/info_panel.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/info_panel.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/info_panel.cpp.obj
 .PHONY : src/editor/ui/info_panel.cpp.obj
 
 src/editor/ui/info_panel.i: src/editor/ui/info_panel.cpp.i
@@ -460,6 +584,7 @@ src/editor/ui/info_panel.i: src/editor/ui/info_panel.cpp.i
 # target to preprocess a source file
 src/editor/ui/info_panel.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/info_panel.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/info_panel.cpp.i
 .PHONY : src/editor/ui/info_panel.cpp.i
 
 src/editor/ui/info_panel.s: src/editor/ui/info_panel.cpp.s
@@ -468,6 +593,7 @@ src/editor/ui/info_panel.s: src/editor/ui/info_panel.cpp.s
 # target to generate assembly for a file
 src/editor/ui/info_panel.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/info_panel.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/info_panel.cpp.s
 .PHONY : src/editor/ui/info_panel.cpp.s
 
 src/editor/ui/properties_panel.obj: src/editor/ui/properties_panel.cpp.obj
@@ -476,6 +602,7 @@ src/editor/ui/properties_panel.obj: src/editor/ui/properties_panel.cpp.obj
 # target to build an object file
 src/editor/ui/properties_panel.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/properties_panel.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/properties_panel.cpp.obj
 .PHONY : src/editor/ui/properties_panel.cpp.obj
 
 src/editor/ui/properties_panel.i: src/editor/ui/properties_panel.cpp.i
@@ -484,6 +611,7 @@ src/editor/ui/properties_panel.i: src/editor/ui/properties_panel.cpp.i
 # target to preprocess a source file
 src/editor/ui/properties_panel.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/properties_panel.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/properties_panel.cpp.i
 .PHONY : src/editor/ui/properties_panel.cpp.i
 
 src/editor/ui/properties_panel.s: src/editor/ui/properties_panel.cpp.s
@@ -492,6 +620,7 @@ src/editor/ui/properties_panel.s: src/editor/ui/properties_panel.cpp.s
 # target to generate assembly for a file
 src/editor/ui/properties_panel.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/properties_panel.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/properties_panel.cpp.s
 .PHONY : src/editor/ui/properties_panel.cpp.s
 
 src/editor/ui/splash_screen.obj: src/editor/ui/splash_screen.cpp.obj
@@ -500,6 +629,7 @@ src/editor/ui/splash_screen.obj: src/editor/ui/splash_screen.cpp.obj
 # target to build an object file
 src/editor/ui/splash_screen.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/splash_screen.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/splash_screen.cpp.obj
 .PHONY : src/editor/ui/splash_screen.cpp.obj
 
 src/editor/ui/splash_screen.i: src/editor/ui/splash_screen.cpp.i
@@ -508,6 +638,7 @@ src/editor/ui/splash_screen.i: src/editor/ui/splash_screen.cpp.i
 # target to preprocess a source file
 src/editor/ui/splash_screen.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/splash_screen.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/splash_screen.cpp.i
 .PHONY : src/editor/ui/splash_screen.cpp.i
 
 src/editor/ui/splash_screen.s: src/editor/ui/splash_screen.cpp.s
@@ -516,6 +647,7 @@ src/editor/ui/splash_screen.s: src/editor/ui/splash_screen.cpp.s
 # target to generate assembly for a file
 src/editor/ui/splash_screen.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/splash_screen.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/splash_screen.cpp.s
 .PHONY : src/editor/ui/splash_screen.cpp.s
 
 src/editor/ui/text_input.obj: src/editor/ui/text_input.cpp.obj
@@ -524,6 +656,7 @@ src/editor/ui/text_input.obj: src/editor/ui/text_input.cpp.obj
 # target to build an object file
 src/editor/ui/text_input.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/text_input.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/text_input.cpp.obj
 .PHONY : src/editor/ui/text_input.cpp.obj
 
 src/editor/ui/text_input.i: src/editor/ui/text_input.cpp.i
@@ -532,6 +665,7 @@ src/editor/ui/text_input.i: src/editor/ui/text_input.cpp.i
 # target to preprocess a source file
 src/editor/ui/text_input.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/text_input.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/text_input.cpp.i
 .PHONY : src/editor/ui/text_input.cpp.i
 
 src/editor/ui/text_input.s: src/editor/ui/text_input.cpp.s
@@ -540,6 +674,7 @@ src/editor/ui/text_input.s: src/editor/ui/text_input.cpp.s
 # target to generate assembly for a file
 src/editor/ui/text_input.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/text_input.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/text_input.cpp.s
 .PHONY : src/editor/ui/text_input.cpp.s
 
 src/editor/ui/top_bar.obj: src/editor/ui/top_bar.cpp.obj
@@ -548,6 +683,7 @@ src/editor/ui/top_bar.obj: src/editor/ui/top_bar.cpp.obj
 # target to build an object file
 src/editor/ui/top_bar.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/top_bar.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/top_bar.cpp.obj
 .PHONY : src/editor/ui/top_bar.cpp.obj
 
 src/editor/ui/top_bar.i: src/editor/ui/top_bar.cpp.i
@@ -556,6 +692,7 @@ src/editor/ui/top_bar.i: src/editor/ui/top_bar.cpp.i
 # target to preprocess a source file
 src/editor/ui/top_bar.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/top_bar.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/top_bar.cpp.i
 .PHONY : src/editor/ui/top_bar.cpp.i
 
 src/editor/ui/top_bar.s: src/editor/ui/top_bar.cpp.s
@@ -564,6 +701,7 @@ src/editor/ui/top_bar.s: src/editor/ui/top_bar.cpp.s
 # target to generate assembly for a file
 src/editor/ui/top_bar.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/top_bar.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/top_bar.cpp.s
 .PHONY : src/editor/ui/top_bar.cpp.s
 
 src/editor/ui/ui_button.obj: src/editor/ui/ui_button.cpp.obj
@@ -572,6 +710,7 @@ src/editor/ui/ui_button.obj: src/editor/ui/ui_button.cpp.obj
 # target to build an object file
 src/editor/ui/ui_button.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/ui_button.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_button.cpp.obj
 .PHONY : src/editor/ui/ui_button.cpp.obj
 
 src/editor/ui/ui_button.i: src/editor/ui/ui_button.cpp.i
@@ -580,6 +719,7 @@ src/editor/ui/ui_button.i: src/editor/ui/ui_button.cpp.i
 # target to preprocess a source file
 src/editor/ui/ui_button.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/ui_button.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_button.cpp.i
 .PHONY : src/editor/ui/ui_button.cpp.i
 
 src/editor/ui/ui_button.s: src/editor/ui/ui_button.cpp.s
@@ -588,6 +728,7 @@ src/editor/ui/ui_button.s: src/editor/ui/ui_button.cpp.s
 # target to generate assembly for a file
 src/editor/ui/ui_button.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/ui_button.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_button.cpp.s
 .PHONY : src/editor/ui/ui_button.cpp.s
 
 src/editor/ui/ui_style.obj: src/editor/ui/ui_style.cpp.obj
@@ -596,6 +737,7 @@ src/editor/ui/ui_style.obj: src/editor/ui/ui_style.cpp.obj
 # target to build an object file
 src/editor/ui/ui_style.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/ui_style.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_style.cpp.obj
 .PHONY : src/editor/ui/ui_style.cpp.obj
 
 src/editor/ui/ui_style.i: src/editor/ui/ui_style.cpp.i
@@ -604,6 +746,7 @@ src/editor/ui/ui_style.i: src/editor/ui/ui_style.cpp.i
 # target to preprocess a source file
 src/editor/ui/ui_style.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/ui_style.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_style.cpp.i
 .PHONY : src/editor/ui/ui_style.cpp.i
 
 src/editor/ui/ui_style.s: src/editor/ui/ui_style.cpp.s
@@ -612,6 +755,7 @@ src/editor/ui/ui_style.s: src/editor/ui/ui_style.cpp.s
 # target to generate assembly for a file
 src/editor/ui/ui_style.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/ui_style.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_style.cpp.s
 .PHONY : src/editor/ui/ui_style.cpp.s
 
 src/editor/viewport/camera_controller.obj: src/editor/viewport/camera_controller.cpp.obj
@@ -620,6 +764,7 @@ src/editor/viewport/camera_controller.obj: src/editor/viewport/camera_controller
 # target to build an object file
 src/editor/viewport/camera_controller.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/camera_controller.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj
 .PHONY : src/editor/viewport/camera_controller.cpp.obj
 
 src/editor/viewport/camera_controller.i: src/editor/viewport/camera_controller.cpp.i
@@ -628,6 +773,7 @@ src/editor/viewport/camera_controller.i: src/editor/viewport/camera_controller.c
 # target to preprocess a source file
 src/editor/viewport/camera_controller.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/camera_controller.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.i
 .PHONY : src/editor/viewport/camera_controller.cpp.i
 
 src/editor/viewport/camera_controller.s: src/editor/viewport/camera_controller.cpp.s
@@ -636,6 +782,7 @@ src/editor/viewport/camera_controller.s: src/editor/viewport/camera_controller.c
 # target to generate assembly for a file
 src/editor/viewport/camera_controller.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/camera_controller.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.s
 .PHONY : src/editor/viewport/camera_controller.cpp.s
 
 src/editor/viewport/gizmo.obj: src/editor/viewport/gizmo.cpp.obj
@@ -644,6 +791,7 @@ src/editor/viewport/gizmo.obj: src/editor/viewport/gizmo.cpp.obj
 # target to build an object file
 src/editor/viewport/gizmo.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/gizmo.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.obj
 .PHONY : src/editor/viewport/gizmo.cpp.obj
 
 src/editor/viewport/gizmo.i: src/editor/viewport/gizmo.cpp.i
@@ -652,6 +800,7 @@ src/editor/viewport/gizmo.i: src/editor/viewport/gizmo.cpp.i
 # target to preprocess a source file
 src/editor/viewport/gizmo.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/gizmo.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.i
 .PHONY : src/editor/viewport/gizmo.cpp.i
 
 src/editor/viewport/gizmo.s: src/editor/viewport/gizmo.cpp.s
@@ -660,6 +809,7 @@ src/editor/viewport/gizmo.s: src/editor/viewport/gizmo.cpp.s
 # target to generate assembly for a file
 src/editor/viewport/gizmo.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/gizmo.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.s
 .PHONY : src/editor/viewport/gizmo.cpp.s
 
 src/physics/nanquimori_physics.obj: src/physics/nanquimori_physics.cpp.obj
@@ -668,6 +818,7 @@ src/physics/nanquimori_physics.obj: src/physics/nanquimori_physics.cpp.obj
 # target to build an object file
 src/physics/nanquimori_physics.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/physics/nanquimori_physics.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.obj
 .PHONY : src/physics/nanquimori_physics.cpp.obj
 
 src/physics/nanquimori_physics.i: src/physics/nanquimori_physics.cpp.i
@@ -676,6 +827,7 @@ src/physics/nanquimori_physics.i: src/physics/nanquimori_physics.cpp.i
 # target to preprocess a source file
 src/physics/nanquimori_physics.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/physics/nanquimori_physics.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.i
 .PHONY : src/physics/nanquimori_physics.cpp.i
 
 src/physics/nanquimori_physics.s: src/physics/nanquimori_physics.cpp.s
@@ -684,7 +836,59 @@ src/physics/nanquimori_physics.s: src/physics/nanquimori_physics.cpp.s
 # target to generate assembly for a file
 src/physics/nanquimori_physics.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/physics/nanquimori_physics.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.s
 .PHONY : src/physics/nanquimori_physics.cpp.s
+
+src/runtime/game_application.obj: src/runtime/game_application.cpp.obj
+.PHONY : src/runtime/game_application.obj
+
+# target to build an object file
+src/runtime/game_application.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/runtime/game_application.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.obj
+.PHONY : src/runtime/game_application.cpp.obj
+
+src/runtime/game_application.i: src/runtime/game_application.cpp.i
+.PHONY : src/runtime/game_application.i
+
+# target to preprocess a source file
+src/runtime/game_application.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/runtime/game_application.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.i
+.PHONY : src/runtime/game_application.cpp.i
+
+src/runtime/game_application.s: src/runtime/game_application.cpp.s
+.PHONY : src/runtime/game_application.s
+
+# target to generate assembly for a file
+src/runtime/game_application.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/runtime/game_application.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.s
+.PHONY : src/runtime/game_application.cpp.s
+
+src/runtime/game_main.obj: src/runtime/game_main.cpp.obj
+.PHONY : src/runtime/game_main.obj
+
+# target to build an object file
+src/runtime/game_main.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.obj
+.PHONY : src/runtime/game_main.cpp.obj
+
+src/runtime/game_main.i: src/runtime/game_main.cpp.i
+.PHONY : src/runtime/game_main.i
+
+# target to preprocess a source file
+src/runtime/game_main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.i
+.PHONY : src/runtime/game_main.cpp.i
+
+src/runtime/game_main.s: src/runtime/game_main.cpp.s
+.PHONY : src/runtime/game_main.s
+
+# target to generate assembly for a file
+src/runtime/game_main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.s
+.PHONY : src/runtime/game_main.cpp.s
 
 src/scene/outliner.obj: src/scene/outliner.cpp.obj
 .PHONY : src/scene/outliner.obj
@@ -692,6 +896,7 @@ src/scene/outliner.obj: src/scene/outliner.cpp.obj
 # target to build an object file
 src/scene/outliner.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/scene/outliner.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj
 .PHONY : src/scene/outliner.cpp.obj
 
 src/scene/outliner.i: src/scene/outliner.cpp.i
@@ -700,6 +905,7 @@ src/scene/outliner.i: src/scene/outliner.cpp.i
 # target to preprocess a source file
 src/scene/outliner.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/scene/outliner.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.i
 .PHONY : src/scene/outliner.cpp.i
 
 src/scene/outliner.s: src/scene/outliner.cpp.s
@@ -708,6 +914,7 @@ src/scene/outliner.s: src/scene/outliner.cpp.s
 # target to generate assembly for a file
 src/scene/outliner.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/scene/outliner.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.s
 .PHONY : src/scene/outliner.cpp.s
 
 src/scene/scene_manager.obj: src/scene/scene_manager.cpp.obj
@@ -716,6 +923,7 @@ src/scene/scene_manager.obj: src/scene/scene_manager.cpp.obj
 # target to build an object file
 src/scene/scene_manager.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/scene/scene_manager.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj
 .PHONY : src/scene/scene_manager.cpp.obj
 
 src/scene/scene_manager.i: src/scene/scene_manager.cpp.i
@@ -724,6 +932,7 @@ src/scene/scene_manager.i: src/scene/scene_manager.cpp.i
 # target to preprocess a source file
 src/scene/scene_manager.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/scene/scene_manager.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.i
 .PHONY : src/scene/scene_manager.cpp.i
 
 src/scene/scene_manager.s: src/scene/scene_manager.cpp.s
@@ -732,6 +941,7 @@ src/scene/scene_manager.s: src/scene/scene_manager.cpp.s
 # target to generate assembly for a file
 src/scene/scene_manager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/scene/scene_manager.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.s
 .PHONY : src/scene/scene_manager.cpp.s
 
 # Help Target
@@ -751,12 +961,20 @@ help:
 	@echo ... uninstall
 	@echo ... update_mappings
 	@echo ... NanquimoriEngine
+	@echo ... NanquimoriPlayer
 	@echo ... glfw
 	@echo ... raylib
-	@echo ... nanquimori_icon.obj
+	@echo ... NanquimoriEngine_icon.obj
+	@echo ... NanquimoriPlayer_icon.obj
 	@echo ... src/app/application.obj
 	@echo ... src/app/application.i
 	@echo ... src/app/application.s
+	@echo ... src/app/exe_icon_win32.obj
+	@echo ... src/app/exe_icon_win32.i
+	@echo ... src/app/exe_icon_win32.s
+	@echo ... src/app/game_exporter.obj
+	@echo ... src/app/game_exporter.i
+	@echo ... src/app/game_exporter.s
 	@echo ... src/app/main.obj
 	@echo ... src/app/main.i
 	@echo ... src/app/main.s
@@ -772,6 +990,9 @@ help:
 	@echo ... src/editor/ui/drag_float_input.obj
 	@echo ... src/editor/ui/drag_float_input.i
 	@echo ... src/editor/ui/drag_float_input.s
+	@echo ... src/editor/ui/export_dialog.obj
+	@echo ... src/editor/ui/export_dialog.i
+	@echo ... src/editor/ui/export_dialog.s
 	@echo ... src/editor/ui/file_explorer.obj
 	@echo ... src/editor/ui/file_explorer.i
 	@echo ... src/editor/ui/file_explorer.s
@@ -808,6 +1029,12 @@ help:
 	@echo ... src/physics/nanquimori_physics.obj
 	@echo ... src/physics/nanquimori_physics.i
 	@echo ... src/physics/nanquimori_physics.s
+	@echo ... src/runtime/game_application.obj
+	@echo ... src/runtime/game_application.i
+	@echo ... src/runtime/game_application.s
+	@echo ... src/runtime/game_main.obj
+	@echo ... src/runtime/game_main.i
+	@echo ... src/runtime/game_main.s
 	@echo ... src/scene/outliner.obj
 	@echo ... src/scene/outliner.i
 	@echo ... src/scene/outliner.s

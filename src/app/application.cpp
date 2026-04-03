@@ -8,6 +8,7 @@
 #include "editor/ui/splash_screen.h"
 #include "editor/ui/info_panel.h"
 #include "editor/ui/top_bar.h"
+#include "editor/ui/export_dialog.h"
 #include "editor/ui/properties_panel.h"
 #include "physics/nanquimori_physics.h"
 #include "scene/scene_manager.h"
@@ -123,6 +124,8 @@ static bool IsMouseOverUIRoot(void)
         return true;
     if (fileExplorer.aberto || IsFileMenuOpen() || IsTopBarMenuOpen())
         return true;
+    if (IsExportDialogOpen())
+        return true;
     if (PropertiesIsBlockingViewport())
         return true;
     if (mouse.x < (float)PAINEL_LARGURA)
@@ -207,6 +210,7 @@ void InitializeApplication()
     InitHelpPanel();
     InitSplashScreen();
     InitPropertiesPanel();
+    InitExportDialog();
 
     InitModelManager();
     InitSceneManager();
@@ -303,6 +307,7 @@ void UpdateApplication()
         ProcessarOutliner();
 
         UpdateFileExplorer();
+        UpdateExportDialog();
 
         char arquivoSelecionado[256] = {0};
         if (FileExplorerArquivoSelecionado(arquivoSelecionado))
@@ -427,6 +432,7 @@ void RenderApplication()
     DrawPropertiesPanel();
     DrawTopBar();
     DrawFileMenu();
+    DrawExportDialog();
     DrawFileExplorer();
     DrawHelpPanel();
     DrawSplashScreen();
