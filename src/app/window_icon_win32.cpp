@@ -85,6 +85,20 @@ void SetWin32ConsoleVisible(bool visible)
     }
 }
 
+bool GetWin32CurrentDisplaySize(int *width, int *height)
+{
+    DEVMODEA mode = {0};
+    mode.dmSize = sizeof(mode);
+    if (!EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &mode))
+        return false;
+
+    if (width)
+        *width = (int)mode.dmPelsWidth;
+    if (height)
+        *height = (int)mode.dmPelsHeight;
+    return mode.dmPelsWidth > 0 && mode.dmPelsHeight > 0;
+}
+
 void SetWin32WindowBounds(void *windowHandle, int x, int y, int width, int height, bool topmost)
 {
     if (!windowHandle || width <= 0 || height <= 0)
@@ -126,6 +140,13 @@ void ReleaseWin32WindowIcon(void)
 void SetWin32ConsoleVisible(bool visible)
 {
     (void)visible;
+}
+
+bool GetWin32CurrentDisplaySize(int *width, int *height)
+{
+    (void)width;
+    (void)height;
+    return false;
 }
 
 void SetWin32WindowBounds(void *windowHandle, int x, int y, int width, int height, bool topmost)

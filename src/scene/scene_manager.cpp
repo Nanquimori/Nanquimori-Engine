@@ -84,6 +84,114 @@ static void SanitizeName(const char *src, char *dst, size_t dstSize);
 static bool ExtractJsonString(const char *line, const char *key, char *out, size_t outSize);
 static void ResetProjectExportSettings(ProjectExportSettings *settings);
 
+static const char *SkipJsonWhitespace(const char *cursor)
+{
+    if (!cursor)
+        return NULL;
+
+    while (*cursor != '\0' && isspace((unsigned char)*cursor))
+        cursor++;
+    return cursor;
+}
+
+static const char *FindJsonObjectValue(const char *buffer, const char *objectKey)
+{
+    if (!buffer || !objectKey || objectKey[0] == '\0')
+        return NULL;
+
+    char needle[96] = {0};
+    snprintf(needle, sizeof(needle), "\"%s\"", objectKey);
+
+    const char *cursor = strstr(buffer, needle);
+    while (cursor)
+    {
+        cursor += strlen(needle);
+        cursor = SkipJsonWhitespace(cursor);
+        if (!cursor || *cursor != ':')
+        {
+            cursor = strstr(cursor ? cursor : "", needle);
+            continue;
+        }
+
+        cursor = SkipJsonWhitespace(cursor + 1);
+        if (cursor && *cursor == '{')
+            return cursor;
+
+        cursor = strstr(cursor ? cursor : "", needle);
+    }
+
+    return NULL;
+}
+
+static const char *FindJsonFieldValue(const char *objectValue, const char *fieldKey)
+{
+    if (!objectValue || !fieldKey || fieldKey[0] == '\0')
+        return NULL;
+
+    char needle[96] = {0};
+    snprintf(needle, sizeof(needle), "\"%s\"", fieldKey);
+
+    const char *cursor = strstr(objectValue, needle);
+    while (cursor)
+    {
+        cursor += strlen(needle);
+        cursor = SkipJsonWhitespace(cursor);
+        if (!cursor || *cursor != ':')
+        {
+            cursor = strstr(cursor ? cursor : "", needle);
+            continue;
+        }
+
+        cursor = SkipJsonWhitespace(cursor + 1);
+        return cursor;
+    }
+
+    return NULL;
+}
+
+static bool ExtractJsonStringField(const char *objectValue, const char *fieldKey, char *out, size_t outSize)
+{
+    if (!out || outSize == 0)
+        return false;
+    out[0] = '\0';
+
+    const char *value = FindJsonFieldValue(objectValue, fieldKey);
+    if (!value || *value != '"')
+        return false;
+
+    value++;
+    size_t outIndex = 0;
+    while (*value != '\0')
+    {
+        if (*value == '"' && value[-1] != '\\')
+            break;
+
+        if (outIndex + 1 < outSize)
+            out[outIndex++] = *value;
+        value++;
+    }
+
+    out[outIndex] = '\0';
+    return *value == '"';
+}
+
+static bool ExtractJsonIntField(const char *objectValue, const char *fieldKey, int *out)
+{
+    if (!out)
+        return false;
+
+    const char *value = FindJsonFieldValue(objectValue, fieldKey);
+    if (!value)
+        return false;
+
+    int parsed = 0;
+    if (sscanf(value, "%d", &parsed) != 1)
+        return false;
+
+    *out = parsed;
+    return true;
+}
+
 static bool NormalizeRecentProjectPath(const char *in, char *out, size_t outSize)
 {
     if (!in || !out || outSize == 0)
@@ -1312,7 +1420,7 @@ bool LoadProjectExportSettingsFromFile(const char *projectJsonPath, ProjectExpor
     strncpy(projectPath, projectJsonPath, sizeof(projectPath) - 1);
     projectPath[sizeof(projectPath) - 1] = '\0';
 
-    const char *exportPtr = strstr(buffer, "\"export\":{");
+    const char *exportPtr = FindJsonObjectValue(buffer, "export");
     if (exportPtr)
     {
         char exportGameNameEsc[128] = {0};
@@ -1320,17 +1428,17 @@ bool LoadProjectExportSettingsFromFile(const char *projectJsonPath, ProjectExpor
         char exportIconEsc[512] = {0};
         char exportOutputEsc[512] = {0};
 
-        if (ExtractJsonString(exportPtr, "\"gameName\":\"", exportGameNameEsc, sizeof(exportGameNameEsc)))
+        if (ExtractJsonStringField(exportPtr, "gameName", exportGameNameEsc, sizeof(exportGameNameEsc)))
             UnescapeJsonString(exportGameNameEsc, out->gameName, sizeof(out->gameName));
-        if (ExtractJsonString(exportPtr, "\"exeName\":\"", exportExeNameEsc, sizeof(exportExeNameEsc)))
+        if (ExtractJsonStringField(exportPtr, "exeName", exportExeNameEsc, sizeof(exportExeNameEsc)))
             UnescapeJsonString(exportExeNameEsc, out->exeName, sizeof(out->exeName));
-        if (ExtractJsonString(exportPtr, "\"icon\":\"", exportIconEsc, sizeof(exportIconEsc)))
+        if (ExtractJsonStringField(exportPtr, "icon", exportIconEsc, sizeof(exportIconEsc)))
             UnescapeJsonString(exportIconEsc, out->iconPath, sizeof(out->iconPath));
-        if (ExtractJsonString(exportPtr, "\"output\":\"", exportOutputEsc, sizeof(exportOutputEsc)))
+        if (ExtractJsonStringField(exportPtr, "output", exportOutputEsc, sizeof(exportOutputEsc)))
             UnescapeJsonString(exportOutputEsc, out->outputDir, sizeof(out->outputDir));
     }
 
-    const char *exportRuntimePtr = strstr(buffer, "\"exportRuntime\":{");
+    const char *exportRuntimePtr = FindJsonObjectValue(buffer, "exportRuntime");
     if (exportRuntimePtr)
     {
         int width = out->windowWidth;
@@ -1341,28 +1449,13 @@ bool LoadProjectExportSettingsFromFile(const char *projectJsonPath, ProjectExpor
         int resizable = out->resizableWindow ? 1 : 0;
         int hud = out->showStartupHud ? 1 : 0;
 
-        const char *widthPtr = strstr(exportRuntimePtr, "\"width\":");
-        const char *heightPtr = strstr(exportRuntimePtr, "\"height\":");
-        const char *consolePtr = strstr(exportRuntimePtr, "\"console\":");
-        const char *fullscreenPtr = strstr(exportRuntimePtr, "\"fullscreen\":");
-        const char *maximizedPtr = strstr(exportRuntimePtr, "\"maximized\":");
-        const char *resizablePtr = strstr(exportRuntimePtr, "\"resizable\":");
-        const char *hudPtr = strstr(exportRuntimePtr, "\"hud\":");
-
-        if (widthPtr)
-            sscanf(widthPtr, "\"width\":%d", &width);
-        if (heightPtr)
-            sscanf(heightPtr, "\"height\":%d", &height);
-        if (consolePtr)
-            sscanf(consolePtr, "\"console\":%d", &console);
-        if (fullscreenPtr)
-            sscanf(fullscreenPtr, "\"fullscreen\":%d", &fullscreen);
-        if (maximizedPtr)
-            sscanf(maximizedPtr, "\"maximized\":%d", &maximized);
-        if (resizablePtr)
-            sscanf(resizablePtr, "\"resizable\":%d", &resizable);
-        if (hudPtr)
-            sscanf(hudPtr, "\"hud\":%d", &hud);
+        ExtractJsonIntField(exportRuntimePtr, "width", &width);
+        ExtractJsonIntField(exportRuntimePtr, "height", &height);
+        ExtractJsonIntField(exportRuntimePtr, "console", &console);
+        ExtractJsonIntField(exportRuntimePtr, "fullscreen", &fullscreen);
+        ExtractJsonIntField(exportRuntimePtr, "maximized", &maximized);
+        ExtractJsonIntField(exportRuntimePtr, "resizable", &resizable);
+        ExtractJsonIntField(exportRuntimePtr, "hud", &hud);
 
         out->windowWidth = width;
         out->windowHeight = height;
@@ -1478,7 +1571,7 @@ bool LoadProject(const char *path)
     }
 
     // Ler configuracoes de exportacao (compativel: pode nao existir em projetos antigos)
-    const char *exportPtr = strstr(buffer, "\"export\":{");
+    const char *exportPtr = FindJsonObjectValue(buffer, "export");
     if (exportPtr)
     {
         char exportGameNameEsc[128] = {0};
@@ -1486,16 +1579,16 @@ bool LoadProject(const char *path)
         char exportIconEsc[512] = {0};
         char exportOutputEsc[512] = {0};
 
-        if (ExtractJsonString(exportPtr, "\"gameName\":\"", exportGameNameEsc, sizeof(exportGameNameEsc)))
+        if (ExtractJsonStringField(exportPtr, "gameName", exportGameNameEsc, sizeof(exportGameNameEsc)))
             UnescapeJsonString(exportGameNameEsc, projectExportSettings.gameName, sizeof(projectExportSettings.gameName));
-        if (ExtractJsonString(exportPtr, "\"exeName\":\"", exportExeNameEsc, sizeof(exportExeNameEsc)))
+        if (ExtractJsonStringField(exportPtr, "exeName", exportExeNameEsc, sizeof(exportExeNameEsc)))
             UnescapeJsonString(exportExeNameEsc, projectExportSettings.exeName, sizeof(projectExportSettings.exeName));
-        if (ExtractJsonString(exportPtr, "\"icon\":\"", exportIconEsc, sizeof(exportIconEsc)))
+        if (ExtractJsonStringField(exportPtr, "icon", exportIconEsc, sizeof(exportIconEsc)))
             UnescapeJsonString(exportIconEsc, projectExportSettings.iconPath, sizeof(projectExportSettings.iconPath));
-        if (ExtractJsonString(exportPtr, "\"output\":\"", exportOutputEsc, sizeof(exportOutputEsc)))
+        if (ExtractJsonStringField(exportPtr, "output", exportOutputEsc, sizeof(exportOutputEsc)))
             UnescapeJsonString(exportOutputEsc, projectExportSettings.outputDir, sizeof(projectExportSettings.outputDir));
     }
-    const char *exportRuntimePtr = strstr(buffer, "\"exportRuntime\":{");
+    const char *exportRuntimePtr = FindJsonObjectValue(buffer, "exportRuntime");
     if (exportRuntimePtr)
     {
         int width = projectExportSettings.windowWidth;
@@ -1506,28 +1599,13 @@ bool LoadProject(const char *path)
         int resizable = projectExportSettings.resizableWindow ? 1 : 0;
         int hud = projectExportSettings.showStartupHud ? 1 : 0;
 
-        const char *widthPtr = strstr(exportRuntimePtr, "\"width\":");
-        const char *heightPtr = strstr(exportRuntimePtr, "\"height\":");
-        const char *consolePtr = strstr(exportRuntimePtr, "\"console\":");
-        const char *fullscreenPtr = strstr(exportRuntimePtr, "\"fullscreen\":");
-        const char *maximizedPtr = strstr(exportRuntimePtr, "\"maximized\":");
-        const char *resizablePtr = strstr(exportRuntimePtr, "\"resizable\":");
-        const char *hudPtr = strstr(exportRuntimePtr, "\"hud\":");
-
-        if (widthPtr)
-            sscanf(widthPtr, "\"width\":%d", &width);
-        if (heightPtr)
-            sscanf(heightPtr, "\"height\":%d", &height);
-        if (consolePtr)
-            sscanf(consolePtr, "\"console\":%d", &console);
-        if (fullscreenPtr)
-            sscanf(fullscreenPtr, "\"fullscreen\":%d", &fullscreen);
-        if (maximizedPtr)
-            sscanf(maximizedPtr, "\"maximized\":%d", &maximized);
-        if (resizablePtr)
-            sscanf(resizablePtr, "\"resizable\":%d", &resizable);
-        if (hudPtr)
-            sscanf(hudPtr, "\"hud\":%d", &hud);
+        ExtractJsonIntField(exportRuntimePtr, "width", &width);
+        ExtractJsonIntField(exportRuntimePtr, "height", &height);
+        ExtractJsonIntField(exportRuntimePtr, "console", &console);
+        ExtractJsonIntField(exportRuntimePtr, "fullscreen", &fullscreen);
+        ExtractJsonIntField(exportRuntimePtr, "maximized", &maximized);
+        ExtractJsonIntField(exportRuntimePtr, "resizable", &resizable);
+        ExtractJsonIntField(exportRuntimePtr, "hud", &hud);
 
         projectExportSettings.windowWidth = width;
         projectExportSettings.windowHeight = height;

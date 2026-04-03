@@ -45,7 +45,7 @@ static bool exportDialogSuccess = false;
 
 static bool AreResolutionFieldsLocked(void)
 {
-    return exportDialogSettings.startMaximized;
+    return exportDialogSettings.startMaximized || exportDialogSettings.startFullscreen;
 }
 
 static void CopyStringSafe(char *dst, size_t dstSize, const char *src)
@@ -349,12 +349,17 @@ void UpdateExportDialog(void)
     if (CheckCollisionPointRec(mouse, layout.toggleConsole) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
         ToggleExportOption(&exportDialogSettings.showConsole);
     else if (CheckCollisionPointRec(mouse, layout.toggleFullscreen) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
         ToggleExportOption(&exportDialogSettings.startFullscreen);
+        if (exportDialogSettings.startFullscreen)
+            exportDialogSettings.startMaximized = false;
+    }
     else if (CheckCollisionPointRec(mouse, layout.toggleMaximized) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
         ToggleExportOption(&exportDialogSettings.startMaximized);
         if (exportDialogSettings.startMaximized)
         {
+            exportDialogSettings.startFullscreen = false;
             exportInputWidth.active = false;
             exportInputHeight.active = false;
         }
@@ -451,7 +456,10 @@ void DrawExportDialog(void)
     if (resolutionLocked)
     {
         Rectangle resolutionHintBounds = {layout.inputWidth.x, layout.inputHeight.y + layout.inputHeight.height + 6.0f, layout.inputHeight.x + layout.inputHeight.width - layout.inputWidth.x, 12.0f};
-        DrawClippedText("Largura e altura ficam desativadas enquanto Janela maximizada estiver ativa.", resolutionHintBounds, 10, style->textMuted);
+        const char *resolutionHint = exportDialogSettings.startFullscreen
+                                         ? "Tela cheia ignora a largura e altura da janela e usa o monitor atual."
+                                         : "Largura e altura ficam desativadas enquanto Janela maximizada estiver ativa.";
+        DrawClippedText(resolutionHint, resolutionHintBounds, 10, style->textMuted);
     }
 
     DrawOptionCard(layout.toggleConsole,
@@ -460,7 +468,7 @@ void DrawExportDialog(void)
                    exportDialogSettings.showConsole);
     DrawOptionCard(layout.toggleFullscreen,
                    "Tela cheia",
-                   "Mantem o player em tela cheia enquanto o build estiver em execucao.",
+                   "Usa uma janela sem borda no tamanho do monitor atual, sem trocar a resolucao do monitor.",
                    exportDialogSettings.startFullscreen);
     DrawOptionCard(layout.toggleMaximized,
                    "Janela maximizada",

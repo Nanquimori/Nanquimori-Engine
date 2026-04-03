@@ -1,12 +1,12 @@
 #include "game_application.h"
 
-#include "assets/model_manager.h"
-#include "editor/viewport/camera_controller.h"
-#include "editor/ui/properties_panel.h"
-#include "physics/nanquimori_physics.h"
-#include "scene/scene_manager.h"
 #include "app/window_icon_win32.h"
+#include "assets/model_manager.h"
+#include "editor/ui/properties_panel.h"
+#include "editor/viewport/camera_controller.h"
+#include "physics/nanquimori_physics.h"
 #include "raylib.h"
+#include "scene/scene_manager.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -14,10 +14,10 @@ static Camera runtimeCamera = {0};
 static bool runtimeProjectLoaded = false;
 static char runtimeProjectPath[512] = {0};
 static char runtimeError[256] = {0};
+static char runtimeStatusText[128] = "Carregando jogo...";
 static ProjectExportSettings runtimeBootSettings = {0};
-static ProjectExportSettings runtimeAppliedWindowSettings = {0};
-static ProjectExportSettings runtimePendingWindowSettings = {0};
-static bool runtimeWindowSettingsPending = false;
+static bool runtimeProjectLoadPending = false;
+static int runtimeProjectLoadDelayFrames = 0;
 
 static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativePath, char *out, size_t outSize)
 {
@@ -40,6 +40,7 @@ static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativ
         next[sizeof(next) - 1] = '\0';
         if (strcmp(next, current) == 0)
             break;
+
         strncpy(current, next, sizeof(current) - 1);
         current[sizeof(current) - 1] = '\0';
     }
@@ -79,21 +80,6 @@ static void ApplyRuntimeWindowIcon(void)
 #endif
 }
 
-static void LoadRuntimeBootSettings(void)
-{
-    runtimeBootSettings = (ProjectExportSettings){0};
-    runtimeBootSettings.windowWidth = 1280;
-    runtimeBootSettings.windowHeight = 720;
-    runtimeBootSettings.resizableWindow = true;
-    runtimeBootSettings.showStartupHud = false;
-
-    char projectJsonPath[512] = {0};
-    if (!ResolveRuntimeFile("project.json", projectJsonPath, sizeof(projectJsonPath)))
-        return;
-
-    LoadProjectExportSettingsFromFile(projectJsonPath, &runtimeBootSettings);
-}
-
 static int GetRuntimeWindowWidth(int width)
 {
     return (width < 320) ? 1280 : width;
@@ -104,21 +90,56 @@ static int GetRuntimeWindowHeight(int height)
     return (height < 240) ? 720 : height;
 }
 
-static void CenterRuntimeWindowOnCurrentMonitor(int width, int height)
+static void NormalizeRuntimeWindowSettings(ProjectExportSettings *settings)
 {
-    int monitor = GetCurrentMonitor();
-    if (monitor < 0)
-        monitor = 0;
-
-    Vector2 monitorPosition = GetMonitorPosition(monitor);
-    int monitorWidth = GetMonitorWidth(monitor);
-    int monitorHeight = GetMonitorHeight(monitor);
-    if (monitorWidth <= 0 || monitorHeight <= 0)
+    if (!settings)
         return;
 
-    int x = (int)monitorPosition.x + (monitorWidth - width) / 2;
-    int y = (int)monitorPosition.y + (monitorHeight - height) / 2;
-    SetWindowPosition(x, y);
+    settings->windowWidth = GetRuntimeWindowWidth(settings->windowWidth);
+    settings->windowHeight = GetRuntimeWindowHeight(settings->windowHeight);
+
+    if (settings->startFullscreen)
+    {
+        settings->startMaximized = false;
+        settings->resizableWindow = false;
+    }
+}
+
+static void GetRuntimeLaunchWindowSize(const ProjectExportSettings *settings, int *outWidth, int *outHeight)
+{
+    int width = GetRuntimeWindowWidth(settings ? settings->windowWidth : 1280);
+    int height = GetRuntimeWindowHeight(settings ? settings->windowHeight : 720);
+
+    if (settings && settings->startFullscreen)
+    {
+#ifdef _WIN32
+        if (!GetWin32CurrentDisplaySize(&width, &height))
+#endif
+        {
+            width = GetRuntimeWindowWidth(width);
+            height = GetRuntimeWindowHeight(height);
+        }
+    }
+
+    if (outWidth)
+        *outWidth = width;
+    if (outHeight)
+        *outHeight = height;
+}
+
+static void LoadRuntimeBootSettings(void)
+{
+    runtimeBootSettings = (ProjectExportSettings){0};
+    runtimeBootSettings.windowWidth = 1280;
+    runtimeBootSettings.windowHeight = 720;
+    runtimeBootSettings.resizableWindow = true;
+    runtimeBootSettings.showStartupHud = false;
+
+    char projectJsonPath[512] = {0};
+    if (ResolveRuntimeFile("project.json", projectJsonPath, sizeof(projectJsonPath)))
+        LoadProjectExportSettingsFromFile(projectJsonPath, &runtimeBootSettings);
+
+    NormalizeRuntimeWindowSettings(&runtimeBootSettings);
 }
 
 static void GetCenteredRuntimeWindowPosition(int width, int height, int *outX, int *outY)
@@ -144,83 +165,37 @@ static void GetCenteredRuntimeWindowPosition(int width, int height, int *outX, i
         *outY = y;
 }
 
-static void QueueRuntimeWindowSettings(const ProjectExportSettings *settings)
-{
-    if (!settings)
-        return;
-
-    runtimePendingWindowSettings = *settings;
-    runtimePendingWindowSettings.windowWidth = GetRuntimeWindowWidth(runtimePendingWindowSettings.windowWidth);
-    runtimePendingWindowSettings.windowHeight = GetRuntimeWindowHeight(runtimePendingWindowSettings.windowHeight);
-    runtimeWindowSettingsPending = true;
-}
-
 static void ApplyRuntimeWindowSettingsNow(const ProjectExportSettings *settings)
 {
     if (!settings)
         return;
 
     ProjectExportSettings applied = *settings;
-    applied.windowWidth = GetRuntimeWindowWidth(applied.windowWidth);
-    applied.windowHeight = GetRuntimeWindowHeight(applied.windowHeight);
+    NormalizeRuntimeWindowSettings(&applied);
 
     if (applied.startFullscreen)
-    {
-        int monitor = GetCurrentMonitor();
-        if (monitor < 0)
-            monitor = 0;
+        return;
 
-        Vector2 monitorPosition = GetMonitorPosition(monitor);
-        int monitorWidth = GetMonitorWidth(monitor);
-        int monitorHeight = GetMonitorHeight(monitor);
-        if (monitorWidth <= 0)
-            monitorWidth = applied.windowWidth;
-        if (monitorHeight <= 0)
-            monitorHeight = applied.windowHeight;
-        if (monitorWidth > 64)
-            monitorWidth -= 1;
-        if (monitorHeight > 64)
-            monitorHeight -= 1;
-
-        ClearWindowState(FLAG_WINDOW_RESIZABLE);
-        SetWindowState(FLAG_WINDOW_UNDECORATED);
-        SetWindowState(FLAG_WINDOW_TOPMOST);
-#ifdef _WIN32
-        SetWin32WindowBounds(GetWindowHandle(), (int)monitorPosition.x, (int)monitorPosition.y, monitorWidth, monitorHeight, true);
-#else
-        SetWindowPosition((int)monitorPosition.x, (int)monitorPosition.y);
-        SetWindowSize(monitorWidth, monitorHeight);
-#endif
-        SetWindowFocused();
-    }
+    if (applied.resizableWindow || applied.startMaximized)
+        SetWindowState(FLAG_WINDOW_RESIZABLE);
     else
-    {
-        ClearWindowState(FLAG_WINDOW_UNDECORATED);
-        ClearWindowState(FLAG_WINDOW_TOPMOST);
-        if (applied.resizableWindow || applied.startMaximized)
-            SetWindowState(FLAG_WINDOW_RESIZABLE);
-        else
-            ClearWindowState(FLAG_WINDOW_RESIZABLE);
+        ClearWindowState(FLAG_WINDOW_RESIZABLE);
 
-        int windowX = 0;
-        int windowY = 0;
-        GetCenteredRuntimeWindowPosition(applied.windowWidth, applied.windowHeight, &windowX, &windowY);
+    int windowX = 0;
+    int windowY = 0;
+    GetCenteredRuntimeWindowPosition(applied.windowWidth, applied.windowHeight, &windowX, &windowY);
+
 #ifdef _WIN32
-        SetWin32WindowBounds(GetWindowHandle(), windowX, windowY, applied.windowWidth, applied.windowHeight, false);
-        SetWin32WindowMaximized(GetWindowHandle(), applied.startMaximized);
+    SetWin32WindowBounds(GetWindowHandle(), windowX, windowY, applied.windowWidth, applied.windowHeight, false);
+    SetWin32WindowMaximized(GetWindowHandle(), applied.startMaximized);
 #else
-        SetWindowSize(applied.windowWidth, applied.windowHeight);
-        CenterRuntimeWindowOnCurrentMonitor(applied.windowWidth, applied.windowHeight);
-        if (applied.startMaximized)
-            MaximizeWindow();
-        else
-            RestoreWindow();
+    SetWindowSize(applied.windowWidth, applied.windowHeight);
+    SetWindowPosition(windowX, windowY);
+    if (applied.startMaximized)
+        MaximizeWindow();
+    else
+        RestoreWindow();
 #endif
-        SetWindowFocused();
-    }
-
-    runtimeAppliedWindowSettings = applied;
-    runtimeWindowSettingsPending = false;
 }
 
 static bool ReloadRuntimeProject(void)
@@ -254,10 +229,10 @@ static bool ReloadRuntimeProject(void)
 
     ProjectExportSettings exportSettings = {0};
     GetProjectExportSettings(&exportSettings);
+    NormalizeRuntimeWindowSettings(&exportSettings);
+
     if (exportSettings.gameName[0] != '\0')
         SetWindowTitle(exportSettings.gameName);
-
-    QueueRuntimeWindowSettings(&exportSettings);
     SetWin32ConsoleVisible(exportSettings.showConsole);
 
     ResetNanquimoriPhysicsWorld();
@@ -268,19 +243,30 @@ static bool ReloadRuntimeProject(void)
 void InitializeGameApplication(void)
 {
     LoadRuntimeBootSettings();
-    runtimeAppliedWindowSettings = (ProjectExportSettings){0};
-    runtimePendingWindowSettings = (ProjectExportSettings){0};
-    runtimeWindowSettingsPending = false;
+    runtimeProjectLoaded = false;
+    runtimeError[0] = '\0';
+    strncpy(runtimeStatusText, "Carregando jogo...", sizeof(runtimeStatusText) - 1);
+    runtimeStatusText[sizeof(runtimeStatusText) - 1] = '\0';
+    runtimeProjectLoadPending = true;
+    runtimeProjectLoadDelayFrames = 1;
+
+    int bootWidth = 1280;
+    int bootHeight = 720;
+    GetRuntimeLaunchWindowSize(&runtimeBootSettings, &bootWidth, &bootHeight);
 
     unsigned int flags = 0;
-    if ((runtimeBootSettings.resizableWindow || runtimeBootSettings.startMaximized) && !runtimeBootSettings.startFullscreen)
+    if (runtimeBootSettings.startFullscreen)
+        flags |= FLAG_FULLSCREEN_MODE;
+    else if (runtimeBootSettings.resizableWindow || runtimeBootSettings.startMaximized)
         flags |= FLAG_WINDOW_RESIZABLE;
-    if (runtimeBootSettings.startMaximized && !runtimeBootSettings.startFullscreen)
+    if (!runtimeBootSettings.startFullscreen && runtimeBootSettings.startMaximized)
         flags |= FLAG_WINDOW_MAXIMIZED;
+
     SetConfigFlags(flags);
-    InitWindow(GetRuntimeWindowWidth(runtimeBootSettings.windowWidth),
-               GetRuntimeWindowHeight(runtimeBootSettings.windowHeight),
+    InitWindow(bootWidth,
+               bootHeight,
                runtimeBootSettings.gameName[0] != '\0' ? runtimeBootSettings.gameName : "Nanquimori Game");
+
     ApplyRuntimeWindowIcon();
     SetWin32ConsoleVisible(runtimeBootSettings.showConsole);
     SetTargetFPS(60);
@@ -295,18 +281,35 @@ void InitializeGameApplication(void)
     InitSceneManager();
     InitNanquimoriPhysics();
 
-    ReloadRuntimeProject();
-    if (runtimeWindowSettingsPending)
-        ApplyRuntimeWindowSettingsNow(&runtimePendingWindowSettings);
+    if (!runtimeBootSettings.startFullscreen)
+        ApplyRuntimeWindowSettingsNow(&runtimeBootSettings);
 }
 
 void UpdateGameApplication(void)
 {
-    if (IsKeyPressed(KEY_R))
-        ReloadRuntimeProject();
+    if (runtimeProjectLoadPending)
+    {
+        if (runtimeProjectLoadDelayFrames > 0)
+        {
+            runtimeProjectLoadDelayFrames--;
+            return;
+        }
 
-    if (runtimeWindowSettingsPending)
-        ApplyRuntimeWindowSettingsNow(&runtimePendingWindowSettings);
+        runtimeProjectLoadPending = false;
+        ReloadRuntimeProject();
+        return;
+    }
+
+    if (IsKeyPressed(KEY_R))
+    {
+        runtimeProjectLoaded = false;
+        runtimeError[0] = '\0';
+        strncpy(runtimeStatusText, "Recarregando projeto...", sizeof(runtimeStatusText) - 1);
+        runtimeStatusText[sizeof(runtimeStatusText) - 1] = '\0';
+        runtimeProjectLoadPending = true;
+        runtimeProjectLoadDelayFrames = 1;
+        return;
+    }
 
     if (!runtimeProjectLoaded)
         return;
@@ -327,13 +330,14 @@ void RenderGameApplication(void)
         RenderModels();
         EndMode3D();
     }
-
-    if (runtimeError[0] != '\0')
+    else
     {
-        int messageWidth = MeasureText(runtimeError, 16);
+        const char *statusText = runtimeError[0] != '\0' ? runtimeError : runtimeStatusText;
+        Color statusColor = runtimeError[0] != '\0' ? (Color){220, 96, 88, 255} : (Color){220, 224, 232, 255};
+        int messageWidth = MeasureText(statusText, 18);
         int x = GetScreenWidth() / 2 - messageWidth / 2;
-        int y = GetScreenHeight() / 2 - 8;
-        DrawText(runtimeError, x, y, 16, (Color){220, 96, 88, 255});
+        int y = GetScreenHeight() / 2 - 10;
+        DrawText(statusText, x, y, 18, statusColor);
     }
 
     EndDrawing();
