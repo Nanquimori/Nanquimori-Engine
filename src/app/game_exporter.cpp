@@ -583,6 +583,7 @@ static void MergeExportSettings(ProjectExportSettings *target, const ProjectExpo
     if (overrideSettings->windowHeight > 0)
         target->windowHeight = overrideSettings->windowHeight;
     target->showConsole = overrideSettings->showConsole;
+    target->fullscreenMode = overrideSettings->fullscreenMode;
     target->startFullscreen = overrideSettings->startFullscreen;
     target->startMaximized = overrideSettings->startMaximized;
     target->resizableWindow = overrideSettings->resizableWindow;

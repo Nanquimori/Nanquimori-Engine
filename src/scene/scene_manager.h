@@ -7,6 +7,13 @@
 #define MAX_SCENES 16
 #define MAX_RECENT_PROJECTS 3
 
+typedef enum
+{
+    EXPORT_FULLSCREEN_DISABLED = 0,
+    EXPORT_FULLSCREEN_EXCLUSIVE = 1,
+    EXPORT_FULLSCREEN_BORDERLESS = 2
+} ExportFullscreenMode;
+
 typedef struct
 {
     char gameName[64];
@@ -16,6 +23,7 @@ typedef struct
     int windowWidth;
     int windowHeight;
     bool showConsole;
+    int fullscreenMode;
     bool startFullscreen;
     bool startMaximized;
     bool resizableWindow;

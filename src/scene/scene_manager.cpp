@@ -940,16 +940,33 @@ static void ResetProjectExportSettings(ProjectExportSettings *settings)
     settings->windowWidth = 1280;
     settings->windowHeight = 720;
     settings->showConsole = false;
+    settings->fullscreenMode = EXPORT_FULLSCREEN_DISABLED;
     settings->startFullscreen = false;
     settings->startMaximized = false;
     settings->resizableWindow = true;
     settings->showStartupHud = false;
 }
 
+static int NormalizeExportFullscreenModeValue(int fullscreenMode, bool legacyStartFullscreen)
+{
+    if (fullscreenMode < EXPORT_FULLSCREEN_DISABLED || fullscreenMode > EXPORT_FULLSCREEN_BORDERLESS)
+        return legacyStartFullscreen ? EXPORT_FULLSCREEN_EXCLUSIVE : EXPORT_FULLSCREEN_DISABLED;
+    return fullscreenMode;
+}
+
 static void ApplyDefaultExportSettings(ProjectExportSettings *settings)
 {
     if (!settings)
         return;
+
+    settings->fullscreenMode = NormalizeExportFullscreenModeValue(settings->fullscreenMode, settings->startFullscreen);
+    settings->startFullscreen = (settings->fullscreenMode != EXPORT_FULLSCREEN_DISABLED);
+
+    if (settings->startFullscreen)
+    {
+        settings->startMaximized = false;
+        settings->resizableWindow = false;
+    }
 
     char defaultName[64] = {0};
     if (projectDir[0] != '\0')
@@ -1185,11 +1202,12 @@ bool SaveProject(void)
     EscapeJsonString(projectExportSettings.outputDir, exportOutputEsc, sizeof(exportOutputEsc));
     fprintf(f, "\"export\":{\"gameName\":\"%s\",\"exeName\":\"%s\",\"icon\":\"%s\",\"output\":\"%s\"},\n",
             exportGameNameEsc, exportExeNameEsc, exportIconEsc, exportOutputEsc);
-    fprintf(f, "\"exportRuntime\":{\"width\":%d,\"height\":%d,\"console\":%d,\"fullscreen\":%d,\"maximized\":%d,\"resizable\":%d,\"hud\":%d},\n",
+    fprintf(f, "\"exportRuntime\":{\"width\":%d,\"height\":%d,\"console\":%d,\"fullscreen\":%d,\"fullscreenMode\":%d,\"maximized\":%d,\"resizable\":%d,\"hud\":%d},\n",
             projectExportSettings.windowWidth,
             projectExportSettings.windowHeight,
             projectExportSettings.showConsole ? 1 : 0,
             projectExportSettings.startFullscreen ? 1 : 0,
+            projectExportSettings.fullscreenMode,
             projectExportSettings.startMaximized ? 1 : 0,
             projectExportSettings.resizableWindow ? 1 : 0,
             projectExportSettings.showStartupHud ? 1 : 0);
@@ -1444,6 +1462,7 @@ bool LoadProjectExportSettingsFromFile(const char *projectJsonPath, ProjectExpor
         int width = out->windowWidth;
         int height = out->windowHeight;
         int console = out->showConsole ? 1 : 0;
+        int fullscreenMode = out->fullscreenMode;
         int fullscreen = out->startFullscreen ? 1 : 0;
         int maximized = out->startMaximized ? 1 : 0;
         int resizable = out->resizableWindow ? 1 : 0;
@@ -1452,6 +1471,7 @@ bool LoadProjectExportSettingsFromFile(const char *projectJsonPath, ProjectExpor
         ExtractJsonIntField(exportRuntimePtr, "width", &width);
         ExtractJsonIntField(exportRuntimePtr, "height", &height);
         ExtractJsonIntField(exportRuntimePtr, "console", &console);
+        ExtractJsonIntField(exportRuntimePtr, "fullscreenMode", &fullscreenMode);
         ExtractJsonIntField(exportRuntimePtr, "fullscreen", &fullscreen);
         ExtractJsonIntField(exportRuntimePtr, "maximized", &maximized);
         ExtractJsonIntField(exportRuntimePtr, "resizable", &resizable);
@@ -1460,6 +1480,7 @@ bool LoadProjectExportSettingsFromFile(const char *projectJsonPath, ProjectExpor
         out->windowWidth = width;
         out->windowHeight = height;
         out->showConsole = (console != 0);
+        out->fullscreenMode = fullscreenMode;
         out->startFullscreen = (fullscreen != 0);
         out->startMaximized = (maximized != 0);
         out->resizableWindow = (resizable != 0);
@@ -1594,6 +1615,7 @@ bool LoadProject(const char *path)
         int width = projectExportSettings.windowWidth;
         int height = projectExportSettings.windowHeight;
         int console = projectExportSettings.showConsole ? 1 : 0;
+        int fullscreenMode = projectExportSettings.fullscreenMode;
         int fullscreen = projectExportSettings.startFullscreen ? 1 : 0;
         int maximized = projectExportSettings.startMaximized ? 1 : 0;
         int resizable = projectExportSettings.resizableWindow ? 1 : 0;
@@ -1602,6 +1624,7 @@ bool LoadProject(const char *path)
         ExtractJsonIntField(exportRuntimePtr, "width", &width);
         ExtractJsonIntField(exportRuntimePtr, "height", &height);
         ExtractJsonIntField(exportRuntimePtr, "console", &console);
+        ExtractJsonIntField(exportRuntimePtr, "fullscreenMode", &fullscreenMode);
         ExtractJsonIntField(exportRuntimePtr, "fullscreen", &fullscreen);
         ExtractJsonIntField(exportRuntimePtr, "maximized", &maximized);
         ExtractJsonIntField(exportRuntimePtr, "resizable", &resizable);
@@ -1610,6 +1633,7 @@ bool LoadProject(const char *path)
         projectExportSettings.windowWidth = width;
         projectExportSettings.windowHeight = height;
         projectExportSettings.showConsole = (console != 0);
+        projectExportSettings.fullscreenMode = fullscreenMode;
         projectExportSettings.startFullscreen = (fullscreen != 0);
         projectExportSettings.startMaximized = (maximized != 0);
         projectExportSettings.resizableWindow = (resizable != 0);

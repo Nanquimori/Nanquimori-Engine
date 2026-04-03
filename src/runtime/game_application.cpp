@@ -19,6 +19,21 @@ static ProjectExportSettings runtimeBootSettings = {0};
 static bool runtimeProjectLoadPending = false;
 static int runtimeProjectLoadDelayFrames = 0;
 
+static const int RUNTIME_BORDERLESS_SAFE_MARGIN = 1;
+
+static void ApplyRuntimeWindowSettingsNow(const ProjectExportSettings *settings);
+
+static int GetRuntimeFullscreenMode(const ProjectExportSettings *settings)
+{
+    if (!settings)
+        return EXPORT_FULLSCREEN_DISABLED;
+
+    int mode = settings->fullscreenMode;
+    if (mode < EXPORT_FULLSCREEN_DISABLED || mode > EXPORT_FULLSCREEN_BORDERLESS)
+        mode = settings->startFullscreen ? EXPORT_FULLSCREEN_EXCLUSIVE : EXPORT_FULLSCREEN_DISABLED;
+    return mode;
+}
+
 static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativePath, char *out, size_t outSize)
 {
     if (!baseDir || baseDir[0] == '\0' || !relativePath || relativePath[0] == '\0' || !out || outSize == 0)
@@ -90,15 +105,58 @@ static int GetRuntimeWindowHeight(int height)
     return (height < 240) ? 720 : height;
 }
 
+static void GetRuntimeBorderlessWindowBounds(int *outX, int *outY, int *outWidth, int *outHeight)
+{
+    int monitor = GetCurrentMonitor();
+    if (monitor < 0)
+        monitor = 0;
+
+    Vector2 monitorPosition = GetMonitorPosition(monitor);
+    int width = GetMonitorWidth(monitor);
+    int height = GetMonitorHeight(monitor);
+
+#ifdef _WIN32
+    if (width <= 0 || height <= 0)
+        GetWin32CurrentDisplaySize(&width, &height);
+#endif
+
+    if (width <= 0)
+        width = 1280;
+    if (height <= 0)
+        height = 720;
+
+#ifdef _WIN32
+    if (outX)
+        *outX = (int)monitorPosition.x - RUNTIME_BORDERLESS_SAFE_MARGIN;
+    if (outY)
+        *outY = (int)monitorPosition.y - RUNTIME_BORDERLESS_SAFE_MARGIN;
+    if (outWidth)
+        *outWidth = width + RUNTIME_BORDERLESS_SAFE_MARGIN * 2;
+    if (outHeight)
+        *outHeight = height + RUNTIME_BORDERLESS_SAFE_MARGIN * 2;
+#else
+    if (outX)
+        *outX = (int)monitorPosition.x;
+    if (outY)
+        *outY = (int)monitorPosition.y;
+    if (outWidth)
+        *outWidth = width;
+    if (outHeight)
+        *outHeight = height;
+#endif
+}
+
 static void NormalizeRuntimeWindowSettings(ProjectExportSettings *settings)
 {
     if (!settings)
         return;
 
+    settings->fullscreenMode = GetRuntimeFullscreenMode(settings);
+    settings->startFullscreen = (settings->fullscreenMode != EXPORT_FULLSCREEN_DISABLED);
     settings->windowWidth = GetRuntimeWindowWidth(settings->windowWidth);
     settings->windowHeight = GetRuntimeWindowHeight(settings->windowHeight);
 
-    if (settings->startFullscreen)
+    if (settings->fullscreenMode != EXPORT_FULLSCREEN_DISABLED)
     {
         settings->startMaximized = false;
         settings->resizableWindow = false;
@@ -107,10 +165,24 @@ static void NormalizeRuntimeWindowSettings(ProjectExportSettings *settings)
 
 static void GetRuntimeLaunchWindowSize(const ProjectExportSettings *settings, int *outWidth, int *outHeight)
 {
+    if (settings && GetRuntimeFullscreenMode(settings) == EXPORT_FULLSCREEN_BORDERLESS)
+    {
+        int x = 0;
+        int y = 0;
+        int width = 0;
+        int height = 0;
+        GetRuntimeBorderlessWindowBounds(&x, &y, &width, &height);
+        if (outWidth)
+            *outWidth = width;
+        if (outHeight)
+            *outHeight = height;
+        return;
+    }
+
     int width = GetRuntimeWindowWidth(settings ? settings->windowWidth : 1280);
     int height = GetRuntimeWindowHeight(settings ? settings->windowHeight : 720);
 
-    if (settings && settings->startFullscreen)
+    if (settings && GetRuntimeFullscreenMode(settings) != EXPORT_FULLSCREEN_DISABLED)
     {
 #ifdef _WIN32
         if (!GetWin32CurrentDisplaySize(&width, &height))
@@ -140,6 +212,34 @@ static void LoadRuntimeBootSettings(void)
         LoadProjectExportSettingsFromFile(projectJsonPath, &runtimeBootSettings);
 
     NormalizeRuntimeWindowSettings(&runtimeBootSettings);
+}
+
+static void ApplyRuntimeStartupWindowPlacement(const ProjectExportSettings *settings)
+{
+    if (!settings)
+        return;
+
+    ProjectExportSettings applied = *settings;
+    NormalizeRuntimeWindowSettings(&applied);
+
+    int fullscreenMode = applied.fullscreenMode;
+
+    if (fullscreenMode == EXPORT_FULLSCREEN_BORDERLESS)
+    {
+#ifdef _WIN32
+        int x = 0;
+        int y = 0;
+        int width = 0;
+        int height = 0;
+        GetRuntimeBorderlessWindowBounds(&x, &y, &width, &height);
+        SetWin32WindowBounds(GetWindowHandle(), x, y, width, height, false);
+#endif
+        return;
+    }
+    else
+    {
+        ApplyRuntimeWindowSettingsNow(&applied);
+    }
 }
 
 static void GetCenteredRuntimeWindowPosition(int width, int height, int *outX, int *outY)
@@ -173,8 +273,37 @@ static void ApplyRuntimeWindowSettingsNow(const ProjectExportSettings *settings)
     ProjectExportSettings applied = *settings;
     NormalizeRuntimeWindowSettings(&applied);
 
-    if (applied.startFullscreen)
+    int fullscreenMode = applied.fullscreenMode;
+
+    if (fullscreenMode == EXPORT_FULLSCREEN_EXCLUSIVE)
         return;
+
+    if (fullscreenMode == EXPORT_FULLSCREEN_BORDERLESS)
+    {
+        ClearWindowState(FLAG_WINDOW_RESIZABLE);
+        if (!IsWindowState(FLAG_WINDOW_UNDECORATED))
+            SetWindowState(FLAG_WINDOW_UNDECORATED);
+#ifdef _WIN32
+        int x = 0;
+        int y = 0;
+        int width = 0;
+        int height = 0;
+        GetRuntimeBorderlessWindowBounds(&x, &y, &width, &height);
+        SetWin32WindowBounds(GetWindowHandle(), x, y, width, height, false);
+#else
+        int x = 0;
+        int y = 0;
+        int width = 0;
+        int height = 0;
+        GetRuntimeBorderlessWindowBounds(&x, &y, &width, &height);
+        SetWindowPosition(x, y);
+        SetWindowSize(width, height);
+#endif
+        return;
+    }
+
+    if (IsWindowState(FLAG_WINDOW_UNDECORATED))
+        ClearWindowState(FLAG_WINDOW_UNDECORATED);
 
     if (applied.resizableWindow || applied.startMaximized)
         SetWindowState(FLAG_WINDOW_RESIZABLE);
@@ -253,13 +382,16 @@ void InitializeGameApplication(void)
     int bootWidth = 1280;
     int bootHeight = 720;
     GetRuntimeLaunchWindowSize(&runtimeBootSettings, &bootWidth, &bootHeight);
+    int fullscreenMode = GetRuntimeFullscreenMode(&runtimeBootSettings);
 
     unsigned int flags = 0;
-    if (runtimeBootSettings.startFullscreen)
+    if (fullscreenMode == EXPORT_FULLSCREEN_EXCLUSIVE)
         flags |= FLAG_FULLSCREEN_MODE;
+    else if (fullscreenMode == EXPORT_FULLSCREEN_BORDERLESS)
+        flags |= FLAG_WINDOW_UNDECORATED;
     else if (runtimeBootSettings.resizableWindow || runtimeBootSettings.startMaximized)
         flags |= FLAG_WINDOW_RESIZABLE;
-    if (!runtimeBootSettings.startFullscreen && runtimeBootSettings.startMaximized)
+    if (fullscreenMode == EXPORT_FULLSCREEN_DISABLED && runtimeBootSettings.startMaximized)
         flags |= FLAG_WINDOW_MAXIMIZED;
 
     SetConfigFlags(flags);
@@ -281,8 +413,8 @@ void InitializeGameApplication(void)
     InitSceneManager();
     InitNanquimoriPhysics();
 
-    if (!runtimeBootSettings.startFullscreen)
-        ApplyRuntimeWindowSettingsNow(&runtimeBootSettings);
+    if (fullscreenMode != EXPORT_FULLSCREEN_EXCLUSIVE)
+        ApplyRuntimeStartupWindowPlacement(&runtimeBootSettings);
 }
 
 void UpdateGameApplication(void)

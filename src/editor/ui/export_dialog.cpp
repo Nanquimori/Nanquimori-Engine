@@ -22,7 +22,8 @@ typedef struct
     Rectangle buttonSelectIcon;
     Rectangle buttonUseProjectIcon;
     Rectangle toggleConsole;
-    Rectangle toggleFullscreen;
+    Rectangle toggleBorderless;
+    Rectangle toggleExclusive;
     Rectangle toggleMaximized;
     Rectangle toggleResizable;
     Rectangle buttonExport;
@@ -43,9 +44,41 @@ static char exportHeightBuffer[16] = {0};
 static char exportDialogStatus[256] = {0};
 static bool exportDialogSuccess = false;
 
+static int GetExportFullscreenMode(void)
+{
+    int mode = exportDialogSettings.fullscreenMode;
+    if (mode < EXPORT_FULLSCREEN_DISABLED || mode > EXPORT_FULLSCREEN_BORDERLESS)
+        mode = exportDialogSettings.startFullscreen ? EXPORT_FULLSCREEN_EXCLUSIVE : EXPORT_FULLSCREEN_DISABLED;
+    return mode;
+}
+
+static bool IsExportFullscreenEnabled(void)
+{
+    return GetExportFullscreenMode() != EXPORT_FULLSCREEN_DISABLED;
+}
+
 static bool AreResolutionFieldsLocked(void)
 {
-    return exportDialogSettings.startMaximized || exportDialogSettings.startFullscreen;
+    return exportDialogSettings.startMaximized || IsExportFullscreenEnabled();
+}
+
+static void SetExportFullscreenMode(int mode)
+{
+    if (mode < EXPORT_FULLSCREEN_DISABLED || mode > EXPORT_FULLSCREEN_BORDERLESS)
+        mode = EXPORT_FULLSCREEN_DISABLED;
+
+    exportDialogSettings.fullscreenMode = mode;
+    exportDialogSettings.startFullscreen = (mode != EXPORT_FULLSCREEN_DISABLED);
+    if (exportDialogSettings.startFullscreen)
+        exportDialogSettings.startMaximized = false;
+}
+
+static void ToggleExportFullscreenMode(int mode)
+{
+    if (GetExportFullscreenMode() == mode)
+        SetExportFullscreenMode(EXPORT_FULLSCREEN_DISABLED);
+    else
+        SetExportFullscreenMode(mode);
 }
 
 static void CopyStringSafe(char *dst, size_t dstSize, const char *src)
@@ -130,7 +163,7 @@ static ExportDialogLayout GetExportDialogLayout(void)
 {
     ExportDialogLayout layout = {0};
     float panelW = ClampFloat((float)GetScreenWidth() - 56.0f, 700.0f, 860.0f);
-    float panelH = ClampFloat((float)GetScreenHeight() - 56.0f, 588.0f, 680.0f);
+    float panelH = ClampFloat((float)GetScreenHeight() - 56.0f, 650.0f, 744.0f);
     float panelX = (float)GetScreenWidth() * 0.5f - panelW * 0.5f;
     float panelY = (float)GetScreenHeight() * 0.5f - panelH * 0.5f;
     float margin = 24.0f;
@@ -159,10 +192,12 @@ static ExportDialogLayout GetExportDialogLayout(void)
     float toggleW = (fieldW - 12.0f) * 0.5f;
     float toggleH = 50.0f;
     layout.toggleConsole = (Rectangle){panelX + margin, y, toggleW, toggleH};
-    layout.toggleFullscreen = (Rectangle){layout.toggleConsole.x + toggleW + 12.0f, y, toggleW, toggleH};
+    layout.toggleBorderless = (Rectangle){layout.toggleConsole.x + toggleW + 12.0f, y, toggleW, toggleH};
     y += toggleH + 12.0f;
-    layout.toggleMaximized = (Rectangle){panelX + margin, y, toggleW, toggleH};
-    layout.toggleResizable = (Rectangle){layout.toggleMaximized.x + toggleW + 12.0f, y, toggleW, toggleH};
+    layout.toggleExclusive = (Rectangle){panelX + margin, y, toggleW, toggleH};
+    layout.toggleMaximized = (Rectangle){layout.toggleExclusive.x + toggleW + 12.0f, y, toggleW, toggleH};
+    y += toggleH + 12.0f;
+    layout.toggleResizable = (Rectangle){panelX + margin, y, fieldW, toggleH};
 
     layout.buttonExport = (Rectangle){panelX + panelW - 256.0f, panelY + panelH - 46.0f, 116.0f, 30.0f};
     layout.buttonCancel = (Rectangle){panelX + panelW - 128.0f, panelY + panelH - 46.0f, 104.0f, 30.0f};
@@ -296,7 +331,7 @@ static bool CommitExport(void)
 
     bool ok = ExportGameBuild(&settings, exportDialogStatus, sizeof(exportDialogStatus));
     exportDialogSuccess = ok;
-    exportDialogSettings = settings;
+    GetProjectExportSettings(&exportDialogSettings);
     SyncSettingsToUiBuffers();
     return ok;
 }
@@ -348,18 +383,16 @@ void UpdateExportDialog(void)
 
     if (CheckCollisionPointRec(mouse, layout.toggleConsole) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
         ToggleExportOption(&exportDialogSettings.showConsole);
-    else if (CheckCollisionPointRec(mouse, layout.toggleFullscreen) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-    {
-        ToggleExportOption(&exportDialogSettings.startFullscreen);
-        if (exportDialogSettings.startFullscreen)
-            exportDialogSettings.startMaximized = false;
-    }
+    else if (CheckCollisionPointRec(mouse, layout.toggleBorderless) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+        ToggleExportFullscreenMode(EXPORT_FULLSCREEN_BORDERLESS);
+    else if (CheckCollisionPointRec(mouse, layout.toggleExclusive) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+        ToggleExportFullscreenMode(EXPORT_FULLSCREEN_EXCLUSIVE);
     else if (CheckCollisionPointRec(mouse, layout.toggleMaximized) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
         ToggleExportOption(&exportDialogSettings.startMaximized);
         if (exportDialogSettings.startMaximized)
         {
-            exportDialogSettings.startFullscreen = false;
+            SetExportFullscreenMode(EXPORT_FULLSCREEN_DISABLED);
             exportInputWidth.active = false;
             exportInputHeight.active = false;
         }
@@ -439,6 +472,7 @@ void DrawExportDialog(void)
     TextInputConfig intCfg = textCfg;
     intCfg.filter = TEXT_INPUT_FILTER_INT;
     bool resolutionLocked = AreResolutionFieldsLocked();
+    int fullscreenMode = GetExportFullscreenMode();
     if (resolutionLocked)
     {
         intCfg.allowInput = false;
@@ -456,9 +490,11 @@ void DrawExportDialog(void)
     if (resolutionLocked)
     {
         Rectangle resolutionHintBounds = {layout.inputWidth.x, layout.inputHeight.y + layout.inputHeight.height + 6.0f, layout.inputHeight.x + layout.inputHeight.width - layout.inputWidth.x, 12.0f};
-        const char *resolutionHint = exportDialogSettings.startFullscreen
-                                         ? "Tela cheia ignora a largura e altura da janela e usa o monitor atual."
-                                         : "Largura e altura ficam desativadas enquanto Janela maximizada estiver ativa.";
+        const char *resolutionHint = "Largura e altura ficam desativadas enquanto Janela maximizada estiver ativa.";
+        if (fullscreenMode == EXPORT_FULLSCREEN_BORDERLESS)
+            resolutionHint = "Tela cheia sem borda ignora a largura e altura da janela e usa o monitor atual.";
+        else if (fullscreenMode == EXPORT_FULLSCREEN_EXCLUSIVE)
+            resolutionHint = "Tela cheia exclusiva ignora a largura e altura da janela e usa o monitor atual.";
         DrawClippedText(resolutionHint, resolutionHintBounds, 10, style->textMuted);
     }
 
@@ -466,10 +502,14 @@ void DrawExportDialog(void)
                    "Console de depuracao",
                    "Mostra uma janela de console para logs e diagnostico no Windows.",
                    exportDialogSettings.showConsole);
-    DrawOptionCard(layout.toggleFullscreen,
-                   "Tela cheia",
-                   "Usa uma janela sem borda no tamanho do monitor atual, sem trocar a resolucao do monitor.",
-                   exportDialogSettings.startFullscreen);
+    DrawOptionCard(layout.toggleBorderless,
+                   "Tela cheia sem borda (Recomendado)",
+                   "Abre como janela sem borda no tamanho do monitor, sem trocar o modo de video.",
+                   fullscreenMode == EXPORT_FULLSCREEN_BORDERLESS);
+    DrawOptionCard(layout.toggleExclusive,
+                   "Tela cheia exclusiva",
+                   "Assume o monitor diretamente e pode trocar resolucao ou refresh do monitor.",
+                   fullscreenMode == EXPORT_FULLSCREEN_EXCLUSIVE);
     DrawOptionCard(layout.toggleMaximized,
                    "Janela maximizada",
                    "Abre ocupando a area util do monitor sem depender da largura e altura definidas.",
