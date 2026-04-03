@@ -234,13 +234,18 @@ static void DrawFieldLabel(Rectangle field, const char *label)
     DrawClippedText(label, labelBounds, 11, GetUIStyle()->textSecondary);
 }
 
+static Color ExportOptionHoverColor(void)
+{
+    return (Color){58, 26, 24, 255};
+}
+
 static void DrawOptionCard(Rectangle bounds, const char *title, const char *description, bool enabled)
 {
     const UIStyle *style = GetUIStyle();
     Vector2 mouse = GetMousePosition();
     bool hovered = CheckCollisionPointRec(mouse, bounds);
 
-    Color bg = hovered ? style->itemHover : style->itemBg;
+    Color bg = hovered ? ExportOptionHoverColor() : style->itemBg;
     Color border = enabled ? style->accent : style->panelBorderSoft;
     Color badgeBg = enabled ? style->accentSoft : style->buttonBg;
     Color badgeBorder = enabled ? style->accent : style->buttonBorder;

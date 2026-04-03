@@ -21,6 +21,7 @@ typedef struct
     bool mouseSelecting;
     int repeatKey;
     float repeatTimer;
+    float caretBlinkTimer;
 } TextInputState;
 
 typedef struct

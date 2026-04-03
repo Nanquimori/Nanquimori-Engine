@@ -35,7 +35,7 @@ static bool DrawSectionHeader(const char *title, int x, int *y, bool *expanded, 
     bool clicked = allowInput && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
     if (clicked)
         *expanded = !(*expanded);
-    DrawBlender266CollapsibleHeader(header, title, 12, *expanded, hover);
+    DrawEditorCollapsibleHeader(header, title, 12, *expanded, hover);
     *y += 22;
     return clicked;
 }
@@ -650,7 +650,7 @@ void DrawPropertiesPanel(void)
     DrawLine(x, 0, x, screenH, COR_BORDA);
     const UIStyle *style = GetUIStyle();
     Rectangle propertiesHeader = {(float)(x + 6), 6.0f, (float)(PROPERTIES_PAINEL_LARGURA - 12), 22.0f};
-    DrawBlender266Header(propertiesHeader, "Properties", 14);
+    DrawEditorHeader(propertiesHeader, "Properties", 14);
 
     CleanupPhysEntries();
 

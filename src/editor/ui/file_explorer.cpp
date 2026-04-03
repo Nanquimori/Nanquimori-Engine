@@ -29,6 +29,16 @@ FileExplorer fileExplorer = {0};
 static bool pathFeedbackInvalid = false;
 static double pathFeedbackUntil = 0.0;
 
+static Color FileMenuOptionHoverColor(void)
+{
+    return (Color){58, 26, 24, 255};
+}
+
+static Color FileMenuOptionBorderColor(void)
+{
+    return (Color){104, 56, 52, 255};
+}
+
 static void EnsureProjectsRootPath(char *out, size_t outSize)
 {
     if (outSize == 0)
@@ -715,6 +725,8 @@ void UpdateFileMenu(void)
 
     Vector2 mouse = GetMousePosition();
 
+    Rectangle fileButtonRect = {(float)PAINEL_LARGURA + 4.0f, 2.0f, 64.0f, 20.0f};
+
     // Menu principal File
     const float menuX = (float)PAINEL_LARGURA + 8.0f;
     const float menuY = 24.0f;
@@ -731,6 +743,20 @@ void UpdateFileMenu(void)
     const float submenuCount = 4.0f;
     Rectangle submenuRect = {menuFileRect.x + menuFileRect.width + 2, menuFileRect.y, 150.0f, submenuItemH * submenuCount};
     bool mouseEmSubmenu = CheckCollisionPointRec(mouse, submenuRect);
+
+    Rectangle keepOpenZone = {fileButtonRect.x - 8.0f,
+                              fileButtonRect.y - 6.0f,
+                              (submenuRect.x + submenuRect.width) - (fileButtonRect.x - 8.0f) + 8.0f,
+                              (menuFileRect.y + menuFileRect.height) - (fileButtonRect.y - 6.0f) + 8.0f};
+    if (!CheckCollisionPointRec(mouse, keepOpenZone))
+    {
+        fileExplorer.mostrarMenuFile = false;
+        fileExplorer.mostrarSubmenuImport = false;
+        fileExplorer.itemHoverFile = -1;
+        fileExplorer.itemHoverImport = -1;
+        fileExplorer.menuFileAbertoEsteFrame = false;
+        return;
+    }
 
     // Verificar hover no menu principal
     fileExplorer.itemHoverFile = -1;
@@ -848,10 +874,18 @@ void DrawFileMenu(void)
     bool hoverSave = fileExplorer.itemHoverFile == 2;
     bool hoverExport = fileExplorer.itemHoverFile == 3;
 
-    DrawRectangleRec(itemImport, hoverImport ? style->buttonBgHover : style->buttonBg);
-    DrawRectangleRec(itemOpen, hoverOpen ? style->buttonBgHover : style->buttonBg);
-    DrawRectangleRec(itemSave, hoverSave ? style->buttonBgHover : style->buttonBg);
-    DrawRectangleRec(itemExport, hoverExport ? style->buttonBgHover : style->buttonBg);
+    DrawRectangleRec(itemImport, hoverImport ? FileMenuOptionHoverColor() : style->buttonBg);
+    DrawRectangleRec(itemOpen, hoverOpen ? FileMenuOptionHoverColor() : style->buttonBg);
+    DrawRectangleRec(itemSave, hoverSave ? FileMenuOptionHoverColor() : style->buttonBg);
+    DrawRectangleRec(itemExport, hoverExport ? FileMenuOptionHoverColor() : style->buttonBg);
+    if (hoverImport)
+        DrawRectangleLinesEx(itemImport, 1.0f, FileMenuOptionBorderColor());
+    if (hoverOpen)
+        DrawRectangleLinesEx(itemOpen, 1.0f, FileMenuOptionBorderColor());
+    if (hoverSave)
+        DrawRectangleLinesEx(itemSave, 1.0f, FileMenuOptionBorderColor());
+    if (hoverExport)
+        DrawRectangleLinesEx(itemExport, 1.0f, FileMenuOptionBorderColor());
 
     DrawText("Import Model", (int)(itemImport.x + 10), (int)(itemImport.y + 6), 12, hoverImport ? style->buttonTextHover : style->buttonText);
     DrawText("Open Project", (int)(itemOpen.x + 10), (int)(itemOpen.y + 6), 12, hoverOpen ? style->buttonTextHover : style->buttonText);
@@ -876,10 +910,18 @@ void DrawFileMenu(void)
         bool hoverGltf = fileExplorer.itemHoverImport == 2;
         bool hoverFbx = fileExplorer.itemHoverImport == 3;
 
-        DrawRectangleRec(itemObj, hoverObj ? style->buttonBgHover : style->buttonBg);
-        DrawRectangleRec(itemGlb, hoverGlb ? style->buttonBgHover : style->buttonBg);
-        DrawRectangleRec(itemGltf, hoverGltf ? style->buttonBgHover : style->buttonBg);
-        DrawRectangleRec(itemFbx, hoverFbx ? style->buttonBgHover : style->buttonBg);
+        DrawRectangleRec(itemObj, hoverObj ? FileMenuOptionHoverColor() : style->buttonBg);
+        DrawRectangleRec(itemGlb, hoverGlb ? FileMenuOptionHoverColor() : style->buttonBg);
+        DrawRectangleRec(itemGltf, hoverGltf ? FileMenuOptionHoverColor() : style->buttonBg);
+        DrawRectangleRec(itemFbx, hoverFbx ? FileMenuOptionHoverColor() : style->buttonBg);
+        if (hoverObj)
+            DrawRectangleLinesEx(itemObj, 1.0f, FileMenuOptionBorderColor());
+        if (hoverGlb)
+            DrawRectangleLinesEx(itemGlb, 1.0f, FileMenuOptionBorderColor());
+        if (hoverGltf)
+            DrawRectangleLinesEx(itemGltf, 1.0f, FileMenuOptionBorderColor());
+        if (hoverFbx)
+            DrawRectangleLinesEx(itemFbx, 1.0f, FileMenuOptionBorderColor());
 
         DrawText(".OBJ (Wavefront)", (int)(itemObj.x + 10), (int)(itemObj.y + 6), 11, hoverObj ? style->buttonTextHover : style->buttonText);
         DrawText(".GLB (glTF Binary)", (int)(itemGlb.x + 10), (int)(itemGlb.y + 6), 11, hoverGlb ? style->buttonTextHover : style->buttonText);

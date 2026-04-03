@@ -1,6 +1,6 @@
 {
 "active":0,
-"camera":{"pos":[2.1198,14.4636,33.7496],"target":[1.0565,0.0176,-2.8829]},
+"camera":{"pos":[-19.1078,20.4386,34.8321],"target":[1.0565,0.0176,-2.8829]},
 "editor":{"showCollisions":0,"ray2D":1,"ray3D":0},
 "export":{"gameName":"teste","exeName":"teste","icon":"icon.png","output":"export\\teste"},
 "exportRuntime":{"width":1280,"height":720,"console":0,"fullscreen":1,"fullscreenMode":2,"maximized":0,"resizable":0,"hud":0},

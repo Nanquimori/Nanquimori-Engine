@@ -13,6 +13,7 @@ typedef struct
     bool cursorHidden;
     bool dragValueActive;
     float dragValue;
+    float dragStartValue;
     Vector2 pressPos;
     Vector2 anchorPos;
 } DragFloatInputState;

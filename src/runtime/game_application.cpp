@@ -3,7 +3,6 @@
 #include "app/window_icon_win32.h"
 #include "assets/model_manager.h"
 #include "editor/ui/properties_panel.h"
-#include "editor/viewport/camera_controller.h"
 #include "physics/nanquimori_physics.h"
 #include "raylib.h"
 #include "scene/scene_manager.h"
@@ -22,6 +21,17 @@ static int runtimeProjectLoadDelayFrames = 0;
 static const int RUNTIME_BORDERLESS_SAFE_MARGIN = 1;
 
 static void ApplyRuntimeWindowSettingsNow(const ProjectExportSettings *settings);
+
+static Camera CreateDefaultRuntimeCamera(void)
+{
+    Camera camera = {0};
+    camera.position = (Vector3){6.0f, 6.0f, 6.0f};
+    camera.target = (Vector3){0.0f, 0.0f, 0.0f};
+    camera.up = (Vector3){0.0f, 1.0f, 0.0f};
+    camera.fovy = 45.0f;
+    camera.projection = CAMERA_PERSPECTIVE;
+    return camera;
+}
 
 static int GetRuntimeFullscreenMode(const ProjectExportSettings *settings)
 {
@@ -346,16 +356,6 @@ static bool ReloadRuntimeProject(void)
         return false;
     }
 
-    Vector3 loadedCamPos = {0};
-    Vector3 loadedCamTarget = {0};
-    if (ConsumeLoadedProjectCameraState(&loadedCamPos, &loadedCamTarget))
-    {
-        runtimeCamera.position = loadedCamPos;
-        runtimeCamera.target = loadedCamTarget;
-        runtimeCamera.up = (Vector3){0.0f, 1.0f, 0.0f};
-        SyncCameraControllerToCamera(&runtimeCamera);
-    }
-
     ProjectExportSettings exportSettings = {0};
     GetProjectExportSettings(&exportSettings);
     NormalizeRuntimeWindowSettings(&exportSettings);
@@ -403,8 +403,7 @@ void InitializeGameApplication(void)
     SetWin32ConsoleVisible(runtimeBootSettings.showConsole);
     SetTargetFPS(60);
 
-    runtimeCamera = InitCamera();
-    DisableMouseForUI();
+    runtimeCamera = CreateDefaultRuntimeCamera();
 
     InitPropertiesPanel();
     InitModelManager();
@@ -446,8 +445,6 @@ void UpdateGameApplication(void)
     if (!runtimeProjectLoaded)
         return;
 
-    DisableMouseForUI();
-    UpdateCameraBlender(&runtimeCamera);
     StepNanquimoriPhysics(GetFrameTime());
 }
 

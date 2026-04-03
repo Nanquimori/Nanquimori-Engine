@@ -105,7 +105,7 @@ bool IsMouseEnabledForUI(void)
     return mouseUIEnabled;
 }
 
-void UpdateCameraBlender(Camera *cam)
+void UpdateEditorOrbitCamera(Camera *cam)
 {
     if (mouseUIEnabled)
         return;

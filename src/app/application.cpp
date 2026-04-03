@@ -256,7 +256,7 @@ void UpdateApplication()
     else
         DisableMouseForUI();
 
-    UpdateCameraBlender(&appCamera);
+    UpdateEditorOrbitCamera(&appCamera);
     SetProjectCameraState(appCamera.position, appCamera.target);
 
     bool ctrlPressed = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);

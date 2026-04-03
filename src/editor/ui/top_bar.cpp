@@ -20,6 +20,8 @@ static bool playModeActive = false;
 static bool playPaused = false;
 static bool playStopRequested = false;
 static bool playRestartRequested = false;
+static bool fileHover = false;
+static bool helpHover = false;
 static bool playHover = false;
 static bool stopHover = false;
 static bool restartHover = false;
@@ -39,6 +41,16 @@ static const char *addPrimitiveLabels[] = {
     "Cylinder",
     "Plane"};
 static const char *topBarBrandText = "Nanquimori Engine";
+
+static Color TopBarMenuHoverColor(void)
+{
+    return (Color){58, 26, 24, 255};
+}
+
+static Color TopBarMenuBorderColor(void)
+{
+    return (Color){104, 56, 52, 255};
+}
 
 static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativePath, char *out, size_t outSize)
 {
@@ -178,9 +190,6 @@ void UnloadTopBar()
 // -------------------------------------------------------
 void UpdateTopBar()
 {
-    Vector2 mouse = GetMousePosition();
-    bool clicked = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
-
     float W = (float)GetScreenWidth();
     float left = (float)PAINEL_LARGURA;
     float right = (float)PROPERTIES_PAINEL_LARGURA;
@@ -190,14 +199,17 @@ void UpdateTopBar()
     float brandW = iconSize + 6.0f + (float)MeasureText(topBarBrandText, 12);
     float brandX = left + (availableW - brandW) * 0.5f;
     Rectangle areaBrand = {brandX, barY, brandW, 16.0f};
-    if (clicked && CheckCollisionPointRec(mouse, areaBrand))
+    UIButtonState brandState = UIButtonGetState(areaBrand);
+    if (brandState.clicked)
         ShowSplashScreen();
 
     float barX = 8.0f + left;
 
     // File
-    Rectangle areaFile = {barX, barY, 50.0f, 16.0f};
-    if (clicked && CheckCollisionPointRec(mouse, areaFile))
+    Rectangle areaFile = {barX - 4.0f, 2.0f, 64.0f, 20.0f};
+    UIButtonState fileState = UIButtonGetState(areaFile);
+    fileHover = fileState.hovered;
+    if (fileState.clicked)
     {
         ToggleFileMenu();
         addMenuOpen = false;
@@ -206,10 +218,11 @@ void UpdateTopBar()
 
     // Add
     barX += 70.0f;
-    Rectangle areaAdd = {barX, barY, 55.0f, 16.0f};
-    addHover = CheckCollisionPointRec(mouse, areaAdd);
+    Rectangle areaAdd = {barX - 6.0f, 2.0f, 56.0f, 20.0f};
+    UIButtonState addState = UIButtonGetState(areaAdd);
+    addHover = addState.hovered;
     bool addToggledThisFrame = false;
-    if (clicked && addHover)
+    if (addState.clicked)
     {
         addMenuOpen = !addMenuOpen;
         addToggledThisFrame = true;
@@ -226,6 +239,8 @@ void UpdateTopBar()
     addShapeHoverItem = -1;
     if (addMenuOpen)
     {
+        Vector2 mouse = GetMousePosition();
+        bool clicked = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
         if (CheckCollisionPointRec(mouse, itemEmpty))
             addMainHoverItem = 0;
         else if (CheckCollisionPointRec(mouse, itemGeometry))
@@ -271,8 +286,10 @@ void UpdateTopBar()
 
     // Help
     barX += 70.0f;
-    Rectangle areaHelp = {barX, barY, 70.0f, 16.0f};
-    if (clicked && CheckCollisionPointRec(mouse, areaHelp))
+    Rectangle areaHelp = {barX - 4.0f, 2.0f, 68.0f, 20.0f};
+    UIButtonState helpState = UIButtonGetState(areaHelp);
+    helpHover = helpState.hovered;
+    if (helpState.clicked)
     {
         SetHelpPanelShow(!HelpPanelShouldShow());
         addMenuOpen = false;
@@ -351,19 +368,27 @@ void DrawTopBar()
     float barX = 8.0f + left;
 
     // File
+    Rectangle areaFile = {barX - 4.0f, 2.0f, 64.0f, 20.0f};
+    bool fileActive = IsFileMenuOpen() || fileHover;
+    Color fileText = fileActive ? style->accent : style->textPrimary;
     DrawTopBarIcon(iconFolder, (Vector2){barX, barY}, iconSize, style->textPrimary);
-    DrawText("File", barX + 20.0f, 5, 12, style->textPrimary);
+    DrawText("File", barX + 20.0f, 5, 12, fileText);
 
     // Add
     barX += 70.0f;
     float addMenuX = barX;
-    Color addColor = (addMenuOpen || addHover) ? style->accent : style->textPrimary;
+    Rectangle areaAdd = {barX - 6.0f, 2.0f, 56.0f, 20.0f};
+    bool addActive = addMenuOpen || addHover;
+    Color addColor = addActive ? style->accent : style->textPrimary;
     DrawText("Add", (int)barX, 5, 12, addColor);
 
     // Help
     barX += 70.0f;
+    Rectangle areaHelp = {barX - 4.0f, 2.0f, 68.0f, 20.0f};
+    bool helpActive = helpHover || HelpPanelShouldShow();
+    Color helpText = helpActive ? style->accent : style->textPrimary;
     DrawTopBarIcon(iconHelp, (Vector2){barX, barY}, iconSize, style->textPrimary);
-    DrawText("Help", barX + 20.0f, 5, 12, style->textPrimary);
+    DrawText("Help", barX + 20.0f, 5, 12, helpText);
 
     if (addMenuOpen)
     {
@@ -376,8 +401,12 @@ void DrawTopBar()
 
         DrawRectangleRec(addMenuRect, style->buttonBg);
         DrawRectangleLinesEx(addMenuRect, 1.0f, style->panelBorder);
-        DrawRectangleRec(itemEmpty, (addMainHoverItem == 0) ? style->buttonBgHover : style->buttonBg);
-        DrawRectangleRec(itemGeometry, (addMainHoverItem == 1 || addShapesSubmenuOpen) ? style->buttonBgHover : style->buttonBg);
+        DrawRectangleRec(itemEmpty, (addMainHoverItem == 0) ? TopBarMenuHoverColor() : style->buttonBg);
+        DrawRectangleRec(itemGeometry, (addMainHoverItem == 1 || addShapesSubmenuOpen) ? TopBarMenuHoverColor() : style->buttonBg);
+        if (addMainHoverItem == 0)
+            DrawRectangleLinesEx(itemEmpty, 1.0f, TopBarMenuBorderColor());
+        if (addMainHoverItem == 1 || addShapesSubmenuOpen)
+            DrawRectangleLinesEx(itemGeometry, 1.0f, TopBarMenuBorderColor());
         DrawText("Empty Object", (int)(itemEmpty.x + 10.0f), (int)(itemEmpty.y + 6.0f), 12,
                  (addMainHoverItem == 0) ? style->buttonTextHover : style->buttonText);
         DrawText("Geometric Shapes", (int)(itemGeometry.x + 10.0f), (int)(itemGeometry.y + 6.0f), 12,
@@ -393,7 +422,9 @@ void DrawTopBar()
             {
                 Rectangle item = {addShapesRect.x, addShapesRect.y + i * addItemH, addShapesRect.width, addItemH};
                 bool hover = (i == addShapeHoverItem);
-                DrawRectangleRec(item, hover ? style->buttonBgHover : style->buttonBg);
+                DrawRectangleRec(item, hover ? TopBarMenuHoverColor() : style->buttonBg);
+                if (hover)
+                    DrawRectangleLinesEx(item, 1.0f, TopBarMenuBorderColor());
                 DrawText(addPrimitiveLabels[i], (int)(item.x + 10.0f), (int)(item.y + 6.0f), 12,
                          hover ? style->buttonTextHover : style->buttonText);
             }

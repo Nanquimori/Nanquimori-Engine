@@ -4,32 +4,31 @@
 #include "raylib.h"
 
 /**
- * Atualiza a câmera com controles estilo Blender:
- * - Shift + Botão Meio: Pan (movimento da visão)
- * - Botão Meio: Rotação
+ * Atualiza a camera com controles de orbita do editor:
+ * - Shift + Botao Meio: Pan
+ * - Botao Meio: Rotacao
  * - Scroll: Zoom
- * - Botão direito: Orbita
  */
-void UpdateCameraBlender(Camera *cam);
+void UpdateEditorOrbitCamera(Camera *cam);
 
 /**
- * Habilita o cursor para que o usuário possa interagir com a UI
+ * Habilita o cursor para que o usuario possa interagir com a UI
  */
 void EnableMouseForUI(void);
 
 /**
- * Desabilita o cursor para que a câmera funcione
+ * Desabilita o cursor para que a camera funcione
  */
 void DisableMouseForUI(void);
 
 /**
- * Retorna verdadeiro se o cursor está habilitado para UI
+ * Retorna verdadeiro se o cursor esta habilitado para UI
  */
 bool IsMouseEnabledForUI(void);
 
 /**
- * Inicializa a câmera com posição padrão (6, 6, 6) e target em (0, 0, 0)
- * Retorna uma câmera configurada pronta para uso
+ * Inicializa a camera com posicao padrao (6, 6, 6) e target em (0, 0, 0)
+ * Retorna uma camera configurada pronta para uso
  */
 Camera InitCamera();
 

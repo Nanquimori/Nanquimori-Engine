@@ -1,5 +1,6 @@
 #include "text_input.h"
 #include "ui_style.h"
+#include <math.h>
 #include <string.h>
 
 static int TextWidthN(const char *text, int count, int fontSize)
@@ -23,6 +24,16 @@ static int ClampInt(int value, int minValue, int maxValue)
     return value;
 }
 
+static Color LerpColorLocal(Color a, Color b, float t)
+{
+    Color out = {0};
+    out.r = (unsigned char)((float)a.r + ((float)b.r - (float)a.r) * t + 0.5f);
+    out.g = (unsigned char)((float)a.g + ((float)b.g - (float)a.g) * t + 0.5f);
+    out.b = (unsigned char)((float)a.b + ((float)b.b - (float)a.b) * t + 0.5f);
+    out.a = (unsigned char)((float)a.a + ((float)b.a - (float)a.a) * t + 0.5f);
+    return out;
+}
+
 static int TextIndexFromX(const char *text, int fontSize, float x)
 {
     int len = (int)strlen(text);
@@ -33,6 +44,13 @@ static int TextIndexFromX(const char *text, int fontSize, float x)
             return i;
     }
     return len;
+}
+
+static void ResetCaretBlink(TextInputState *state)
+{
+    if (!state)
+        return;
+    state->caretBlinkTimer = 0.0f;
 }
 
 static void EraseRange(char *text, int start, int end)
@@ -100,6 +118,7 @@ void TextInputInit(TextInputState *state)
     state->mouseSelecting = false;
     state->repeatKey = 0;
     state->repeatTimer = 0.0f;
+    state->caretBlinkTimer = 0.0f;
 }
 
 int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *state, const TextInputConfig *config)
@@ -145,6 +164,7 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
             state->selStart = idx;
             state->selEnd = idx;
             state->mouseSelecting = true;
+            ResetCaretBlink(state);
         }
         else
         {
@@ -161,12 +181,24 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
         int idx = TextIndexFromX(buffer, cfg.fontSize, localX);
         state->selEnd = idx;
         state->caret = idx;
+        ResetCaretBlink(state);
         if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
             state->mouseSelecting = false;
     }
 
     DrawRectangleRec(box, cfg.bgColor);
-    DrawRectangleLinesEx(box, 1, cfg.borderColor);
+    Color borderColor = cfg.borderColor;
+    if (state->active)
+        borderColor = style->accent;
+    else if (over && cfg.allowInput)
+        borderColor = LerpColorLocal(cfg.borderColor, style->textPrimary, 0.22f);
+    DrawRectangleLinesEx(box, 1, borderColor);
+    if (!state->active && over && cfg.allowInput)
+    {
+        Color hoverGlow = LerpColorLocal(cfg.bgColor, style->textPrimary, 0.08f);
+        Rectangle hoverFill = {box.x + 1.0f, box.y + 1.0f, box.width - 2.0f, box.height - 2.0f};
+        DrawRectangleRec(hoverFill, hoverGlow);
+    }
 
     int len = (int)strlen(buffer);
     state->caret = ClampInt(state->caret, 0, len);
@@ -223,7 +255,12 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
     if (state->active)
     {
         int cx = textX + TextWidthN(buffer, state->caret, cfg.fontSize) - (int)state->scrollX;
-        DrawLine(cx, textY - 1, cx, textY + cfg.fontSize + 1, cfg.caretColor);
+        bool showCaret = state->mouseSelecting || fmodf(state->caretBlinkTimer, 1.0f) < 0.55f;
+        if (showCaret)
+        {
+            Rectangle caret = {(float)cx, (float)(textY - 1), 2.0f, (float)(cfg.fontSize + 2)};
+            DrawRectangleRec(caret, cfg.caretColor);
+        }
     }
 
     EndScissorMode();
@@ -245,6 +282,7 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
             state->selStart = 0;
             state->selEnd = len;
             state->caret = len;
+            ResetCaretBlink(state);
         }
         if (ctrl && IsKeyPressed(KEY_C))
         {
@@ -288,6 +326,7 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
                 state->selStart = state->caret;
                 state->selEnd = state->caret;
                 flags |= TEXT_INPUT_CHANGED;
+                ResetCaretBlink(state);
             }
         }
 
@@ -299,6 +338,7 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
                 state->caret--;
             state->selStart = state->caret;
             state->selEnd = state->caret;
+            ResetCaretBlink(state);
         }
         if (IsKeyPressed(KEY_RIGHT))
         {
@@ -308,12 +348,14 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
                 state->caret++;
             state->selStart = state->caret;
             state->selEnd = state->caret;
+            ResetCaretBlink(state);
         }
         if (IsKeyPressed(KEY_HOME))
         {
             state->caret = 0;
             state->selStart = 0;
             state->selEnd = 0;
+            ResetCaretBlink(state);
         }
         if (IsKeyPressed(KEY_END))
         {
@@ -321,6 +363,7 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
             state->caret = end;
             state->selStart = end;
             state->selEnd = end;
+            ResetCaretBlink(state);
         }
 
         auto applyBackspace = [&](void)
@@ -339,6 +382,7 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
             }
             state->selStart = state->caret;
             state->selEnd = state->caret;
+            ResetCaretBlink(state);
         };
 
         auto applyDelete = [&](void)
@@ -356,6 +400,7 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
             }
             state->selStart = state->caret;
             state->selEnd = state->caret;
+            ResetCaretBlink(state);
         };
 
         if (IsKeyPressed(KEY_BACKSPACE))
@@ -415,6 +460,7 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
                 }
                 state->selStart = state->caret;
                 state->selEnd = state->caret;
+                ResetCaretBlink(state);
             }
             ch = GetCharPressed();
         }
@@ -422,6 +468,11 @@ int TextInputDraw(Rectangle box, char *buffer, int bufferSize, TextInputState *s
         if (IsKeyPressed(KEY_ENTER))
             flags |= TEXT_INPUT_SUBMITTED;
     }
+
+    if (state->active)
+        state->caretBlinkTimer += GetFrameTime();
+    else
+        state->caretBlinkTimer = 0.0f;
 
     return flags;
 }

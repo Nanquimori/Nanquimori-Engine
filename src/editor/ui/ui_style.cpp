@@ -11,7 +11,7 @@ static Color LerpColor(Color a, Color b, float t)
     return out;
 }
 
-static void DrawBlender266HeaderBase(Rectangle bounds, Color top, Color bottom, Color border, Color topHighlight, Color innerShade)
+static void DrawEditorHeaderBase(Rectangle bounds, Color top, Color bottom, Color border, Color topHighlight, Color innerShade)
 {
     DrawRectangleGradientV((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height, top, bottom);
     DrawRectangleLinesEx(bounds, 1.0f, border);
@@ -63,7 +63,7 @@ Color UiTextForBackground(Color bg)
     return (l > 0.6f) ? style->buttonTextHover : style->textPrimary;
 }
 
-void DrawBlender266Header(Rectangle bounds, const char *title, int textSize)
+void DrawEditorHeader(Rectangle bounds, const char *title, int textSize)
 {
     Color base = ColorAlpha((Color){0xCF, 0xE6, 0xE1, 255}, 0.75f);
     Color top = LerpColor(base, WHITE, 0.16f);
@@ -74,7 +74,7 @@ void DrawBlender266Header(Rectangle bounds, const char *title, int textSize)
     Color textColor = BLACK;
     Color textEmboss = ColorAlpha(WHITE, 0.35f);
 
-    DrawBlender266HeaderBase(bounds, top, bottom, border, topHighlight, innerShade);
+    DrawEditorHeaderBase(bounds, top, bottom, border, topHighlight, innerShade);
 
     int textX = (int)bounds.x + 10;
     int textY = (int)(bounds.y + (bounds.height - (float)textSize) * 0.5f) - 1;
@@ -82,7 +82,7 @@ void DrawBlender266Header(Rectangle bounds, const char *title, int textSize)
     DrawText(title, textX, textY, textSize, textColor);
 }
 
-void DrawBlender266CollapsibleHeader(Rectangle bounds, const char *title, int textSize, bool expanded, bool hovered)
+void DrawEditorCollapsibleHeader(Rectangle bounds, const char *title, int textSize, bool expanded, bool hovered)
 {
     Color base = ColorAlpha((Color){0xCF, 0xE6, 0xE1, 255}, hovered ? 0.84f : 0.75f);
     Color top = LerpColor(base, WHITE, hovered ? 0.22f : 0.16f);
@@ -95,7 +95,7 @@ void DrawBlender266CollapsibleHeader(Rectangle bounds, const char *title, int te
     Color glyphColor = ColorAlpha(BLACK, 0.90f);
     Color glyphShadow = ColorAlpha(WHITE, 0.28f);
 
-    DrawBlender266HeaderBase(bounds, top, bottom, border, topHighlight, innerShade);
+    DrawEditorHeaderBase(bounds, top, bottom, border, topHighlight, innerShade);
 
     float cx = floorf(bounds.x + 10.0f) + 0.5f;
     float cy = floorf(bounds.y + bounds.height * 0.5f) + 0.5f;

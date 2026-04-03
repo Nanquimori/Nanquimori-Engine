@@ -19,6 +19,7 @@ void DragFloatInputInit(DragFloatInputState *state)
     state->cursorHidden = false;
     state->dragValueActive = false;
     state->dragValue = 0.0f;
+    state->dragStartValue = 0.0f;
     state->pressPos = (Vector2){0, 0};
     state->anchorPos = (Vector2){0, 0};
 }
@@ -107,6 +108,7 @@ int DragFloatInputDraw(Rectangle box, char *buffer, int bufferSize, DragFloatInp
         state->dragging = false;
         state->pressAllowDrag = !state->text.active;
         state->dragValueActive = false;
+        state->dragStartValue = *value;
         state->pressPos = mouse;
         state->anchorPos = mouse;
     }
@@ -126,6 +128,7 @@ int DragFloatInputDraw(Rectangle box, char *buffer, int bufferSize, DragFloatInp
                     state->text.mouseSelecting = false;
                     state->text.selStart = state->text.caret;
                     state->text.selEnd = state->text.caret;
+                    state->dragStartValue = *value;
                     state->dragValue = *value;
                     state->dragValueActive = true;
                     if (!state->cursorHidden)
@@ -138,6 +141,26 @@ int DragFloatInputDraw(Rectangle box, char *buffer, int bufferSize, DragFloatInp
 
             if (state->dragging)
             {
+                if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON))
+                {
+                    if (*value != state->dragStartValue)
+                    {
+                        *value = state->dragStartValue;
+                        DragFloatInputFormat(buffer, bufferSize, *value);
+                        flags |= DRAG_FLOAT_INPUT_CHANGED;
+                    }
+                    state->pressed = false;
+                    state->dragging = false;
+                    state->pressAllowDrag = false;
+                    state->dragValueActive = false;
+                    if (state->cursorHidden)
+                    {
+                        ShowCursor();
+                        state->cursorHidden = false;
+                    }
+                }
+                else
+                {
                 float delta = mouse.x - state->anchorPos.x;
                 if (delta != 0.0f)
                 {
@@ -172,6 +195,7 @@ int DragFloatInputDraw(Rectangle box, char *buffer, int bufferSize, DragFloatInp
 
                 SetMousePosition((int)state->anchorPos.x, (int)state->anchorPos.y);
                 flags |= DRAG_FLOAT_INPUT_DRAGGING;
+                }
             }
         }
         else

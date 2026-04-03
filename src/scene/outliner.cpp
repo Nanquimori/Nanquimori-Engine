@@ -16,9 +16,9 @@
 #define COR_TEXTO (GetUIStyle()->textPrimary)
 #define COR_ITEM (GetUIStyle()->textSecondary)
 #define COR_ITEM_SEL (GetUIStyle()->itemActive)
-#define COR_ITEM_DRAG (GetUIStyle()->itemHover)
+#define COR_ITEM_DRAG ((Color){58, 26, 24, 255})
 #define COR_MENU (GetUIStyle()->panelBg)
-#define COR_MENU_HOVER (GetUIStyle()->itemHover)
+#define COR_MENU_HOVER ((Color){58, 26, 24, 255})
 #define COR_EDIT_BG (GetUIStyle()->inputBg)
 typedef enum
 {
@@ -129,8 +129,23 @@ static bool DrawOutlinerSectionHeader(Rectangle header, const char *title, int t
     bool clicked = allowInput && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
     if (clicked)
         *expanded = !(*expanded);
-    DrawBlender266CollapsibleHeader(header, title, textSize, *expanded, hover);
+    DrawEditorCollapsibleHeader(header, title, textSize, *expanded, hover);
     return clicked;
+}
+
+static Color OutlinerOptionBaseColor(void)
+{
+    return (Color){24, 14, 14, 255};
+}
+
+static Color OutlinerOptionHoverColor(void)
+{
+    return (Color){58, 26, 24, 255};
+}
+
+static Color OutlinerOptionBorderColor(void)
+{
+    return (Color){104, 56, 52, 255};
 }
 
 static void LimparSelecaoObjetos(void)
@@ -939,11 +954,11 @@ static int DrawOutlinerItem(int id, int nivel, int y)
     else if (selecionado)
         fundo = GetUIStyle()->accentSoft;
     else if (hoverItem)
-        fundo = GetUIStyle()->itemHover;
+        fundo = OutlinerOptionHoverColor();
 
     DrawRectangleRec(item, fundo);
     if (hoverItem && !selecionado)
-        DrawRectangleLinesEx(item, 1, GetUIStyle()->accentSoft);
+        DrawRectangleLinesEx(item, 1, OutlinerOptionBorderColor());
 
     // Linhas de hierarquia (pai/filho) estilo IDE
     if (nivel > 0)
@@ -1495,7 +1510,7 @@ void DrawOutliner(void)
     DrawRectangle(0, 0, PAINEL_LARGURA, GetScreenHeight(), COR_PAINEL);
     DrawLine(PAINEL_LARGURA, 0, PAINEL_LARGURA, GetScreenHeight(), COR_BORDA);
     Rectangle outlinerHeader = {6.0f, 6.0f, (float)(PAINEL_LARGURA - 12), 22.0f};
-    DrawBlender266Header(outlinerHeader, "Outliner", 14);
+    DrawEditorHeader(outlinerHeader, "Outliner", 14);
     Vector2 mouse = GetMousePosition();
 
     int sceneCount = GetSceneCount();
@@ -1545,8 +1560,8 @@ void DrawOutliner(void)
     if (scenesClicked && CtrlHeld() && outlinerScenesExpanded)
         outlinerObjectExpanded = true;
     Rectangle scenesCountBadge = {scenesHeader.x + scenesHeader.width - 28.0f, scenesHeader.y + 2.0f, 22.0f, 14.0f};
-    DrawRectangleRec(scenesCountBadge, style->panelBgHover);
-    DrawRectangleLinesEx(scenesCountBadge, 1.0f, style->panelBorderSoft);
+    DrawRectangleRec(scenesCountBadge, OutlinerOptionBaseColor());
+    DrawRectangleLinesEx(scenesCountBadge, 1.0f, OutlinerOptionBorderColor());
     DrawText(TextFormat("%d", sceneCount), (int)scenesCountBadge.x + 6, (int)scenesCountBadge.y + 2, 10, style->textPrimary);
     y += 22;
 
@@ -1561,9 +1576,9 @@ void DrawOutliner(void)
 
             bool ativo = (i == activeScene);
             bool selecionada = sceneSelected[i];
-            Color fundo = ativo ? style->accent : (selecionada ? style->accentSoft : style->itemBg);
+            Color fundo = ativo ? style->accent : (selecionada ? style->accentSoft : OutlinerOptionBaseColor());
             if (hover && !ativo && !selecionada)
-                fundo = style->itemHover;
+                fundo = OutlinerOptionHoverColor();
             if (arrastando && hover)
             {
                 fundo = COR_ITEM_DRAG;
@@ -1572,12 +1587,12 @@ void DrawOutliner(void)
             DrawRectangleRec(item, fundo);
             if (ativo || hover || selecionada)
             {
-                Color bordaCena = ativo ? style->panelBorder : style->accentSoft;
+                Color bordaCena = ativo ? style->panelBorder : OutlinerOptionBorderColor();
                 DrawRectangleLinesEx(item, 1, bordaCena);
             }
             if (!ativo)
             {
-                Color marcador = selecionada ? style->accent : (hover ? style->accent : style->accentSoft);
+                Color marcador = selecionada ? style->accent : (hover ? style->accent : OutlinerOptionBorderColor());
                 DrawRectangle((int)item.x + 1, (int)item.y + 1, 3, (int)item.height - 2, marcador);
             }
 
