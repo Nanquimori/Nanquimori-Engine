@@ -61,13 +61,13 @@ void DrawHelpPanel(void)
     DrawText("Orbita ao redor do alvo", (int)(helpX + 30), (int)(helpY + 170), 11, style->textPrimary);
 
     DrawText("Ctrl + Z:", (int)(helpX + 15), (int)(helpY + 190), 12, style->textSecondary);
-    DrawText("Desfazer (outliner e gizmo)", (int)(helpX + 30), (int)(helpY + 205), 11, style->textPrimary);
+    DrawText("Desfazer (outliner, properties e gizmo)", (int)(helpX + 30), (int)(helpY + 205), 11, style->textPrimary);
 
     DrawText("Ctrl + Y:", (int)(helpX + 15), (int)(helpY + 220), 12, style->textSecondary);
-    DrawText("Refazer (gizmo)", (int)(helpX + 30), (int)(helpY + 235), 11, style->textPrimary);
+    DrawText("Refazer (properties e gizmo)", (int)(helpX + 30), (int)(helpY + 235), 11, style->textPrimary);
 
     DrawText("Gizmo de mover (eixos X/Y/Z):", (int)(helpX + 15), (int)(helpY + 255), 12, style->textSecondary);
-    DrawText("W = mover / R = rotacionar", (int)(helpX + 30), (int)(helpY + 270), 11, style->textPrimary);
+    DrawText("W = mover / E = escala / R = rotacionar", (int)(helpX + 30), (int)(helpY + 270), 11, style->textPrimary);
     DrawText("Clique e arraste no eixo", (int)(helpX + 30), (int)(helpY + 285), 11, style->textPrimary);
     DrawText("Ctrl + arraste: snap", (int)(helpX + 30), (int)(helpY + 300), 11, style->textPrimary);
     DrawText("Shift + arraste: lento/suave", (int)(helpX + 30), (int)(helpY + 315), 11, style->textPrimary);

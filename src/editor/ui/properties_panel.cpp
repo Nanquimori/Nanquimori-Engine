@@ -96,6 +96,9 @@ enum
     TRANSFORM_ROT_X,
     TRANSFORM_ROT_Y,
     TRANSFORM_ROT_Z,
+    TRANSFORM_SCALE_X,
+    TRANSFORM_SCALE_Y,
+    TRANSFORM_SCALE_Z,
     TRANSFORM_FIELD_COUNT
 };
 
@@ -119,8 +122,10 @@ typedef struct
     int id;
     Vector3 posBefore;
     Vector3 rotBefore;
+    Vector3 scaleBefore;
     Vector3 posAfter;
     Vector3 rotAfter;
+    Vector3 scaleAfter;
 } TransformHistoryEntry;
 #define TRANSFORM_HISTORY_MAX 64
 static TransformHistoryEntry transformUndoStack[TRANSFORM_HISTORY_MAX] = {0};
@@ -131,6 +136,7 @@ static bool transformEditSession = false;
 static int transformEditId = -1;
 static Vector3 transformEditStartPos = {0};
 static Vector3 transformEditStartRot = {0};
+static Vector3 transformEditStartScale = {1.0f, 1.0f, 1.0f};
 static void SyncTransformBuffers(const ObjetoCena *obj);
 extern void SetSelectedModelByObjetoId(int idObjeto);
 
@@ -266,12 +272,13 @@ static void PushTransformUndo(TransformHistoryEntry entry)
     transformRedoTop = 0;
 }
 
-static void BeginTransformSession(int id, Vector3 startPos, Vector3 startRot)
+static void BeginTransformSession(int id, Vector3 startPos, Vector3 startRot, Vector3 startScale)
 {
     transformEditSession = true;
     transformEditId = id;
     transformEditStartPos = startPos;
     transformEditStartRot = startRot;
+    transformEditStartScale = startScale;
 }
 
 static void FinalizeTransformSession(void)
@@ -284,14 +291,17 @@ static void FinalizeTransformSession(void)
     {
         Vector3 endPos = objetos[idx].posicao;
         Vector3 endRot = objetos[idx].rotacao;
-        if (!Vec3Equal(transformEditStartPos, endPos) || !Vec3Equal(transformEditStartRot, endRot))
+        Vector3 endScale = objetos[idx].escala;
+        if (!Vec3Equal(transformEditStartPos, endPos) || !Vec3Equal(transformEditStartRot, endRot) || !Vec3Equal(transformEditStartScale, endScale))
         {
             TransformHistoryEntry e = {0};
             e.id = transformEditId;
             e.posBefore = transformEditStartPos;
             e.rotBefore = transformEditStartRot;
+            e.scaleBefore = transformEditStartScale;
             e.posAfter = endPos;
             e.rotAfter = endRot;
+            e.scaleAfter = endScale;
             PushTransformUndo(e);
         }
     }
@@ -310,6 +320,7 @@ static bool ApplyTransformEntry(const TransformHistoryEntry *entry, bool useAfte
 
     objetos[idx].posicao = useAfter ? entry->posAfter : entry->posBefore;
     objetos[idx].rotacao = useAfter ? entry->rotAfter : entry->rotBefore;
+    objetos[idx].escala = useAfter ? entry->scaleAfter : entry->scaleBefore;
     SetSelectedModelByObjetoId(entry->id);
     if (transformObjectId == entry->id)
         SyncTransformBuffers(&objetos[idx]);
@@ -326,6 +337,9 @@ static void SyncTransformBuffers(const ObjetoCena *obj)
     DragFloatInputFormat(transformBuffer[TRANSFORM_ROT_X], (int)sizeof(transformBuffer[TRANSFORM_ROT_X]), obj->rotacao.x * RAD2DEG);
     DragFloatInputFormat(transformBuffer[TRANSFORM_ROT_Y], (int)sizeof(transformBuffer[TRANSFORM_ROT_Y]), obj->rotacao.y * RAD2DEG);
     DragFloatInputFormat(transformBuffer[TRANSFORM_ROT_Z], (int)sizeof(transformBuffer[TRANSFORM_ROT_Z]), obj->rotacao.z * RAD2DEG);
+    DragFloatInputFormat(transformBuffer[TRANSFORM_SCALE_X], (int)sizeof(transformBuffer[TRANSFORM_SCALE_X]), obj->escala.x);
+    DragFloatInputFormat(transformBuffer[TRANSFORM_SCALE_Y], (int)sizeof(transformBuffer[TRANSFORM_SCALE_Y]), obj->escala.y);
+    DragFloatInputFormat(transformBuffer[TRANSFORM_SCALE_Z], (int)sizeof(transformBuffer[TRANSFORM_SCALE_Z]), obj->escala.z);
 }
 
 static bool GetCustomPacksPath(char *out, size_t outSize)
@@ -710,7 +724,8 @@ static bool DrawOptionButton(Rectangle rect, const char *label, bool active, boo
     return allowInput && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
 
-static void DrawVec3Inputs(const char *label, Vector3 *value, int baseIndex, int x, int *y, bool allowInput, bool useDegrees)
+static void DrawVec3Inputs(const char *label, Vector3 *value, int baseIndex, int x, int *y, bool allowInput, bool useDegrees,
+                           bool clampValue, float minValue, float maxValue)
 {
     DrawText(label, x + 14, *y, 12, COR_TEXTO);
     *y += 16;
@@ -735,7 +750,9 @@ static void DrawVec3Inputs(const char *label, Vector3 *value, int baseIndex, int
     cfg.selectionColor = GetUIStyle()->inputSelection;
     cfg.caretColor = GetUIStyle()->caret;
     cfg.allowInput = allowInput;
-    cfg.clamp = false;
+    cfg.clamp = clampValue;
+    cfg.minValue = minValue;
+    cfg.maxValue = maxValue;
     cfg.dragSpeed = useDegrees ? 0.2f : 0.01f;
     cfg.fineDragSpeed = useDegrees ? 0.02f : 0.001f;
 
@@ -875,6 +892,7 @@ void DrawPropertiesPanel(void)
             bool transformWasActive = AnyTransformInputActive();
             Vector3 transformBeforePos = obj->posicao;
             Vector3 transformBeforeRot = obj->rotacao;
+            Vector3 transformBeforeScale = obj->escala;
 
             if (transformObjectId != selId)
             {
@@ -889,11 +907,12 @@ void DrawPropertiesPanel(void)
                 SyncTransformBuffers(obj);
             }
 
-            DrawVec3Inputs("Location", &obj->posicao, TRANSFORM_POS_X, x, &y, allowInput, false);
-            DrawVec3Inputs("Rotation", &obj->rotacao, TRANSFORM_ROT_X, x, &y, allowInput, true);
+            DrawVec3Inputs("Location", &obj->posicao, TRANSFORM_POS_X, x, &y, allowInput, false, false, 0.0f, 0.0f);
+            DrawVec3Inputs("Rotation", &obj->rotacao, TRANSFORM_ROT_X, x, &y, allowInput, true, false, 0.0f, 0.0f);
+            DrawVec3Inputs("Scale", &obj->escala, TRANSFORM_SCALE_X, x, &y, allowInput, false, true, 0.01f, 1000.0f);
             bool transformNowActive = AnyTransformInputActive();
             if (!transformWasActive && transformNowActive)
-                BeginTransformSession(selId, transformBeforePos, transformBeforeRot);
+                BeginTransformSession(selId, transformBeforePos, transformBeforeRot, transformBeforeScale);
             if (transformEditSession && (!transformNowActive || transformEditId != selId))
                 FinalizeTransformSession();
         }

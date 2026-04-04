@@ -28,6 +28,7 @@ typedef struct
     char nome[32];
     Vector3 posicao;
     Vector3 rotacao;
+    Vector3 escala;
     int paiId;
     bool ativo;
     bool selecionado;

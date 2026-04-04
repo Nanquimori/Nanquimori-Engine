@@ -3,6 +3,7 @@
 #include "assets/model_manager.h"
 #include "editor/ui/properties_panel.h"
 #include "editor/viewport/camera_controller.h"
+#include "rlgl.h"
 #include "raymath.h"
 #include <math.h>
 
@@ -249,15 +250,19 @@ static float gizmoStartT = 0.0f;
 static float gizmoLastT = 0.0f;
 static Vector3 gizmoStartPos = {0};
 static Vector3 gizmoStartRot = {0};
+static Vector3 gizmoStartScale = {1.0f, 1.0f, 1.0f};
 static Vector3 gizmoStartRingVec = {0};
 static const float GIZMO_SNAP_STEP = 0.5f;
+static const float GIZMO_SCALE_SNAP_STEP = 0.1f;
+static const float GIZMO_SCALE_MIN = 0.01f;
 static const float GIZMO_SLOW_FACTOR = 0.2f;
 #define GIZMO_ROT_SNAP (15.0f * (PI / 180.0f))
 
 typedef enum
 {
     GIZMO_MODE_MOVE = 0,
-    GIZMO_MODE_ROTATE = 1
+    GIZMO_MODE_ROTATE = 1,
+    GIZMO_MODE_SCALE = 2
 } GizmoMode;
 
 static GizmoMode gizmoMode = GIZMO_MODE_MOVE;
@@ -268,6 +273,7 @@ typedef struct
     int ids[MAX_OBJETOS];
     Vector3 pos[MAX_OBJETOS];
     Vector3 rot[MAX_OBJETOS];
+    Vector3 scale[MAX_OBJETOS];
 } GizmoSelectionSnapshot;
 
 typedef struct
@@ -312,6 +318,7 @@ static void CaptureSelectedSnapshot(GizmoSelectionSnapshot *snapshot, int primar
         snapshot->ids[snapshot->count] = primaryId;
         snapshot->pos[snapshot->count] = objetos[primaryIdx].posicao;
         snapshot->rot[snapshot->count] = objetos[primaryIdx].rotacao;
+        snapshot->scale[snapshot->count] = objetos[primaryIdx].escala;
         snapshot->count++;
     }
 
@@ -322,6 +329,7 @@ static void CaptureSelectedSnapshot(GizmoSelectionSnapshot *snapshot, int primar
         snapshot->ids[snapshot->count] = objetos[i].id;
         snapshot->pos[snapshot->count] = objetos[i].posicao;
         snapshot->rot[snapshot->count] = objetos[i].rotacao;
+        snapshot->scale[snapshot->count] = objetos[i].escala;
         snapshot->count++;
     }
 }
@@ -340,6 +348,7 @@ static void CaptureSnapshotForIds(GizmoSelectionSnapshot *snapshot, const GizmoS
         snapshot->ids[snapshot->count] = sourceIds->ids[i];
         snapshot->pos[snapshot->count] = objetos[idx].posicao;
         snapshot->rot[snapshot->count] = objetos[idx].rotacao;
+        snapshot->scale[snapshot->count] = objetos[idx].escala;
         snapshot->count++;
     }
 }
@@ -359,6 +368,8 @@ static bool SnapshotChanged(const GizmoSelectionSnapshot *before, const GizmoSel
             return true;
         if (!Vector3EqualsExact(before->rot[i], after->rot[i]))
             return true;
+        if (!Vector3EqualsExact(before->scale[i], after->scale[i]))
+            return true;
     }
     return false;
 }
@@ -375,9 +386,17 @@ static void ApplySnapshot(const GizmoSelectionSnapshot *snapshot)
             continue;
         objetos[idx].posicao = snapshot->pos[i];
         objetos[idx].rotacao = snapshot->rot[i];
+        objetos[idx].escala = snapshot->scale[i];
     }
 
     SetSelectedModelByObjetoId(ObterObjetoSelecionadoId());
+}
+
+static float ClampScaleComponent(float value)
+{
+    if (value < GIZMO_SCALE_MIN)
+        return GIZMO_SCALE_MIN;
+    return value;
 }
 
 static void ApplyMoveFromStart(const GizmoSelectionSnapshot *snapshot, Vector3 axis, float delta)
@@ -414,6 +433,28 @@ static void ApplyMoveStep(const GizmoSelectionSnapshot *snapshot, Vector3 axis, 
     }
 }
 
+static void ApplyScaleFromStart(const GizmoSelectionSnapshot *snapshot, int axisIndex, float delta)
+{
+    if (!snapshot)
+        return;
+
+    for (int i = 0; i < snapshot->count; i++)
+    {
+        int idx = BuscarIndicePorId(snapshot->ids[i]);
+        if (idx == -1)
+            continue;
+
+        Vector3 newScale = snapshot->scale[i];
+        if (axisIndex == 0)
+            newScale.x = ClampScaleComponent(snapshot->scale[i].x + delta);
+        else if (axisIndex == 1)
+            newScale.y = ClampScaleComponent(snapshot->scale[i].y + delta);
+        else
+            newScale.z = ClampScaleComponent(snapshot->scale[i].z + delta);
+        objetos[idx].escala = newScale;
+    }
+}
+
 static void ApplyRotationFromStart(const GizmoSelectionSnapshot *snapshot, int axisIndex, float angle)
 {
     if (!snapshot)
@@ -441,6 +482,8 @@ void UpdateMoveGizmo(Camera cam)
     // Keep transform mode shortcuts responsive even when mouse is over UI.
     if (IsKeyPressed(KEY_W))
         gizmoMode = GIZMO_MODE_MOVE;
+    if (IsKeyPressed(KEY_E))
+        gizmoMode = GIZMO_MODE_SCALE;
     if (IsKeyPressed(KEY_R))
         gizmoMode = GIZMO_MODE_ROTATE;
 
@@ -491,7 +534,7 @@ void UpdateMoveGizmo(Camera cam)
         for (int a = 0; a < 3; a++)
         {
             Vector3 axis = AxisDir(a);
-            if (gizmoMode == GIZMO_MODE_MOVE)
+            if (gizmoMode == GIZMO_MODE_MOVE || gizmoMode == GIZMO_MODE_SCALE)
             {
                 float t = 0.0f;
                 float dist = 0.0f;
@@ -535,6 +578,7 @@ void UpdateMoveGizmo(Camera cam)
             gizmoLastT = bestT;
             gizmoStartPos = pos;
             gizmoStartRot = rot;
+            gizmoStartScale = objetos[idx].escala;
             CaptureSelectedSnapshot(&gizmoDragSelection, selId);
             if (gizmoMode == GIZMO_MODE_ROTATE)
             {
@@ -572,6 +616,21 @@ void UpdateMoveGizmo(Camera cam)
                             deltaStep *= GIZMO_SLOW_FACTOR;
                         ApplyMoveStep(&gizmoDragSelection, axis, deltaStep);
                     }
+                    gizmoLastT = t;
+                }
+            }
+            else if (gizmoMode == GIZMO_MODE_SCALE)
+            {
+                float t = 0.0f;
+                float dist = 0.0f;
+                if (RayAxisClosest(cam, gizmoStartPos, axis, &t, &dist))
+                {
+                    float delta = t - gizmoStartT;
+                    if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))
+                        delta *= GIZMO_SLOW_FACTOR;
+                    if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))
+                        delta = floorf(delta / GIZMO_SCALE_SNAP_STEP + 0.5f) * GIZMO_SCALE_SNAP_STEP;
+                    ApplyScaleFromStart(&gizmoDragSelection, gizmoAxis, delta);
                     gizmoLastT = t;
                 }
             }
@@ -625,6 +684,11 @@ void DrawMoveGizmo(Camera cam)
     Vector3 pos = objetos[idx].posicao;
     float len = AxisHandleLength(cam, pos);
 
+    // O gizmo e um overlay de edicao: mantemos o tamanho no espaco 3D,
+    // mas desenhamos por cima da geometria para nao desaparecer atras do mesh.
+    rlDrawRenderBatchActive();
+    rlDisableDepthTest();
+
     if (gizmoMode == GIZMO_MODE_ROTATE)
     {
         float radius = len * 0.6f;
@@ -647,7 +711,18 @@ void DrawMoveGizmo(Camera cam)
             if (gizmoDragging && gizmoAxis == a)
                 cor = (Color){242, 239, 231, 255};
             DrawLine3D(pos, end, cor);
-            DrawSphere(end, len * 0.04f, cor);
+            if (gizmoMode == GIZMO_MODE_SCALE)
+            {
+                float boxSize = len * 0.08f;
+                DrawCubeV(end, (Vector3){boxSize, boxSize, boxSize}, cor);
+            }
+            else
+            {
+                DrawSphere(end, len * 0.04f, cor);
+            }
         }
     }
+
+    rlDrawRenderBatchActive();
+    rlEnableDepthTest();
 }

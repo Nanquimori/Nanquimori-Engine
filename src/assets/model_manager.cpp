@@ -766,6 +766,16 @@ static BoundingBox TransformBoundingBox(BoundingBox localBox, Matrix transform)
     return worldBox;
 }
 
+static Matrix BuildObjectWorldMatrix(Vector3 pos, Vector3 rot, Vector3 escala)
+{
+    Matrix world = MatrixTranslate(pos.x, pos.y, pos.z);
+    if (rot.x != 0.0f || rot.y != 0.0f || rot.z != 0.0f)
+        world = MatrixMultiply(world, MatrixRotateXYZ(rot));
+    if (escala.x != 1.0f || escala.y != 1.0f || escala.z != 1.0f)
+        world = MatrixMultiply(world, MatrixScale(escala.x, escala.y, escala.z));
+    return world;
+}
+
 void InitModelManager(void)
 {
     modelManager.modelCount = 0;
@@ -950,6 +960,7 @@ void RenderModels(void)
         CachedModel *cm = &modelManager.cache[lm->cacheIndex];
         Model *model = &cm->model;
         Vector3 pos = {0, 0, 0};
+        Vector3 escala = {1.0f, 1.0f, 1.0f};
         bool ativo = true;
         ObjetoCena *obj = NULL;
 
@@ -959,6 +970,7 @@ void RenderModels(void)
             if (idx != -1)
             {
                 pos = objetos[idx].posicao;
+                escala = objetos[idx].escala;
                 ativo = objetos[idx].ativo;
                 obj = &objetos[idx];
             }
@@ -973,6 +985,7 @@ void RenderModels(void)
                 rlRotatef(obj->rotacao.x * RAD2DEG, 1, 0, 0);
                 rlRotatef(obj->rotacao.y * RAD2DEG, 0, 1, 0);
                 rlRotatef(obj->rotacao.z * RAD2DEG, 0, 0, 1);
+                rlScalef(escala.x, escala.y, escala.z);
             }
             if (obj && obj->protoEnabled)
             {
@@ -1228,6 +1241,7 @@ static bool RaycastModelsInternal(Ray ray, Vector3 *hitPos, float *hitDist, int 
         Model model = modelManager.cache[lm->cacheIndex].model;
         Vector3 pos = {0, 0, 0};
         Vector3 rot = {0, 0, 0};
+        Vector3 escala = {1.0f, 1.0f, 1.0f};
         bool ativo = true;
 
         if (lm->idObjeto > 0)
@@ -1237,15 +1251,14 @@ static bool RaycastModelsInternal(Ray ray, Vector3 *hitPos, float *hitDist, int 
                 continue;
             pos = objetos[idx].posicao;
             rot = objetos[idx].rotacao;
+            escala = objetos[idx].escala;
             ativo = objetos[idx].ativo;
         }
 
         if (!ativo)
             continue;
 
-        Matrix world = MatrixTranslate(pos.x, pos.y, pos.z);
-        if (rot.x != 0.0f || rot.y != 0.0f || rot.z != 0.0f)
-            world = MatrixMultiply(world, MatrixRotateXYZ(rot));
+        Matrix world = BuildObjectWorldMatrix(pos, rot, escala);
         Matrix transform = MatrixMultiply(world, model.transform);
         BoundingBox localBounds = GetModelBoundingBox(model);
         BoundingBox worldBounds = TransformBoundingBox(localBounds, transform);

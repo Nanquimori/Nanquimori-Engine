@@ -6,3 +6,32 @@ Conectar o painel às propriedades do objeto selecionado no outliner.
 Adicionar seções/abas (Transform, Render, Física, etc.).
 
 faça uma caixa de diálogo de confirmação do Motor que aparece quando você tenta fechar sem salvar as alterações recentes.
+
+
+
+
+
+
+O Que Falta
+
+Falta o básico mais importante de qualquer engine 3D moderna: Transform com escala. Seu objeto persiste só posicao e rotacao em outliner.h, e o painel também só edita 6 campos de transform em properties_panel.cpp. Isso hoje é o maior gap.
+Não encontrei sistema de componentes de gameplay/scripting. Hoje o runtime carrega cena, renderiza e roda física, mas não há camada de comportamento equivalente a MonoBehaviour, GDScript, sinais/eventos ou Python components.
+Não encontrei prefabs/instancing reutilizável. Você duplica objetos e cenas, mas ainda não tem asset reutilizável com herança/override.
+Não encontrei áudio, UI de gameplay, partículas, animação esquelética/clipes, iluminação/sombras, navegação/pathfinding ou networking.
+A física é promissora, mas ainda é “primeira geração”: sem joints, triggers, layers/masks, character controller, vehicle controller, CCD configurável, sleeping ou solver mais robusto. Hoje ela roda com solverIterations = 1 em nanquimori_physics.cpp.
+O undo/redo é fragmentado: outliner, transform e gizmo têm pilhas separadas em outliner.cpp, properties_panel.cpp e gizmo.cpp, mas não existe histórico global de editor.
+A serialização funciona, mas está frágil para crescer: o parse é manual por string/sscanf em scene_manager.cpp e scene_manager.cpp.
+Comparando Com Unity, Godot e Range
+
+Unity usa GameObject + Components, com Transform sempre presente e com posição/rotação/escala, além de prefabs, física com rigidbodies/colliders/joints/CCD e build profiles. Seu motor hoje já cobre cenas, hierarquia, câmera e export, mas ainda não cobre o núcleo “componentizado” do gameplay.
+Godot usa Nodes + Scenes, instanciamento de cenas, sinais, scripting, e tem baseline nativo de áudio, input, GUI, animation, navigation, networking e export presets. Seu motor já chega em editor/runtime/export, mas ainda não tem esse ecossistema de sistemas acopláveis.
+Assumi que você quis dizer Range Engine (rangeengine.tech). Pela documentação oficial, ele expõe Python controllers/components, logic bricks, áudio, vários modos de física, cenas e export standalone com Range Armor. Nessa comparação, o seu gap principal é a camada de lógica/gameplay.
+Prioridade Real
+
+Transform completo com escala.
+Sistema de componentes + scripting/eventos.
+Prefabs/instâncias reutilizáveis.
+Input actions + UI de gameplay + áudio.
+Física 2.0: layers, triggers, joints, CCD, character/vehicle controller.
+Undo global + dirty state + confirmação ao fechar sem salvar.
+Diagnóstico honesto: hoje seu projeto está mais perto de um “mini editor 3D com player exportável” do que de uma engine generalista. Isso é ótimo, porque a base difícil já existe. O próximo salto não é “mais janelas”, e sim virar a arquitetura para gameplay reutilizável.

@@ -14,7 +14,7 @@ CMakeFiles/NanquimoriEngine.dir/src/editor/viewport/gizmo.cpp.obj: \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/assets/model_manager.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/properties_panel.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/viewport/camera_controller.h \
- C:/raylib/raylib/src/raymath.h \
+ C:/raylib/raylib/src/rlgl.h C:/raylib/raylib/src/raymath.h \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/math.h \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/cmath \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/requires_hosted.h \

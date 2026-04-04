@@ -501,6 +501,7 @@ static void CarregarCena(int index)
             objetos[idx].ativo = src->ativo;
             objetos[idx].selecionado = false;
             objetos[idx].rotacao = src->rotacao;
+            objetos[idx].escala = src->escala;
             strncpy(objetos[idx].caminhoModelo, src->caminhoModelo, 255);
             objetos[idx].caminhoModelo[255] = '\0';
             objetos[idx].protoEnabled = src->protoEnabled;
@@ -1299,7 +1300,7 @@ bool SaveProject(void)
             EscapeJsonString(pcustoms, pcustomsEsc, sizeof(pcustomsEsc));
 
             fprintf(f,
-                    "{\"id\":%d,\"name\":\"%s\",\"pos\":[%.4f,%.4f,%.4f],\"rot\":[%.4f,%.4f,%.4f],\"parent\":%d,\"active\":%d,\"model\":\"%s\","
+                    "{\"id\":%d,\"name\":\"%s\",\"pos\":[%.4f,%.4f,%.4f],\"rot\":[%.4f,%.4f,%.4f],\"scale\":[%.4f,%.4f,%.4f],\"parent\":%d,\"active\":%d,\"model\":\"%s\","
                     "\"proto\":%d,\"pbase\":[%d,%d,%d],\"psec\":[%d,%d,%d],\"ppack\":%d,\"ppackv\":%d,\"pcustom\":\"%s\","
                     "\"type\":%d,\"cammain\":%d,\"camproj\":%d,\"camfov\":%.3f,\"camortho\":%.3f,\"camfocus\":%.3f,\"camnear\":%.3f,\"camfar\":%.3f,"
                     "\"pcustombase\":[%d,%d,%d],\"pcustomsec\":[%d,%d,%d],\"pcustoms\":\"%s\","
@@ -1308,6 +1309,7 @@ bool SaveProject(void)
                     nomeObjEsc,
                     o->posicao.x, o->posicao.y, o->posicao.z,
                     o->rotacao.x, o->rotacao.y, o->rotacao.z,
+                    o->escala.x, o->escala.y, o->escala.z,
                     o->paiId,
                     o->ativo ? 1 : 0,
                     pathEsc,
@@ -1730,6 +1732,7 @@ bool LoadProject(const char *path)
                 int active = 1;
                 float px = 0, py = 0, pz = 0;
                 float rx = 0, ry = 0, rz = 0;
+                float sx = 1.0f, sy = 1.0f, sz = 1.0f;
                 char nomeObjEsc[128] = {0};
                 char modelEsc[512] = {0};
                 char pcustomEsc[128] = {0};
@@ -1764,6 +1767,9 @@ bool LoadProject(const char *path)
                     const char *rotPtr = strstr(objLine, "\"rot\":[");
                     if (rotPtr)
                         sscanf(rotPtr, "\"rot\":[%f,%f,%f]", &rx, &ry, &rz);
+                    const char *scalePtr = strstr(objLine, "\"scale\":[");
+                    if (scalePtr)
+                        sscanf(scalePtr, "\"scale\":[%f,%f,%f]", &sx, &sy, &sz);
 
                     const char *parentPtr = strstr(objLine, "\"parent\":");
                     if (parentPtr)
@@ -1855,6 +1861,7 @@ bool LoadProject(const char *path)
                     UnescapeJsonString(nomeObjEsc, o->nome, sizeof(o->nome));
                     o->posicao = (Vector3){px, py, pz};
                     o->rotacao = (Vector3){rx, ry, rz};
+                    o->escala = (Vector3){sx, sy, sz};
                     o->paiId = parent;
                     o->ativo = active != 0;
                     o->selecionado = false;

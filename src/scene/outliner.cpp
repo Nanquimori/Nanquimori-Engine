@@ -833,6 +833,7 @@ int RegistrarObjeto(const char *nome, Vector3 posicao, int paiId)
     obj->nome[MAX_NOME] = '\0';
     obj->posicao = posicao;
     obj->rotacao = (Vector3){0, 0, 0};
+    obj->escala = (Vector3){1.0f, 1.0f, 1.0f};
     obj->paiId = paiId;
     obj->ativo = true;
     obj->selecionado = false;
