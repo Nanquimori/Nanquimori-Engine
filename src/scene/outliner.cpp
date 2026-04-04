@@ -1375,7 +1375,7 @@ static void DrawObjectSettings(float startY, float height)
             TextInputConfig nameCfg = {0};
             nameCfg.fontSize = 14;
             nameCfg.padding = 4;
-            nameCfg.textColor = propNameInput.active ? COR_ITEM_SEL : COR_ITEM;
+            nameCfg.textColor = propNameInput.active ? GetUIStyle()->inputText : COR_ITEM;
             nameCfg.bgColor = COR_EDIT_BG;
             nameCfg.borderColor = COR_BORDA;
             nameCfg.selectionColor = GetUIStyle()->inputSelection;
