@@ -494,8 +494,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-ds2l41"
-      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-ds2l41"
+      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-nn3syu"
+      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-nn3syu"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -506,13 +506,13 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-ds2l41'
+        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-nn3syu'
         
-        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_21217/fast
-        make  -f CMakeFiles\\cmTC_21217.dir\\build.make CMakeFiles/cmTC_21217.dir/build
-        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-ds2l41'
-        Building CXX object CMakeFiles/cmTC_21217.dir/CMakeCXXCompilerABI.cpp.obj
-        C:\\raylib\\w64devkit\\bin\\g++.exe   -v -o CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.obj -c "C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCXXCompilerABI.cpp"
+        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_6c460/fast
+        make  -f CMakeFiles\\cmTC_6c460.dir\\build.make CMakeFiles/cmTC_6c460.dir/build
+        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-nn3syu'
+        Building CXX object CMakeFiles/cmTC_6c460.dir/CMakeCXXCompilerABI.cpp.obj
+        C:\\raylib\\w64devkit\\bin\\g++.exe   -v -o CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.obj -c "C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCXXCompilerABI.cpp"
         Using built-in specs.
         COLLECT_GCC=C:\\raylib\\w64devkit\\bin\\g++.exe
         Target: x86_64-w64-mingw32
@@ -520,8 +520,8 @@ events:
         Thread model: posix
         Supported LTO compression algorithms: zlib
         gcc version 14.2.0 (GCC) 
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_21217.dir\\'
-         C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/cc1plus.exe -quiet -v -iprefix C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/ -isysroot C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -D_REENTRANT C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles\\cmTC_21217.dir\\ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\cc0CHQC6.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_6c460.dir\\'
+         C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/cc1plus.exe -quiet -v -iprefix C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/ -isysroot C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -D_REENTRANT C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles\\cmTC_6c460.dir\\ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccpB6ITe.s
         GNU C++17 (GCC) version 14.2.0 (x86_64-w64-mingw32)
         	compiled by GNU C version 14.2.0, GMP version 6.3.0, MPFR version 4.2.1, MPC version 1.3.1, isl version none
         GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
@@ -543,14 +543,14 @@ events:
          C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/include
         End of search list.
         Compiler executable checksum: 720049954b8563a4f8c39b72b91551d9
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_21217.dir\\'
-         as -v -o CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.obj C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\cc0CHQC6.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_6c460.dir\\'
+         as -v -o CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.obj C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccpB6ITe.s
         GNU assembler version 2.42 (x86_64-w64-mingw32) using BFD version (GNU Binutils) 2.42
         COMPILER_PATH=C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/;C:/raylib/w64devkit/bin/../libexec/gcc/
         LIBRARY_PATH=C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/;C:/raylib/w64devkit/bin/../lib/gcc/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.'
-        Linking CXX executable cmTC_21217.exe
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_21217.dir\\link.txt --verbose=1
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.'
+        Linking CXX executable cmTC_6c460.exe
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_6c460.dir\\link.txt --verbose=1
         Using built-in specs.
         COLLECT_GCC=C:\\raylib\\w64devkit\\bin\\g++.exe
         COLLECT_LTO_WRAPPER=C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/lto-wrapper.exe
@@ -561,16 +561,16 @@ events:
         gcc version 14.2.0 (GCC) 
         COMPILER_PATH=C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/;C:/raylib/w64devkit/bin/../libexec/gcc/
         LIBRARY_PATH=C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/;C:/raylib/w64devkit/bin/../lib/gcc/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_21217.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_21217.'
-         C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/collect2.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_21217.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_21217.dir/objects.a --no-whole-archive --out-implib libcmTC_21217.dll.a --major-image-version 0 --minor-image-version 0 -lstdc++ -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_6c460.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_6c460.'
+         C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/collect2.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_6c460.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_6c460.dir/objects.a --no-whole-archive --out-implib libcmTC_6c460.dll.a --major-image-version 0 --minor-image-version 0 -lstdc++ -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o
         collect2 version 14.2.0
-        C:/raylib/w64devkit/bin/ld.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_21217.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_21217.dir/objects.a --no-whole-archive --out-implib libcmTC_21217.dll.a --major-image-version 0 --minor-image-version 0 -lstdc++ -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o
+        C:/raylib/w64devkit/bin/ld.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_6c460.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_6c460.dir/objects.a --no-whole-archive --out-implib libcmTC_6c460.dll.a --major-image-version 0 --minor-image-version 0 -lstdc++ -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o
         GNU ld (GNU Binutils) 2.42
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_21217.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_21217.'
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_21217.dir/objects.a
-        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_21217.dir/objects.a @CMakeFiles\\cmTC_21217.dir\\objects1.rsp
-        C:\\raylib\\w64devkit\\bin\\g++.exe  -v -Wl,-v -Wl,--whole-archive CMakeFiles\\cmTC_21217.dir/objects.a -Wl,--no-whole-archive -o cmTC_21217.exe -Wl,--out-implib,libcmTC_21217.dll.a -Wl,--major-image-version,0,--minor-image-version,0
-        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-ds2l41'
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_6c460.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_6c460.'
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_6c460.dir/objects.a
+        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_6c460.dir/objects.a @CMakeFiles\\cmTC_6c460.dir\\objects1.rsp
+        C:\\raylib\\w64devkit\\bin\\g++.exe  -v -Wl,-v -Wl,--whole-archive CMakeFiles\\cmTC_6c460.dir/objects.a -Wl,--no-whole-archive -o cmTC_6c460.exe -Wl,--out-implib,libcmTC_6c460.dll.a -Wl,--major-image-version,0,--minor-image-version,0
+        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-nn3syu'
         
       exitCode: 0
   -
@@ -609,13 +609,13 @@ events:
       Parsed CXX implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-ds2l41']
+        ignore line: [Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-nn3syu']
         ignore line: []
-        ignore line: [Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_21217/fast]
-        ignore line: [make  -f CMakeFiles\\cmTC_21217.dir\\build.make CMakeFiles/cmTC_21217.dir/build]
-        ignore line: [make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-ds2l41']
-        ignore line: [Building CXX object CMakeFiles/cmTC_21217.dir/CMakeCXXCompilerABI.cpp.obj]
-        ignore line: [C:\\raylib\\w64devkit\\bin\\g++.exe   -v -o CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.obj -c "C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCXXCompilerABI.cpp"]
+        ignore line: [Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_6c460/fast]
+        ignore line: [make  -f CMakeFiles\\cmTC_6c460.dir\\build.make CMakeFiles/cmTC_6c460.dir/build]
+        ignore line: [make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-nn3syu']
+        ignore line: [Building CXX object CMakeFiles/cmTC_6c460.dir/CMakeCXXCompilerABI.cpp.obj]
+        ignore line: [C:\\raylib\\w64devkit\\bin\\g++.exe   -v -o CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.obj -c "C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCXXCompilerABI.cpp"]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=C:\\raylib\\w64devkit\\bin\\g++.exe]
         ignore line: [Target: x86_64-w64-mingw32]
@@ -623,8 +623,8 @@ events:
         ignore line: [Thread model: posix]
         ignore line: [Supported LTO compression algorithms: zlib]
         ignore line: [gcc version 14.2.0 (GCC) ]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_21217.dir\\']
-        ignore line: [ C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/cc1plus.exe -quiet -v -iprefix C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/ -isysroot C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -D_REENTRANT C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles\\cmTC_21217.dir\\ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\cc0CHQC6.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_6c460.dir\\']
+        ignore line: [ C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/cc1plus.exe -quiet -v -iprefix C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/ -isysroot C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -D_REENTRANT C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles\\cmTC_6c460.dir\\ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -o C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccpB6ITe.s]
         ignore line: [GNU C++17 (GCC) version 14.2.0 (x86_64-w64-mingw32)]
         ignore line: [	compiled by GNU C version 14.2.0  GMP version 6.3.0  MPFR version 4.2.1  MPC version 1.3.1  isl version none]
         ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
@@ -646,8 +646,8 @@ events:
         ignore line: [ C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/include]
         ignore line: [End of search list.]
         ignore line: [Compiler executable checksum: 720049954b8563a4f8c39b72b91551d9]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_21217.dir\\']
-        ignore line: [ as -v -o CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.obj C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\cc0CHQC6.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_6c460.dir\\']
+        ignore line: [ as -v -o CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.obj C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccpB6ITe.s]
         ignore line: [GNU assembler version 2.42 (x86_64-w64-mingw32) using BFD version (GNU Binutils) 2.42]
         ignore line: [COMPILER_PATH=C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/]
         ignore line: [C:/raylib/w64devkit/bin/../libexec/gcc/]
@@ -657,9 +657,9 @@ events:
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib/]
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/]
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_21217.dir\\CMakeCXXCompilerABI.cpp.']
-        ignore line: [Linking CXX executable cmTC_21217.exe]
-        ignore line: ["C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_21217.dir\\link.txt --verbose=1]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_6c460.dir\\CMakeCXXCompilerABI.cpp.']
+        ignore line: [Linking CXX executable cmTC_6c460.exe]
+        ignore line: ["C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_6c460.dir\\link.txt --verbose=1]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=C:\\raylib\\w64devkit\\bin\\g++.exe]
         ignore line: [COLLECT_LTO_WRAPPER=C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/lto-wrapper.exe]
@@ -676,15 +676,15 @@ events:
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib/]
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/]
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_21217.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_21217.']
-        link line: [ C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/collect2.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_21217.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_21217.dir/objects.a --no-whole-archive --out-implib libcmTC_21217.dll.a --major-image-version 0 --minor-image-version 0 -lstdc++ -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_6c460.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_6c460.']
+        link line: [ C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/collect2.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_6c460.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_6c460.dir/objects.a --no-whole-archive --out-implib libcmTC_6c460.dll.a --major-image-version 0 --minor-image-version 0 -lstdc++ -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o]
           arg [C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/collect2.exe] ==> ignore
           arg [--sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32] ==> ignore
           arg [-m] ==> ignore
           arg [i386pep] ==> ignore
           arg [-Bdynamic] ==> search dynamic
           arg [-o] ==> ignore
-          arg [cmTC_21217.exe] ==> ignore
+          arg [cmTC_6c460.exe] ==> ignore
           arg [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o] ==> obj [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o]
           arg [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o] ==> obj [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o]
           arg [-LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0] ==> dir [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0]
@@ -695,10 +695,10 @@ events:
           arg [-LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../..] ==> dir [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../..]
           arg [-v] ==> ignore
           arg [--whole-archive] ==> ignore
-          arg [CMakeFiles\\cmTC_21217.dir/objects.a] ==> ignore
+          arg [CMakeFiles\\cmTC_6c460.dir/objects.a] ==> ignore
           arg [--no-whole-archive] ==> ignore
           arg [--out-implib] ==> ignore
-          arg [libcmTC_21217.dll.a] ==> ignore
+          arg [libcmTC_6c460.dll.a] ==> ignore
           arg [--major-image-version] ==> ignore
           arg [0] ==> ignore
           arg [--minor-image-version] ==> ignore
@@ -721,7 +721,7 @@ events:
           arg [-lkernel32] ==> lib [kernel32]
           arg [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o] ==> obj [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o]
         ignore line: [collect2 version 14.2.0]
-        ignore line: [C:/raylib/w64devkit/bin/ld.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_21217.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_21217.dir/objects.a --no-whole-archive --out-implib libcmTC_21217.dll.a --major-image-version 0 --minor-image-version 0 -lstdc++ -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o]
+        ignore line: [C:/raylib/w64devkit/bin/ld.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_6c460.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_6c460.dir/objects.a --no-whole-archive --out-implib libcmTC_6c460.dll.a --major-image-version 0 --minor-image-version 0 -lstdc++ -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o]
         linker tool for 'CXX': C:/raylib/w64devkit/bin/ld.exe
         remove lib [msvcrt]
         remove lib [msvcrt]
@@ -1145,8 +1145,8 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-e8qh85"
-      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-e8qh85"
+      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-lj2vd1"
+      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-lj2vd1"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: ""
@@ -1155,13 +1155,13 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-e8qh85'
+        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-lj2vd1'
         
-        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_0f141/fast
-        make  -f CMakeFiles\\cmTC_0f141.dir\\build.make CMakeFiles/cmTC_0f141.dir/build
-        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-e8qh85'
-        Building C object CMakeFiles/cmTC_0f141.dir/CMakeCCompilerABI.c.obj
-        C:\\raylib\\w64devkit\\bin\\gcc.exe   -v -o CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.obj -c "C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCCompilerABI.c"
+        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_689e6/fast
+        make  -f CMakeFiles\\cmTC_689e6.dir\\build.make CMakeFiles/cmTC_689e6.dir/build
+        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-lj2vd1'
+        Building C object CMakeFiles/cmTC_689e6.dir/CMakeCCompilerABI.c.obj
+        C:\\raylib\\w64devkit\\bin\\gcc.exe   -v -o CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.obj -c "C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCCompilerABI.c"
         Using built-in specs.
         COLLECT_GCC=C:\\raylib\\w64devkit\\bin\\gcc.exe
         Target: x86_64-w64-mingw32
@@ -1169,8 +1169,8 @@ events:
         Thread model: posix
         Supported LTO compression algorithms: zlib
         gcc version 14.2.0 (GCC) 
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_0f141.dir\\'
-         C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/cc1.exe -quiet -v -iprefix C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/ -isysroot C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -D_REENTRANT C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles\\cmTC_0f141.dir\\ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccfw3ph4.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_689e6.dir\\'
+         C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/cc1.exe -quiet -v -iprefix C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/ -isysroot C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -D_REENTRANT C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles\\cmTC_689e6.dir\\ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccWLpfv6.s
         GNU C17 (GCC) version 14.2.0 (x86_64-w64-mingw32)
         	compiled by GNU C version 14.2.0, GMP version 6.3.0, MPFR version 4.2.1, MPC version 1.3.1, isl version none
         GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
@@ -1186,14 +1186,14 @@ events:
          C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/include
         End of search list.
         Compiler executable checksum: b1c82c984a0ce5cd93aa5eb22e7ad9b3
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_0f141.dir\\'
-         as -v -o CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.obj C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccfw3ph4.s
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_689e6.dir\\'
+         as -v -o CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.obj C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccWLpfv6.s
         GNU assembler version 2.42 (x86_64-w64-mingw32) using BFD version (GNU Binutils) 2.42
         COMPILER_PATH=C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/;C:/raylib/w64devkit/bin/../libexec/gcc/
         LIBRARY_PATH=C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/;C:/raylib/w64devkit/bin/../lib/gcc/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../
-        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.'
-        Linking C executable cmTC_0f141.exe
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_0f141.dir\\link.txt --verbose=1
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.'
+        Linking C executable cmTC_689e6.exe
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_689e6.dir\\link.txt --verbose=1
         Using built-in specs.
         COLLECT_GCC=C:\\raylib\\w64devkit\\bin\\gcc.exe
         COLLECT_LTO_WRAPPER=C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/lto-wrapper.exe
@@ -1204,16 +1204,16 @@ events:
         gcc version 14.2.0 (GCC) 
         COMPILER_PATH=C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/;C:/raylib/w64devkit/bin/../libexec/gcc/
         LIBRARY_PATH=C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/;C:/raylib/w64devkit/bin/../lib/gcc/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/;C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_0f141.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_0f141.'
-         C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/collect2.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_0f141.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_0f141.dir/objects.a --no-whole-archive --out-implib libcmTC_0f141.dll.a --major-image-version 0 --minor-image-version 0 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_689e6.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_689e6.'
+         C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/collect2.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_689e6.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_689e6.dir/objects.a --no-whole-archive --out-implib libcmTC_689e6.dll.a --major-image-version 0 --minor-image-version 0 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o
         collect2 version 14.2.0
-        C:/raylib/w64devkit/bin/ld.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_0f141.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_0f141.dir/objects.a --no-whole-archive --out-implib libcmTC_0f141.dll.a --major-image-version 0 --minor-image-version 0 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o
+        C:/raylib/w64devkit/bin/ld.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_689e6.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_689e6.dir/objects.a --no-whole-archive --out-implib libcmTC_689e6.dll.a --major-image-version 0 --minor-image-version 0 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o
         GNU ld (GNU Binutils) 2.42
-        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_0f141.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_0f141.'
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_0f141.dir/objects.a
-        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_0f141.dir/objects.a @CMakeFiles\\cmTC_0f141.dir\\objects1.rsp
-        C:\\raylib\\w64devkit\\bin\\gcc.exe  -v -Wl,-v -Wl,--whole-archive CMakeFiles\\cmTC_0f141.dir/objects.a -Wl,--no-whole-archive -o cmTC_0f141.exe -Wl,--out-implib,libcmTC_0f141.dll.a -Wl,--major-image-version,0,--minor-image-version,0
-        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-e8qh85'
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_689e6.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_689e6.'
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_689e6.dir/objects.a
+        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_689e6.dir/objects.a @CMakeFiles\\cmTC_689e6.dir\\objects1.rsp
+        C:\\raylib\\w64devkit\\bin\\gcc.exe  -v -Wl,-v -Wl,--whole-archive CMakeFiles\\cmTC_689e6.dir/objects.a -Wl,--no-whole-archive -o cmTC_689e6.exe -Wl,--out-implib,libcmTC_689e6.dll.a -Wl,--major-image-version,0,--minor-image-version,0
+        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-lj2vd1'
         
       exitCode: 0
   -
@@ -1246,13 +1246,13 @@ events:
       Parsed C implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-e8qh85']
+        ignore line: [Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-lj2vd1']
         ignore line: []
-        ignore line: [Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_0f141/fast]
-        ignore line: [make  -f CMakeFiles\\cmTC_0f141.dir\\build.make CMakeFiles/cmTC_0f141.dir/build]
-        ignore line: [make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-e8qh85']
-        ignore line: [Building C object CMakeFiles/cmTC_0f141.dir/CMakeCCompilerABI.c.obj]
-        ignore line: [C:\\raylib\\w64devkit\\bin\\gcc.exe   -v -o CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.obj -c "C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCCompilerABI.c"]
+        ignore line: [Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_689e6/fast]
+        ignore line: [make  -f CMakeFiles\\cmTC_689e6.dir\\build.make CMakeFiles/cmTC_689e6.dir/build]
+        ignore line: [make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-lj2vd1']
+        ignore line: [Building C object CMakeFiles/cmTC_689e6.dir/CMakeCCompilerABI.c.obj]
+        ignore line: [C:\\raylib\\w64devkit\\bin\\gcc.exe   -v -o CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.obj -c "C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCCompilerABI.c"]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=C:\\raylib\\w64devkit\\bin\\gcc.exe]
         ignore line: [Target: x86_64-w64-mingw32]
@@ -1260,8 +1260,8 @@ events:
         ignore line: [Thread model: posix]
         ignore line: [Supported LTO compression algorithms: zlib]
         ignore line: [gcc version 14.2.0 (GCC) ]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_0f141.dir\\']
-        ignore line: [ C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/cc1.exe -quiet -v -iprefix C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/ -isysroot C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -D_REENTRANT C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles\\cmTC_0f141.dir\\ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccfw3ph4.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_689e6.dir\\']
+        ignore line: [ C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/cc1.exe -quiet -v -iprefix C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/ -isysroot C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -D_REENTRANT C:\\Program Files\\CMake\\share\\cmake-4.3\\Modules\\CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles\\cmTC_689e6.dir\\ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccWLpfv6.s]
         ignore line: [GNU C17 (GCC) version 14.2.0 (x86_64-w64-mingw32)]
         ignore line: [	compiled by GNU C version 14.2.0  GMP version 6.3.0  MPFR version 4.2.1  MPC version 1.3.1  isl version none]
         ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
@@ -1277,8 +1277,8 @@ events:
         ignore line: [ C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/include]
         ignore line: [End of search list.]
         ignore line: [Compiler executable checksum: b1c82c984a0ce5cd93aa5eb22e7ad9b3]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_0f141.dir\\']
-        ignore line: [ as -v -o CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.obj C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccfw3ph4.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_689e6.dir\\']
+        ignore line: [ as -v -o CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.obj C:\\Users\\ANDREY~1\\AppData\\Local\\Temp\\ccWLpfv6.s]
         ignore line: [GNU assembler version 2.42 (x86_64-w64-mingw32) using BFD version (GNU Binutils) 2.42]
         ignore line: [COMPILER_PATH=C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/]
         ignore line: [C:/raylib/w64devkit/bin/../libexec/gcc/]
@@ -1288,9 +1288,9 @@ events:
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib/]
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/]
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_0f141.dir\\CMakeCCompilerABI.c.']
-        ignore line: [Linking C executable cmTC_0f141.exe]
-        ignore line: ["C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_0f141.dir\\link.txt --verbose=1]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_689e6.dir\\CMakeCCompilerABI.c.']
+        ignore line: [Linking C executable cmTC_689e6.exe]
+        ignore line: ["C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_689e6.dir\\link.txt --verbose=1]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=C:\\raylib\\w64devkit\\bin\\gcc.exe]
         ignore line: [COLLECT_LTO_WRAPPER=C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/lto-wrapper.exe]
@@ -1307,15 +1307,15 @@ events:
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib/]
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/]
         ignore line: [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../]
-        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_0f141.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_0f141.']
-        link line: [ C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/collect2.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_0f141.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_0f141.dir/objects.a --no-whole-archive --out-implib libcmTC_0f141.dll.a --major-image-version 0 --minor-image-version 0 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_689e6.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_689e6.']
+        link line: [ C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/collect2.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_689e6.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_689e6.dir/objects.a --no-whole-archive --out-implib libcmTC_689e6.dll.a --major-image-version 0 --minor-image-version 0 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o]
           arg [C:/raylib/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/14.2.0/collect2.exe] ==> ignore
           arg [--sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32] ==> ignore
           arg [-m] ==> ignore
           arg [i386pep] ==> ignore
           arg [-Bdynamic] ==> search dynamic
           arg [-o] ==> ignore
-          arg [cmTC_0f141.exe] ==> ignore
+          arg [cmTC_689e6.exe] ==> ignore
           arg [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o] ==> obj [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o]
           arg [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o] ==> obj [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o]
           arg [-LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0] ==> dir [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0]
@@ -1326,10 +1326,10 @@ events:
           arg [-LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../..] ==> dir [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../..]
           arg [-v] ==> ignore
           arg [--whole-archive] ==> ignore
-          arg [CMakeFiles\\cmTC_0f141.dir/objects.a] ==> ignore
+          arg [CMakeFiles\\cmTC_689e6.dir/objects.a] ==> ignore
           arg [--no-whole-archive] ==> ignore
           arg [--out-implib] ==> ignore
-          arg [libcmTC_0f141.dll.a] ==> ignore
+          arg [libcmTC_689e6.dll.a] ==> ignore
           arg [--major-image-version] ==> ignore
           arg [0] ==> ignore
           arg [--minor-image-version] ==> ignore
@@ -1351,7 +1351,7 @@ events:
           arg [-lkernel32] ==> lib [kernel32]
           arg [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o] ==> obj [C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o]
         ignore line: [collect2 version 14.2.0]
-        ignore line: [C:/raylib/w64devkit/bin/ld.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_0f141.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_0f141.dir/objects.a --no-whole-archive --out-implib libcmTC_0f141.dll.a --major-image-version 0 --minor-image-version 0 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o]
+        ignore line: [C:/raylib/w64devkit/bin/ld.exe --sysroot=C:/raylib/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_689e6.exe C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtbegin.o -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0 -LC:/raylib/w64devkit/bin/../lib/gcc -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/lib -LC:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_689e6.dir/objects.a --no-whole-archive --out-implib libcmTC_689e6.dll.a --major-image-version 0 --minor-image-version 0 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmingwex -lmsvcrt -lkernel32 C:/raylib/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/crtend.o]
         linker tool for 'C': C:/raylib/w64devkit/bin/ld.exe
         remove lib [msvcrt]
         remove lib [msvcrt]
@@ -1392,8 +1392,8 @@ events:
     checks:
       - "Performing Test COMPILER_HAS_THOSE_TOGGLES"
     directories:
-      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-1ht7oc"
-      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-1ht7oc"
+      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-yu8qzk"
+      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-yu8qzk"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: ""
@@ -1403,19 +1403,19 @@ events:
       variable: "COMPILER_HAS_THOSE_TOGGLES"
       cached: true
       stdout: |
-        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-1ht7oc'
+        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-yu8qzk'
         
-        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_09035/fast
-        make  -f CMakeFiles\\cmTC_09035.dir\\build.make CMakeFiles/cmTC_09035.dir/build
-        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-1ht7oc'
-        Building C object CMakeFiles/cmTC_09035.dir/src.c.obj
-        C:\\raylib\\w64devkit\\bin\\gcc.exe -DCOMPILER_HAS_THOSE_TOGGLES  -Werror=pointer-arith -o CMakeFiles\\cmTC_09035.dir\\src.c.obj -c "C:\\Users\\Andrey Acelerion\\Documents\\Documentos Salvos\\Raylib\\Nanquimori Engine\\.cmake\\build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-1ht7oc\\src.c"
-        Linking C executable cmTC_09035.exe
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_09035.dir\\link.txt --verbose=1
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_09035.dir/objects.a
-        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_09035.dir/objects.a @CMakeFiles\\cmTC_09035.dir\\objects1.rsp
-        C:\\raylib\\w64devkit\\bin\\gcc.exe -Wl,--whole-archive CMakeFiles\\cmTC_09035.dir/objects.a -Wl,--no-whole-archive -o cmTC_09035.exe -Wl,--out-implib,libcmTC_09035.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_09035.dir\\linkLibs.rsp
-        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-1ht7oc'
+        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_cee8f/fast
+        make  -f CMakeFiles\\cmTC_cee8f.dir\\build.make CMakeFiles/cmTC_cee8f.dir/build
+        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-yu8qzk'
+        Building C object CMakeFiles/cmTC_cee8f.dir/src.c.obj
+        C:\\raylib\\w64devkit\\bin\\gcc.exe -DCOMPILER_HAS_THOSE_TOGGLES  -Werror=pointer-arith -o CMakeFiles\\cmTC_cee8f.dir\\src.c.obj -c "C:\\Users\\Andrey Acelerion\\Documents\\Documentos Salvos\\Raylib\\Nanquimori Engine\\.cmake\\build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-yu8qzk\\src.c"
+        Linking C executable cmTC_cee8f.exe
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_cee8f.dir\\link.txt --verbose=1
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_cee8f.dir/objects.a
+        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_cee8f.dir/objects.a @CMakeFiles\\cmTC_cee8f.dir\\objects1.rsp
+        C:\\raylib\\w64devkit\\bin\\gcc.exe -Wl,--whole-archive CMakeFiles\\cmTC_cee8f.dir/objects.a -Wl,--no-whole-archive -o cmTC_cee8f.exe -Wl,--out-implib,libcmTC_cee8f.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_cee8f.dir\\linkLibs.rsp
+        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-yu8qzk'
         
       exitCode: 0
   -
@@ -1429,8 +1429,8 @@ events:
     checks:
       - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
     directories:
-      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-992om5"
-      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-992om5"
+      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-aqu3to"
+      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-aqu3to"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: "-fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith "
@@ -1440,19 +1440,19 @@ events:
       variable: "CMAKE_HAVE_LIBC_PTHREAD"
       cached: true
       stdout: |
-        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-992om5'
+        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-aqu3to'
         
-        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_d9d2c/fast
-        make  -f CMakeFiles\\cmTC_d9d2c.dir\\build.make CMakeFiles/cmTC_d9d2c.dir/build
-        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-992om5'
-        Building C object CMakeFiles/cmTC_d9d2c.dir/src.c.obj
-        C:\\raylib\\w64devkit\\bin\\gcc.exe -DCMAKE_HAVE_LIBC_PTHREAD  -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -o CMakeFiles\\cmTC_d9d2c.dir\\src.c.obj -c "C:\\Users\\Andrey Acelerion\\Documents\\Documentos Salvos\\Raylib\\Nanquimori Engine\\.cmake\\build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-992om5\\src.c"
-        Linking C executable cmTC_d9d2c.exe
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_d9d2c.dir\\link.txt --verbose=1
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_d9d2c.dir/objects.a
-        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_d9d2c.dir/objects.a @CMakeFiles\\cmTC_d9d2c.dir\\objects1.rsp
-        C:\\raylib\\w64devkit\\bin\\gcc.exe -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -Wl,--whole-archive CMakeFiles\\cmTC_d9d2c.dir/objects.a -Wl,--no-whole-archive -o cmTC_d9d2c.exe -Wl,--out-implib,libcmTC_d9d2c.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_d9d2c.dir\\linkLibs.rsp
-        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-992om5'
+        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_7c313/fast
+        make  -f CMakeFiles\\cmTC_7c313.dir\\build.make CMakeFiles/cmTC_7c313.dir/build
+        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-aqu3to'
+        Building C object CMakeFiles/cmTC_7c313.dir/src.c.obj
+        C:\\raylib\\w64devkit\\bin\\gcc.exe -DCMAKE_HAVE_LIBC_PTHREAD  -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -o CMakeFiles\\cmTC_7c313.dir\\src.c.obj -c "C:\\Users\\Andrey Acelerion\\Documents\\Documentos Salvos\\Raylib\\Nanquimori Engine\\.cmake\\build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-aqu3to\\src.c"
+        Linking C executable cmTC_7c313.exe
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_7c313.dir\\link.txt --verbose=1
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_7c313.dir/objects.a
+        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_7c313.dir/objects.a @CMakeFiles\\cmTC_7c313.dir\\objects1.rsp
+        C:\\raylib\\w64devkit\\bin\\gcc.exe -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -Wl,--whole-archive CMakeFiles\\cmTC_7c313.dir/objects.a -Wl,--no-whole-archive -o cmTC_7c313.exe -Wl,--out-implib,libcmTC_7c313.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_7c313.dir\\linkLibs.rsp
+        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-aqu3to'
         
       exitCode: 0
   -
@@ -1463,8 +1463,8 @@ events:
     checks:
       - "Looking for dinput.h"
     directories:
-      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-97p0zr"
-      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-97p0zr"
+      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-epopt1"
+      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-epopt1"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: "-fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith "
@@ -1475,19 +1475,19 @@ events:
       variable: "DINPUT_H_FOUND"
       cached: true
       stdout: |
-        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-97p0zr'
+        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-epopt1'
         
-        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_2493d/fast
-        make  -f CMakeFiles\\cmTC_2493d.dir\\build.make CMakeFiles/cmTC_2493d.dir/build
-        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-97p0zr'
-        Building C object CMakeFiles/cmTC_2493d.dir/CheckIncludeFile.c.obj
-        C:\\raylib\\w64devkit\\bin\\gcc.exe   -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -std=gnu99 -o CMakeFiles\\cmTC_2493d.dir\\CheckIncludeFile.c.obj -c "C:\\Users\\Andrey Acelerion\\Documents\\Documentos Salvos\\Raylib\\Nanquimori Engine\\.cmake\\build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-97p0zr\\CheckIncludeFile.c"
-        Linking C executable cmTC_2493d.exe
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_2493d.dir\\link.txt --verbose=1
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_2493d.dir/objects.a
-        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_2493d.dir/objects.a @CMakeFiles\\cmTC_2493d.dir\\objects1.rsp
-        C:\\raylib\\w64devkit\\bin\\gcc.exe -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -Wl,--whole-archive CMakeFiles\\cmTC_2493d.dir/objects.a -Wl,--no-whole-archive -o cmTC_2493d.exe -Wl,--out-implib,libcmTC_2493d.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_2493d.dir\\linkLibs.rsp
-        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-97p0zr'
+        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_332b3/fast
+        make  -f CMakeFiles\\cmTC_332b3.dir\\build.make CMakeFiles/cmTC_332b3.dir/build
+        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-epopt1'
+        Building C object CMakeFiles/cmTC_332b3.dir/CheckIncludeFile.c.obj
+        C:\\raylib\\w64devkit\\bin\\gcc.exe   -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -std=gnu99 -o CMakeFiles\\cmTC_332b3.dir\\CheckIncludeFile.c.obj -c "C:\\Users\\Andrey Acelerion\\Documents\\Documentos Salvos\\Raylib\\Nanquimori Engine\\.cmake\\build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-epopt1\\CheckIncludeFile.c"
+        Linking C executable cmTC_332b3.exe
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_332b3.dir\\link.txt --verbose=1
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_332b3.dir/objects.a
+        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_332b3.dir/objects.a @CMakeFiles\\cmTC_332b3.dir\\objects1.rsp
+        C:\\raylib\\w64devkit\\bin\\gcc.exe -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -Wl,--whole-archive CMakeFiles\\cmTC_332b3.dir/objects.a -Wl,--no-whole-archive -o cmTC_332b3.exe -Wl,--out-implib,libcmTC_332b3.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_332b3.dir\\linkLibs.rsp
+        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-epopt1'
         
       exitCode: 0
   -
@@ -1498,8 +1498,8 @@ events:
     checks:
       - "Looking for xinput.h"
     directories:
-      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-4cicyr"
-      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-4cicyr"
+      source: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-xcvajv"
+      binary: "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-xcvajv"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: "-fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith "
@@ -1510,19 +1510,19 @@ events:
       variable: "XINPUT_H_FOUND"
       cached: true
       stdout: |
-        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-4cicyr'
+        Change Dir: 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-xcvajv'
         
-        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_a0cf3/fast
-        make  -f CMakeFiles\\cmTC_a0cf3.dir\\build.make CMakeFiles/cmTC_a0cf3.dir/build
-        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-4cicyr'
-        Building C object CMakeFiles/cmTC_a0cf3.dir/CheckIncludeFile.c.obj
-        C:\\raylib\\w64devkit\\bin\\gcc.exe   -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -std=gnu99 -o CMakeFiles\\cmTC_a0cf3.dir\\CheckIncludeFile.c.obj -c "C:\\Users\\Andrey Acelerion\\Documents\\Documentos Salvos\\Raylib\\Nanquimori Engine\\.cmake\\build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-4cicyr\\CheckIncludeFile.c"
-        Linking C executable cmTC_a0cf3.exe
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_a0cf3.dir\\link.txt --verbose=1
-        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_a0cf3.dir/objects.a
-        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_a0cf3.dir/objects.a @CMakeFiles\\cmTC_a0cf3.dir\\objects1.rsp
-        C:\\raylib\\w64devkit\\bin\\gcc.exe -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -Wl,--whole-archive CMakeFiles\\cmTC_a0cf3.dir/objects.a -Wl,--no-whole-archive -o cmTC_a0cf3.exe -Wl,--out-implib,libcmTC_a0cf3.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_a0cf3.dir\\linkLibs.rsp
-        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-4cicyr'
+        Run Build Command(s): "C:/Program Files/CMake/bin/cmake.exe" -E env VERBOSE=1 C:/raylib/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_81d63/fast
+        make  -f CMakeFiles\\cmTC_81d63.dir\\build.make CMakeFiles/cmTC_81d63.dir/build
+        make[1]: Entering directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-xcvajv'
+        Building C object CMakeFiles/cmTC_81d63.dir/CheckIncludeFile.c.obj
+        C:\\raylib\\w64devkit\\bin\\gcc.exe   -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -std=gnu99 -o CMakeFiles\\cmTC_81d63.dir\\CheckIncludeFile.c.obj -c "C:\\Users\\Andrey Acelerion\\Documents\\Documentos Salvos\\Raylib\\Nanquimori Engine\\.cmake\\build-debug\\CMakeFiles\\CMakeScratch\\TryCompile-xcvajv\\CheckIncludeFile.c"
+        Linking C executable cmTC_81d63.exe
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E cmake_link_script CMakeFiles\\cmTC_81d63.dir\\link.txt --verbose=1
+        "C:\\Program Files\\CMake\\bin\\cmake.exe" -E rm -f CMakeFiles\\cmTC_81d63.dir/objects.a
+        C:\\raylib\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_81d63.dir/objects.a @CMakeFiles\\cmTC_81d63.dir\\objects1.rsp
+        C:\\raylib\\w64devkit\\bin\\gcc.exe -fno-strict-aliasing -Werror=implicit-function-declaration -Werror=pointer-arith   -Wl,--whole-archive CMakeFiles\\cmTC_81d63.dir/objects.a -Wl,--no-whole-archive -o cmTC_81d63.exe -Wl,--out-implib,libcmTC_81d63.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_81d63.dir\\linkLibs.rsp
+        make[1]: Leaving directory 'C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/.cmake/build-debug/CMakeFiles/CMakeScratch/TryCompile-xcvajv'
         
       exitCode: 0
 ...

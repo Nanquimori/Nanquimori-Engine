@@ -27,6 +27,9 @@ static float profPhysicsMs = 0.0f;
 static float profRenderMs = 0.0f;
 static Camera editorCameraBeforePlay = {0};
 static bool editorCameraBeforePlaySaved = false;
+static Camera editorCameraBeforeActiveLook = {0};
+static bool editorCameraBeforeActiveLookSaved = false;
+static bool activeCameraShortcutLook = false;
 
 static bool CamerasApproximatelyEqual(const Camera *a, const Camera *b)
 {
@@ -47,15 +50,23 @@ static bool CamerasApproximatelyEqual(const Camera *a, const Camera *b)
 
 static ObjetoCena *GetViewportSceneCameraObject(const Camera *viewportCamera)
 {
-    int selectedId = ObterObjetoSelecionadoId();
-    int idx = BuscarIndicePorId(selectedId);
-    if (idx == -1 || !ObjetoEhCamera(&objetos[idx]) || !viewportCamera)
+    if (!viewportCamera)
         return nullptr;
 
-    Camera objectCamera = {0};
-    if (!BuildSceneCameraFromObject(&objetos[idx], &objectCamera))
-        return nullptr;
-    return CamerasApproximatelyEqual(viewportCamera, &objectCamera) ? &objetos[idx] : nullptr;
+    for (int i = 0; i < totalObjetos; i++)
+    {
+        if (!objetos[i].ativo || !ObjetoEhCamera(&objetos[i]))
+            continue;
+
+        Camera objectCamera = {0};
+        if (!BuildSceneCameraFromObject(&objetos[i], &objectCamera))
+            continue;
+
+        if (CamerasApproximatelyEqual(viewportCamera, &objectCamera))
+            return &objetos[i];
+    }
+
+    return nullptr;
 }
 
 static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativePath, char *out, size_t outSize)
@@ -238,6 +249,30 @@ static void HandleViewportDuplicateShortcut(void)
     DuplicarObjetosSelecionados(duplicateOffset);
 }
 
+static void HandleViewportActiveCameraShortcut(void)
+{
+    if (ShiftHeld() || CtrlHeld() || AltHeld() || !IsKeyPressed(KEY_KP_0))
+        return;
+
+    if (activeCameraShortcutLook)
+    {
+        if (editorCameraBeforeActiveLookSaved)
+            SetEditorViewportCamera(&editorCameraBeforeActiveLook);
+        editorCameraBeforeActiveLookSaved = false;
+        activeCameraShortcutLook = false;
+        return;
+    }
+
+    Camera activeCamera = {0};
+    if (!GetSceneRenderCamera(&activeCamera, nullptr))
+        return;
+
+    editorCameraBeforeActiveLook = appCamera;
+    editorCameraBeforeActiveLookSaved = true;
+    activeCameraShortcutLook = true;
+    SetEditorViewportCamera(&activeCamera);
+}
+
 void InitializeApplication()
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED);
@@ -292,6 +327,8 @@ void UpdateApplication()
         appCamera.target = loadedCamTarget;
         appCamera.up = (Vector3){0.0f, 1.0f, 0.0f};
         SyncCameraControllerToCamera(&appCamera);
+        editorCameraBeforeActiveLookSaved = false;
+        activeCameraShortcutLook = false;
     }
 
     bool handledTransformShortcut = PropertiesHandleTransformShortcuts();
@@ -362,6 +399,8 @@ void UpdateApplication()
         ResetNanquimoriPhysicsWorld();
         editorCameraBeforePlay = appCamera;
         editorCameraBeforePlaySaved = true;
+        editorCameraBeforeActiveLookSaved = false;
+        activeCameraShortcutLook = false;
     }
     else if (playSessionPrev && !playSession)
     {
@@ -372,6 +411,8 @@ void UpdateApplication()
             SyncCameraControllerToCamera(&appCamera);
             editorCameraBeforePlaySaved = false;
         }
+        editorCameraBeforeActiveLookSaved = false;
+        activeCameraShortcutLook = false;
     }
     playSessionPrev = playSession;
     navigateModePrev = IsViewportNavigateModeActive();
@@ -390,6 +431,7 @@ void UpdateApplication()
 
     if (IsViewportEditorInputAllowed(playSession))
     {
+        HandleViewportActiveCameraShortcut();
         if (!IsViewportNavigateModeActive())
             HandleViewportRightClickSelection();
         HandleViewportDuplicateShortcut();
