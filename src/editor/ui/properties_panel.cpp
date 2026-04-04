@@ -80,6 +80,10 @@ static TextInputState protoNameInput = {0};
 static char protoNameBuffer[32] = "Custom";
 static int protoNameObjectId = -1;
 static int protoNamePackIndex = -1;
+static DragFloatInputState cameraResolutionWidthInput = {0};
+static DragFloatInputState cameraResolutionHeightInput = {0};
+static char cameraResolutionWidthBuffer[16] = {0};
+static char cameraResolutionHeightBuffer[16] = {0};
 static ProtoCustomEntry protoCustomPacks[MAX_PROTO_CUSTOM] = {0};
 static int protoCustomPackCount = 0;
 static bool protoCustomLoaded = false;
@@ -588,6 +592,96 @@ static void DrawFloatPropertyInput(const char *label, float *value, int fieldInd
     *y = (int)(box.y + box.height + 10.0f);
 }
 
+static int ClampIntLocal(int value, int minValue, int maxValue)
+{
+    if (value < minValue)
+        return minValue;
+    if (value > maxValue)
+        return maxValue;
+    return value;
+}
+
+static void DrawCameraResolutionInputs(int x, int *y, bool allowInput)
+{
+    ProjectExportSettings exportSettings = {0};
+    GetProjectExportSettings(&exportSettings);
+
+    if (!DragFloatInputIsActive(&cameraResolutionWidthInput))
+    {
+        snprintf(cameraResolutionWidthBuffer, sizeof(cameraResolutionWidthBuffer), "%d", exportSettings.windowWidth);
+        cameraResolutionWidthBuffer[sizeof(cameraResolutionWidthBuffer) - 1] = '\0';
+    }
+    if (!DragFloatInputIsActive(&cameraResolutionHeightInput))
+    {
+        snprintf(cameraResolutionHeightBuffer, sizeof(cameraResolutionHeightBuffer), "%d", exportSettings.windowHeight);
+        cameraResolutionHeightBuffer[sizeof(cameraResolutionHeightBuffer) - 1] = '\0';
+    }
+
+    DrawText("Resolution", x + 14, *y, 12, COR_TEXTO);
+    *y += 16;
+
+    const float totalWidth = (float)(PROPERTIES_PAINEL_LARGURA - 28);
+    const float gap = 6.0f;
+    const float inputWidth = (totalWidth - gap) * 0.5f;
+    Rectangle widthBox = {(float)(x + 14), (float)(*y), inputWidth, 20.0f};
+    Rectangle heightBox = {(float)(x + 14) + inputWidth + gap, (float)(*y), inputWidth, 20.0f};
+
+    DragFloatInputConfig cfg = {0};
+    cfg.fontSize = 12;
+    cfg.padding = 4;
+    cfg.textColor = COR_TEXTO;
+    cfg.bgColor = COR_EDIT_BG;
+    cfg.borderColor = COR_BORDA;
+    cfg.selectionColor = GetUIStyle()->inputSelection;
+    cfg.caretColor = GetUIStyle()->caret;
+    cfg.dragSpeed = 1.0f;
+    cfg.fineDragSpeed = 1.0f;
+    cfg.ctrlStep = 10.0f;
+    cfg.minValue = 320.0f;
+    cfg.maxValue = 7680.0f;
+    cfg.clamp = true;
+    cfg.allowInput = allowInput;
+
+    float widthValue = (float)exportSettings.windowWidth;
+    float heightValue = (float)exportSettings.windowHeight;
+
+    int widthFlags = DragFloatInputDraw(widthBox,
+                                        cameraResolutionWidthBuffer,
+                                        (int)sizeof(cameraResolutionWidthBuffer),
+                                        &cameraResolutionWidthInput,
+                                        &widthValue,
+                                        &cfg);
+    cfg.minValue = 240.0f;
+    cfg.maxValue = 4320.0f;
+    int heightFlags = DragFloatInputDraw(heightBox,
+                                         cameraResolutionHeightBuffer,
+                                         (int)sizeof(cameraResolutionHeightBuffer),
+                                         &cameraResolutionHeightInput,
+                                         &heightValue,
+                                         &cfg);
+
+    bool changed = (widthFlags & DRAG_FLOAT_INPUT_CHANGED) || (widthFlags & DRAG_FLOAT_INPUT_SUBMITTED) ||
+                   (heightFlags & DRAG_FLOAT_INPUT_CHANGED) || (heightFlags & DRAG_FLOAT_INPUT_SUBMITTED) ||
+                   (widthFlags & DRAG_FLOAT_INPUT_DEACTIVATED) || (heightFlags & DRAG_FLOAT_INPUT_DEACTIVATED);
+    if (changed)
+    {
+        int width = ClampIntLocal((int)roundf(widthValue), 320, 7680);
+        int height = ClampIntLocal((int)roundf(heightValue), 240, 4320);
+
+        exportSettings.windowWidth = width;
+        exportSettings.windowHeight = height;
+        SetProjectExportSettings(&exportSettings);
+        snprintf(cameraResolutionWidthBuffer, sizeof(cameraResolutionWidthBuffer), "%d", width);
+        cameraResolutionWidthBuffer[sizeof(cameraResolutionWidthBuffer) - 1] = '\0';
+        snprintf(cameraResolutionHeightBuffer, sizeof(cameraResolutionHeightBuffer), "%d", height);
+        cameraResolutionHeightBuffer[sizeof(cameraResolutionHeightBuffer) - 1] = '\0';
+    }
+
+    *y = (int)(widthBox.y + widthBox.height + 6.0f);
+    DrawText("Atualiza a resolucao usada na visualizacao da camera e no build.", x + 14, *y, 10, COR_TEXTO_SECUNDARIO);
+    *y += 18;
+}
+
 static bool DrawCheckboxRow(const char *label, bool checked, int x, int *y, float width, bool allowInput, Vector2 mouse)
 {
     const Color activeCheckText = (Color){0, 255, 102, 255};
@@ -683,6 +777,8 @@ void InitPropertiesPanel(void)
         fisicaInit = true;
     }
     TextInputInit(&protoNameInput);
+    DragFloatInputInit(&cameraResolutionWidthInput);
+    DragFloatInputInit(&cameraResolutionHeightInput);
     ResetTransformInputs();
     ResetPropertyFloatInputs();
     transformObjectId = -1;
@@ -846,6 +942,8 @@ void DrawPropertiesPanel(void)
                 if (obj->cameraFarClip < obj->cameraNearClip + 0.1f)
                     obj->cameraFarClip = obj->cameraNearClip + 0.1f;
 
+                DrawCameraResolutionInputs(x, &y, allowInput);
+
                 int actionGap = 6;
                 int actionWidth = (PROPERTIES_PAINEL_LARGURA - 28 - actionGap) / 2;
                 Rectangle useViewBtn = {(float)(x + 14), (float)y, (float)actionWidth, 20.0f};
@@ -857,9 +955,7 @@ void DrawPropertiesPanel(void)
                 }
                 if (DrawOptionButton(lookBtn, "Look Through", false, allowInput, mouse))
                 {
-                    Camera objectCamera = {0};
-                    if (BuildSceneCameraFromObject(obj, &objectCamera))
-                        SetEditorViewportCamera(&objectCamera);
+                    LookThroughSceneCameraObject(selId);
                 }
                 y += 30;
             }

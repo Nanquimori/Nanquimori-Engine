@@ -29,6 +29,7 @@ typedef struct
     Color caretColor;
     float dragSpeed;
     float fineDragSpeed;
+    float ctrlStep;
     float minValue;
     float maxValue;
     bool clamp;

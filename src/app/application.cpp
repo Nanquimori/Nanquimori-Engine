@@ -29,44 +29,250 @@ static Camera editorCameraBeforePlay = {0};
 static bool editorCameraBeforePlaySaved = false;
 static Camera editorCameraBeforeActiveLook = {0};
 static bool editorCameraBeforeActiveLookSaved = false;
-static bool activeCameraShortcutLook = false;
+static int editorViewportSceneCameraLookObjectId = -1;
+static float editorViewportSceneCameraFrameZoom = 1.0f;
+static RenderTexture2D editorViewportSceneCameraTexture = {0};
+static int editorViewportSceneCameraTextureWidth = 0;
+static int editorViewportSceneCameraTextureHeight = 0;
 
-static bool CamerasApproximatelyEqual(const Camera *a, const Camera *b)
+static Rectangle GetEditorViewportBounds(void)
 {
-    if (!a || !b)
-        return false;
+    Rectangle bounds = {
+        (float)PAINEL_LARGURA,
+        24.0f,
+        (float)(GetScreenWidth() - PAINEL_LARGURA - PROPERTIES_PAINEL_LARGURA),
+        (float)(GetScreenHeight() - 24)};
 
-    const float eps = 0.0005f;
-    if (fabsf(a->position.x - b->position.x) > eps || fabsf(a->position.y - b->position.y) > eps || fabsf(a->position.z - b->position.z) > eps)
-        return false;
-    if (fabsf(a->target.x - b->target.x) > eps || fabsf(a->target.y - b->target.y) > eps || fabsf(a->target.z - b->target.z) > eps)
-        return false;
-    if (fabsf(a->up.x - b->up.x) > eps || fabsf(a->up.y - b->up.y) > eps || fabsf(a->up.z - b->up.z) > eps)
-        return false;
-    if (fabsf(a->fovy - b->fovy) > eps)
-        return false;
-    return a->projection == b->projection;
+    if (bounds.width < 1.0f)
+        bounds.width = 1.0f;
+    if (bounds.height < 1.0f)
+        bounds.height = 1.0f;
+    return bounds;
 }
 
-static ObjetoCena *GetViewportSceneCameraObject(const Camera *viewportCamera)
+static void GetProjectViewportFrameSettings(float *aspectOut, int *widthOut, int *heightOut)
 {
-    if (!viewportCamera)
-        return nullptr;
+    ProjectExportSettings settings = {0};
+    GetProjectExportSettings(&settings);
 
-    for (int i = 0; i < totalObjetos; i++)
+    int width = settings.windowWidth;
+    int height = settings.windowHeight;
+    if (width < 320)
+        width = 1280;
+    if (height < 240)
+        height = 720;
+
+    if (widthOut)
+        *widthOut = width;
+    if (heightOut)
+        *heightOut = height;
+    if (aspectOut)
+        *aspectOut = (float)width / (float)height;
+}
+
+static Rectangle FitRectToAspect(Rectangle bounds, float aspect)
+{
+    Rectangle frame = bounds;
+    if (aspect <= 0.01f)
+        return frame;
+
+    float boundsAspect = bounds.width / bounds.height;
+    if (boundsAspect > aspect)
     {
-        if (!objetos[i].ativo || !ObjetoEhCamera(&objetos[i]))
-            continue;
-
-        Camera objectCamera = {0};
-        if (!BuildSceneCameraFromObject(&objetos[i], &objectCamera))
-            continue;
-
-        if (CamerasApproximatelyEqual(viewportCamera, &objectCamera))
-            return &objetos[i];
+        frame.width = bounds.height * aspect;
+        frame.x = bounds.x + (bounds.width - frame.width) * 0.5f;
+    }
+    else
+    {
+        frame.height = bounds.width / aspect;
+        frame.y = bounds.y + (bounds.height - frame.height) * 0.5f;
     }
 
-    return nullptr;
+    return frame;
+}
+
+static Rectangle ScaleRectAroundCenter(Rectangle rect, float scale)
+{
+    if (scale <= 0.001f)
+        scale = 0.001f;
+
+    float centerX = rect.x + rect.width * 0.5f;
+    float centerY = rect.y + rect.height * 0.5f;
+    Rectangle scaled = {
+        centerX - rect.width * scale * 0.5f,
+        centerY - rect.height * scale * 0.5f,
+        rect.width * scale,
+        rect.height * scale};
+    return scaled;
+}
+
+static Rectangle GetViewportCameraDisplayRect(Rectangle viewportBounds)
+{
+    return ScaleRectAroundCenter(viewportBounds, editorViewportSceneCameraFrameZoom);
+}
+
+static void UnloadEditorViewportSceneCameraTexture(void)
+{
+    if (editorViewportSceneCameraTexture.id != 0)
+        UnloadRenderTexture(editorViewportSceneCameraTexture);
+    editorViewportSceneCameraTexture = (RenderTexture2D){0};
+    editorViewportSceneCameraTextureWidth = 0;
+    editorViewportSceneCameraTextureHeight = 0;
+}
+
+static bool EnsureEditorViewportSceneCameraTexture(int width, int height)
+{
+    if (width <= 0 || height <= 0)
+        return false;
+
+    if (editorViewportSceneCameraTexture.id != 0 &&
+        editorViewportSceneCameraTextureWidth == width &&
+        editorViewportSceneCameraTextureHeight == height)
+        return true;
+
+    UnloadEditorViewportSceneCameraTexture();
+    editorViewportSceneCameraTexture = LoadRenderTexture(width, height);
+    if (editorViewportSceneCameraTexture.id == 0)
+        return false;
+
+    editorViewportSceneCameraTextureWidth = width;
+    editorViewportSceneCameraTextureHeight = height;
+    return true;
+}
+
+static void ApplyEditorViewportCamera(const Camera *camera)
+{
+    if (!camera)
+        return;
+
+    appCamera = *camera;
+    SyncCameraControllerToCamera(&appCamera);
+}
+
+static void ClearEditorViewportSceneCameraLook(bool restorePreviousView, bool resetFrameZoom = true)
+{
+    if (restorePreviousView && editorCameraBeforeActiveLookSaved)
+        ApplyEditorViewportCamera(&editorCameraBeforeActiveLook);
+
+    editorCameraBeforeActiveLookSaved = false;
+    editorViewportSceneCameraLookObjectId = -1;
+    if (resetFrameZoom)
+        editorViewportSceneCameraFrameZoom = 1.0f;
+    UnloadEditorViewportSceneCameraTexture();
+}
+
+static ObjetoCena *GetLookedSceneCameraObject(void)
+{
+    if (editorViewportSceneCameraLookObjectId <= 0)
+        return nullptr;
+
+    int idx = BuscarIndicePorId(editorViewportSceneCameraLookObjectId);
+    if (idx == -1 || !objetos[idx].ativo || !ObjetoEhCamera(&objetos[idx]))
+        return nullptr;
+
+    return &objetos[idx];
+}
+
+static bool SyncEditorViewportLookedSceneCamera(void)
+{
+    ObjetoCena *cameraObject = GetLookedSceneCameraObject();
+    if (!cameraObject)
+    {
+        ClearEditorViewportSceneCameraLook(true);
+        return false;
+    }
+
+    Camera objectCamera = {0};
+    if (!BuildSceneCameraFromObject(cameraObject, &objectCamera))
+    {
+        ClearEditorViewportSceneCameraLook(true);
+        return false;
+    }
+
+    ApplyEditorViewportCamera(&objectCamera);
+    return true;
+}
+
+static void AdjustEditorViewportSceneCameraFrameZoom(float stepAmount)
+{
+    if (fabsf(stepAmount) <= 0.0001f)
+        return;
+
+    float scale = powf(1.12f, stepAmount);
+    editorViewportSceneCameraFrameZoom = Clamp(editorViewportSceneCameraFrameZoom * scale, 0.20f, 4.0f);
+}
+
+static void HandleViewportLookedSceneCameraZoomInput(void)
+{
+    bool shiftHeld = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
+    bool ctrlHeld = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+    bool altHeld = IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT);
+    if (editorViewportSceneCameraLookObjectId <= 0 || shiftHeld || ctrlHeld || altHeld)
+        return;
+
+    float zoomStep = GetMouseWheelMove();
+    if (IsKeyPressed(KEY_KP_ADD))
+        zoomStep += 1.0f;
+    if (IsKeyPressed(KEY_KP_SUBTRACT))
+        zoomStep -= 1.0f;
+
+    AdjustEditorViewportSceneCameraFrameZoom(zoomStep);
+}
+
+static void DrawViewportCameraFrameOverlay(void)
+{
+    Rectangle viewportBounds = GetEditorViewportBounds();
+    Rectangle displayRect = GetViewportCameraDisplayRect(viewportBounds);
+    float frameAspect = 16.0f / 9.0f;
+    int outputWidth = 1280;
+    int outputHeight = 720;
+    GetProjectViewportFrameSettings(&frameAspect, &outputWidth, &outputHeight);
+
+    Rectangle frame = FitRectToAspect(displayRect, frameAspect);
+    const Color matteColor = {14, 16, 22, 138};
+    const Color borderColor = {236, 221, 188, 210};
+    const Color guideColor = {236, 221, 188, 72};
+    const Color labelBg = {10, 12, 16, 224};
+    const Color labelText = {236, 221, 188, 255};
+
+    if (frame.y > viewportBounds.y)
+        DrawRectangleRec((Rectangle){viewportBounds.x, viewportBounds.y, viewportBounds.width, frame.y - viewportBounds.y}, matteColor);
+    if (frame.x > viewportBounds.x)
+        DrawRectangleRec((Rectangle){viewportBounds.x, frame.y, frame.x - viewportBounds.x, frame.height}, matteColor);
+
+    float frameRight = frame.x + frame.width;
+    float viewportRight = viewportBounds.x + viewportBounds.width;
+    if (frameRight < viewportRight)
+        DrawRectangleRec((Rectangle){frameRight, frame.y, viewportRight - frameRight, frame.height}, matteColor);
+
+    float frameBottom = frame.y + frame.height;
+    float viewportBottom = viewportBounds.y + viewportBounds.height;
+    if (frameBottom < viewportBottom)
+        DrawRectangleRec((Rectangle){viewportBounds.x, frameBottom, viewportBounds.width, viewportBottom - frameBottom}, matteColor);
+
+    DrawRectangleLinesEx(frame, 1.0f, borderColor);
+
+    float thirdW = frame.width / 3.0f;
+    float thirdH = frame.height / 3.0f;
+    for (int i = 1; i <= 2; i++)
+    {
+        DrawLineEx((Vector2){frame.x + thirdW * i, frame.y},
+                   (Vector2){frame.x + thirdW * i, frameBottom},
+                   1.0f,
+                   guideColor);
+        DrawLineEx((Vector2){frame.x, frame.y + thirdH * i},
+                   (Vector2){frameRight, frame.y + thirdH * i},
+                   1.0f,
+                   guideColor);
+    }
+
+    char frameLabel[64] = {0};
+    snprintf(frameLabel, sizeof(frameLabel), "%d x %d", outputWidth, outputHeight);
+    int labelWidth = MeasureText(frameLabel, 11) + 18;
+    Rectangle labelRect = {frame.x + 10.0f, frame.y + 10.0f, (float)labelWidth, 22.0f};
+    DrawRectangleRounded(labelRect, 0.35f, 8, labelBg);
+    DrawRectangleLinesEx(labelRect, 1.0f, Fade(borderColor, 0.85f));
+    DrawText(frameLabel, (int)labelRect.x + 9, (int)labelRect.y + 6, 11, labelText);
 }
 
 static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativePath, char *out, size_t outSize)
@@ -254,23 +460,18 @@ static void HandleViewportActiveCameraShortcut(void)
     if (ShiftHeld() || CtrlHeld() || AltHeld() || !IsKeyPressed(KEY_KP_0))
         return;
 
-    if (activeCameraShortcutLook)
+    if (editorViewportSceneCameraLookObjectId > 0)
     {
-        if (editorCameraBeforeActiveLookSaved)
-            SetEditorViewportCamera(&editorCameraBeforeActiveLook);
-        editorCameraBeforeActiveLookSaved = false;
-        activeCameraShortcutLook = false;
+        ClearEditorViewportSceneCameraLook(true);
         return;
     }
 
+    int activeCameraObjectId = -1;
     Camera activeCamera = {0};
-    if (!GetSceneRenderCamera(&activeCamera, nullptr))
+    if (!GetSceneRenderCamera(&activeCamera, &activeCameraObjectId))
         return;
 
-    editorCameraBeforeActiveLook = appCamera;
-    editorCameraBeforeActiveLookSaved = true;
-    activeCameraShortcutLook = true;
-    SetEditorViewportCamera(&activeCamera);
+    LookThroughSceneCameraObject(activeCameraObjectId);
 }
 
 void InitializeApplication()
@@ -307,6 +508,7 @@ void ShutdownApplication()
     ShutdownNanquimoriPhysics();
     UnloadAllModels();
     UnloadFileExplorer();
+    UnloadEditorViewportSceneCameraTexture();
 
     ReleaseWin32WindowIcon();
 
@@ -327,8 +529,7 @@ void UpdateApplication()
         appCamera.target = loadedCamTarget;
         appCamera.up = (Vector3){0.0f, 1.0f, 0.0f};
         SyncCameraControllerToCamera(&appCamera);
-        editorCameraBeforeActiveLookSaved = false;
-        activeCameraShortcutLook = false;
+        ClearEditorViewportSceneCameraLook(false, false);
     }
 
     bool handledTransformShortcut = PropertiesHandleTransformShortcuts();
@@ -349,6 +550,18 @@ void UpdateApplication()
     bool navigateMode = IsViewportNavigateModeActive();
     bool stopRequested = ConsumePlayStopRequested();
     bool restartRequested = ConsumePlayRestartRequested();
+    if (!CtrlHeld() && !AltHeld() && !playSession && IsKeyPressed(KEY_P))
+    {
+        SetPlayModeActive(true);
+        SetPlayPaused(false);
+        playSession = true;
+        playPaused = false;
+        playMode = true;
+    }
+    if (playSession && IsKeyPressed(KEY_ESCAPE))
+    {
+        stopRequested = true;
+    }
 
     if (IsMouseOverUIRoot())
         EnableMouseForUI();
@@ -367,8 +580,15 @@ void UpdateApplication()
 
     if (!playSession)
     {
-        UpdateEditorViewportCamera(&appCamera, false);
-        SetProjectCameraState(appCamera.position, appCamera.target);
+        if (editorViewportSceneCameraLookObjectId > 0)
+        {
+            SyncEditorViewportLookedSceneCamera();
+        }
+        else
+        {
+            UpdateEditorViewportCamera(&appCamera, false);
+            SetProjectCameraState(appCamera.position, appCamera.target);
+        }
     }
     else if (navigateMode)
     {
@@ -399,8 +619,7 @@ void UpdateApplication()
         ResetNanquimoriPhysicsWorld();
         editorCameraBeforePlay = appCamera;
         editorCameraBeforePlaySaved = true;
-        editorCameraBeforeActiveLookSaved = false;
-        activeCameraShortcutLook = false;
+        ClearEditorViewportSceneCameraLook(false, false);
     }
     else if (playSessionPrev && !playSession)
     {
@@ -411,8 +630,7 @@ void UpdateApplication()
             SyncCameraControllerToCamera(&appCamera);
             editorCameraBeforePlaySaved = false;
         }
-        editorCameraBeforeActiveLookSaved = false;
-        activeCameraShortcutLook = false;
+        ClearEditorViewportSceneCameraLook(false, false);
     }
     playSessionPrev = playSession;
     navigateModePrev = IsViewportNavigateModeActive();
@@ -431,6 +649,7 @@ void UpdateApplication()
 
     if (IsViewportEditorInputAllowed(playSession))
     {
+        HandleViewportLookedSceneCameraZoomInput();
         HandleViewportActiveCameraShortcut();
         if (!IsViewportNavigateModeActive())
             HandleViewportRightClickSelection();
@@ -519,14 +738,16 @@ void RenderApplication()
     bool playSession = IsPlayModeActive();
     bool playMode = playSession && !IsPlayPaused();
     bool navigateMode = IsViewportNavigateModeActive();
+    bool showCameraFrameOverlay = false;
     Camera renderCamera = appCamera;
-    ObjetoCena *renderCameraObject = GetViewportSceneCameraObject(&appCamera);
+    ObjetoCena *renderCameraObject = nullptr;
     if (playSession)
     {
         if (navigateMode)
         {
             renderCamera = appCamera;
             renderCameraObject = nullptr;
+            showCameraFrameOverlay = false;
         }
         else
         {
@@ -537,54 +758,109 @@ void RenderApplication()
                 renderCamera = sceneCamera;
                 int idx = BuscarIndicePorId(renderCameraObjectId);
                 renderCameraObject = (idx != -1) ? &objetos[idx] : nullptr;
+                showCameraFrameOverlay = (renderCameraObject != nullptr);
             }
             else
             {
                 renderCameraObject = nullptr;
+                showCameraFrameOverlay = false;
             }
         }
+    }
+    else
+    {
+        renderCameraObject = GetLookedSceneCameraObject();
+        showCameraFrameOverlay = (renderCameraObject != nullptr);
     }
 
     BeginDrawing();
     ClearBackground((Color){24, 26, 32, 255});
 
-    BeginManagedMode3D(renderCamera, renderCameraObject);
-
-    RenderModels();
-    if (PropertiesShowCollisions())
-        DrawNanquimoriPhysicsDebug();
-
-    if (!playSession)
-        DrawGrid(10, 1.0f);
-    if (!playMode)
+    if (showCameraFrameOverlay)
     {
-        DrawMoveGizmo(renderCamera);
-        DrawSceneCameraHelpers(renderCamera);
-    }
+        Rectangle viewportBounds = GetEditorViewportBounds();
+        int textureWidth = (int)viewportBounds.width;
+        int textureHeight = (int)viewportBounds.height;
+        if (EnsureEditorViewportSceneCameraTexture(textureWidth, textureHeight))
+        {
+            BeginTextureMode(editorViewportSceneCameraTexture);
+            ClearBackground((Color){24, 26, 32, 0});
 
-    if (IsRaycastLineVisible())
+            BeginManagedMode3D(renderCamera, renderCameraObject);
+            RenderModels();
+            if (PropertiesShowCollisions())
+                DrawNanquimoriPhysicsDebug();
+            if (!playSession)
+                DrawGrid(10, 1.0f);
+            if (!playMode)
+            {
+                DrawMoveGizmo(renderCamera);
+                DrawSceneCameraHelpers(renderCamera);
+            }
+            if (IsRaycastLineVisible())
+            {
+                Color rayColor = appRayHit ? GREEN : RED;
+                DrawLine3D(renderCamera.position, appRayEndPos, rayColor);
+                if (IsRaycast3DVisible())
+                    DrawSphere(appRayEndPos, 0.08f, rayColor);
+            }
+            EndManagedMode3D();
+
+            EndTextureMode();
+
+            Rectangle displayRect = GetViewportCameraDisplayRect(viewportBounds);
+            Rectangle source = {0.0f, 0.0f, (float)textureWidth, (float)-textureHeight};
+            DrawTexturePro(editorViewportSceneCameraTexture.texture,
+                           source,
+                           displayRect,
+                           (Vector2){0.0f, 0.0f},
+                           0.0f,
+                           WHITE);
+        }
+    }
+    else
     {
-        Color rayColor = appRayHit ? GREEN : RED;
-        DrawLine3D(renderCamera.position, appRayEndPos, rayColor);
-        if (IsRaycast3DVisible())
-            DrawSphere(appRayEndPos, 0.08f, rayColor);
+        BeginManagedMode3D(renderCamera, renderCameraObject);
+
+        RenderModels();
+        if (PropertiesShowCollisions())
+            DrawNanquimoriPhysicsDebug();
+
+        if (!playSession)
+            DrawGrid(10, 1.0f);
+        if (!playMode)
+        {
+            DrawMoveGizmo(renderCamera);
+            DrawSceneCameraHelpers(renderCamera);
+        }
+
+        if (IsRaycastLineVisible())
+        {
+            Color rayColor = appRayHit ? GREEN : RED;
+            DrawLine3D(renderCamera.position, appRayEndPos, rayColor);
+            if (IsRaycast3DVisible())
+                DrawSphere(appRayEndPos, 0.08f, rayColor);
+        }
+
+        EndManagedMode3D();
+
+        DrawSelectedObjectOrigins(renderCamera);
     }
-
-    EndManagedMode3D();
-
-    DrawSelectedObjectOrigins(renderCamera);
 
     char pendingIconPath[512] = {0};
     if (ConsumePendingProjectIconPath(pendingIconPath, (int)sizeof(pendingIconPath)))
         SaveProjectIconFromCurrentFrame(pendingIconPath);
 
-    if (IsRaycast2DVisible())
+    if (!showCameraFrameOverlay && IsRaycast2DVisible())
     {
         Color rayColor = appRayHit ? GREEN : RED;
         Vector2 screenPos = GetWorldToScreen(appRayEndPos, renderCamera);
         DrawCircleV(screenPos, 5.0f, rayColor);
         DrawCircleLines((int)screenPos.x, (int)screenPos.y, 6.0f, BLACK);
     }
+
+    if (showCameraFrameOverlay)
+        DrawViewportCameraFrameOverlay();
 
     DrawGizmo(renderCamera, GetScreenWidth());
     DrawInfoPanel();
@@ -610,9 +886,29 @@ Camera GetEditorViewportCamera(void)
 
 void SetEditorViewportCamera(const Camera *camera)
 {
-    if (!camera)
-        return;
+    ClearEditorViewportSceneCameraLook(false);
+    ApplyEditorViewportCamera(camera);
+}
 
-    appCamera = *camera;
-    SyncCameraControllerToCamera(&appCamera);
+bool LookThroughSceneCameraObject(int objectId)
+{
+    int idx = BuscarIndicePorId(objectId);
+    if (idx == -1 || !objetos[idx].ativo || !ObjetoEhCamera(&objetos[idx]))
+        return false;
+
+    Camera objectCamera = {0};
+    if (!BuildSceneCameraFromObject(&objetos[idx], &objectCamera))
+        return false;
+
+    if (editorViewportSceneCameraLookObjectId <= 0)
+    {
+        editorCameraBeforeActiveLook = appCamera;
+        editorCameraBeforeActiveLookSaved = true;
+    }
+    if (editorViewportSceneCameraLookObjectId != objectId)
+        editorViewportSceneCameraFrameZoom = 1.0f;
+
+    editorViewportSceneCameraLookObjectId = objectId;
+    ApplyEditorViewportCamera(&objectCamera);
+    return true;
 }

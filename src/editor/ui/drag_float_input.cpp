@@ -181,7 +181,12 @@ int DragFloatInputDraw(Rectangle box, char *buffer, int bufferSize, DragFloatInp
 
                     float outValue = state->dragValue;
                     if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))
-                        outValue = roundf(outValue);
+                    {
+                        if (cfg.ctrlStep > 0.0f)
+                            outValue = roundf(outValue / cfg.ctrlStep) * cfg.ctrlStep;
+                        else
+                            outValue = roundf(outValue);
+                    }
                     if (cfg.clamp)
                         outValue = Clamp(outValue, cfg.minValue, cfg.maxValue);
 
