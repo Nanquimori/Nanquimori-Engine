@@ -3,6 +3,7 @@
 #include "help_panel.h"
 #include "splash_screen.h"
 #include "app/application.h"
+#include "editor/viewport/camera_controller.h"
 #include "scene/outliner.h"
 #include "scene/scene_camera.h"
 #include "properties_panel.h"
@@ -27,6 +28,8 @@ static bool helpHover = false;
 static bool playHover = false;
 static bool stopHover = false;
 static bool restartHover = false;
+static bool navigateHover = false;
+static bool viewportNavigateMode = false;
 static bool addMenuOpen = false;
 static bool addHover = false;
 static int addMainHoverItem = -1;
@@ -308,10 +311,25 @@ void UpdateTopBar()
         addShapesSubmenuOpen = false;
     }
 
-    // Play / Stop / Restart (depois do Help)
+    if (!playModeActive && viewportNavigateMode)
+        viewportNavigateMode = false;
+
+    // Navegacao / Play / Stop / Restart (depois do Help)
     float btnY = barY;
     float btnX = barX + 80.0f;
     Rectangle areaPlay = {btnX, btnY, 60.0f, 16.0f};
+    if (playModeActive)
+        areaPlay.x = btnX + 94.0f;
+
+    navigateHover = false;
+    if (playModeActive)
+    {
+        Rectangle areaNavigate = {btnX, btnY, 84.0f, 16.0f};
+        UIButtonState navigateState = UIButtonGetState(areaNavigate);
+        navigateHover = navigateState.hovered;
+        if (navigateState.clicked)
+            viewportNavigateMode = !viewportNavigateMode;
+    }
 
     UIButtonState playState = UIButtonGetState(areaPlay);
     playHover = playState.hovered;
@@ -319,6 +337,7 @@ void UpdateTopBar()
     {
         if (!playModeActive)
         {
+            viewportNavigateMode = false;
             playModeActive = true;
             playPaused = false;
         }
@@ -333,8 +352,8 @@ void UpdateTopBar()
     }
     else if (playModeActive)
     {
-        Rectangle areaStop = {btnX + 70.0f, btnY, 60.0f, 16.0f};
-        Rectangle areaRestart = {btnX + 140.0f, btnY, 70.0f, 16.0f};
+        Rectangle areaStop = {btnX + 164.0f, btnY, 60.0f, 16.0f};
+        Rectangle areaRestart = {btnX + 234.0f, btnY, 70.0f, 16.0f};
         UIButtonState stopState = UIButtonGetState(areaStop);
         UIButtonState restartState = UIButtonGetState(areaRestart);
         stopHover = stopState.hovered;
@@ -449,11 +468,8 @@ void DrawTopBar()
         }
     }
 
-    // Play / Stop / Restart after Help
+    // Navegacao / Play / Stop / Restart after Help
     barX += 80.0f;
-    const char *playLabel = playModeActive ? (playPaused ? "Resume" : "Pause") : "Play";
-    Color playColor = playPaused ? (Color){80, 160, 220, 255} : (playModeActive ? (Color){220, 110, 80, 255} : (Color){80, 200, 120, 255});
-
     UIButtonConfig baseCfg = {0};
     const UIStyle *uiStyle = GetUIStyle();
     baseCfg.fontSize = 12;
@@ -466,6 +482,22 @@ void DrawTopBar()
     baseCfg.borderColor = uiStyle->buttonBorder;
     baseCfg.borderHoverColor = uiStyle->accent;
     baseCfg.borderThickness = 1.0f;
+
+    if (playModeActive)
+    {
+        Rectangle areaNavigate = {barX, 4.0f, 84.0f, 16.0f};
+        UIButtonConfig navigateCfg = baseCfg;
+        Color navigateColor = viewportNavigateMode ? (Color){88, 192, 224, 255} : style->textSecondary;
+        navigateCfg.textColor = navigateColor;
+        navigateCfg.textHoverColor = navigateColor;
+        navigateCfg.borderColor = navigateColor;
+        navigateCfg.borderHoverColor = navigateColor;
+        UIButtonDraw(areaNavigate, "Navegar", nullptr, &navigateCfg, navigateHover);
+        barX += 94.0f;
+    }
+
+    const char *playLabel = playModeActive ? (playPaused ? "Resume" : "Pause") : "Play";
+    Color playColor = playPaused ? (Color){80, 160, 220, 255} : (playModeActive ? (Color){220, 110, 80, 255} : (Color){80, 200, 120, 255});
 
     Rectangle areaPlay = {barX, 4.0f, 60.0f, 16.0f};
     UIButtonConfig playCfg = baseCfg;
@@ -509,7 +541,10 @@ void SetPlayModeActive(bool active)
 {
     playModeActive = active;
     if (!playModeActive)
+    {
         playPaused = false;
+        viewportNavigateMode = false;
+    }
 }
 
 bool IsPlayPaused(void)
@@ -541,4 +576,9 @@ bool ConsumePlayRestartRequested(void)
 bool IsTopBarMenuOpen(void)
 {
     return addMenuOpen;
+}
+
+bool IsViewportNavigateModeActive(void)
+{
+    return viewportNavigateMode && playModeActive;
 }

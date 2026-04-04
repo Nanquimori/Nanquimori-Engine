@@ -790,6 +790,16 @@ void DrawPropertiesPanel(void)
                 else
                     DrawFloatSlider("Field of View", &obj->cameraPerspectiveFov, 10.0f, 140.0f, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput);
 
+                DrawFloatSlider("Near Clip", &obj->cameraNearClip, 0.01f, 50.0f, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput);
+                float minFarClip = obj->cameraNearClip + 0.1f;
+                if (minFarClip < 1.0f)
+                    minFarClip = 1.0f;
+                DrawFloatSlider("Far Clip", &obj->cameraFarClip, minFarClip, 5000.0f, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput);
+                if (obj->cameraNearClip < 0.01f)
+                    obj->cameraNearClip = 0.01f;
+                if (obj->cameraFarClip < obj->cameraNearClip + 0.1f)
+                    obj->cameraFarClip = obj->cameraNearClip + 0.1f;
+
                 int actionGap = 6;
                 int actionWidth = (PROPERTIES_PAINEL_LARGURA - 28 - actionGap) / 2;
                 Rectangle useViewBtn = {(float)(x + 14), (float)y, (float)actionWidth, 20.0f};

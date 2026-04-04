@@ -28,6 +28,36 @@ static float profRenderMs = 0.0f;
 static Camera editorCameraBeforePlay = {0};
 static bool editorCameraBeforePlaySaved = false;
 
+static bool CamerasApproximatelyEqual(const Camera *a, const Camera *b)
+{
+    if (!a || !b)
+        return false;
+
+    const float eps = 0.0005f;
+    if (fabsf(a->position.x - b->position.x) > eps || fabsf(a->position.y - b->position.y) > eps || fabsf(a->position.z - b->position.z) > eps)
+        return false;
+    if (fabsf(a->target.x - b->target.x) > eps || fabsf(a->target.y - b->target.y) > eps || fabsf(a->target.z - b->target.z) > eps)
+        return false;
+    if (fabsf(a->up.x - b->up.x) > eps || fabsf(a->up.y - b->up.y) > eps || fabsf(a->up.z - b->up.z) > eps)
+        return false;
+    if (fabsf(a->fovy - b->fovy) > eps)
+        return false;
+    return a->projection == b->projection;
+}
+
+static ObjetoCena *GetViewportSceneCameraObject(const Camera *viewportCamera)
+{
+    int selectedId = ObterObjetoSelecionadoId();
+    int idx = BuscarIndicePorId(selectedId);
+    if (idx == -1 || !ObjetoEhCamera(&objetos[idx]) || !viewportCamera)
+        return nullptr;
+
+    Camera objectCamera = {0};
+    if (!BuildSceneCameraFromObject(&objetos[idx], &objectCamera))
+        return nullptr;
+    return CamerasApproximatelyEqual(viewportCamera, &objectCamera) ? &objetos[idx] : nullptr;
+}
+
 static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativePath, char *out, size_t outSize)
 {
     if (!baseDir || baseDir[0] == '\0' || !relativePath || relativePath[0] == '\0' || !out || outSize == 0)
@@ -252,6 +282,7 @@ void UpdateApplication()
 {
     double updateStart = GetTime();
     static bool playSessionPrev = false;
+    static bool navigateModePrev = false;
 
     Vector3 loadedCamPos = {0};
     Vector3 loadedCamTarget = {0};
@@ -278,6 +309,7 @@ void UpdateApplication()
     bool playSession = IsPlayModeActive();
     bool playPaused = IsPlayPaused();
     bool playMode = playSession && !playPaused;
+    bool navigateMode = IsViewportNavigateModeActive();
     bool stopRequested = ConsumePlayStopRequested();
     bool restartRequested = ConsumePlayRestartRequested();
 
@@ -286,10 +318,24 @@ void UpdateApplication()
     else
         DisableMouseForUI();
 
+    if (playSession && navigateMode && !navigateModePrev)
+    {
+        Camera sceneCamera = {0};
+        if (GetSceneRenderCamera(&sceneCamera, nullptr))
+        {
+            appCamera = sceneCamera;
+            SyncCameraControllerToCamera(&appCamera);
+        }
+    }
+
     if (!playSession)
     {
-        UpdateEditorOrbitCamera(&appCamera);
+        UpdateEditorViewportCamera(&appCamera, false);
         SetProjectCameraState(appCamera.position, appCamera.target);
+    }
+    else if (navigateMode)
+    {
+        UpdateEditorViewportCamera(&appCamera, true);
     }
 
     if (stopRequested)
@@ -328,6 +374,7 @@ void UpdateApplication()
         }
     }
     playSessionPrev = playSession;
+    navigateModePrev = IsViewportNavigateModeActive();
 
     if (!playSession)
     {
@@ -343,7 +390,8 @@ void UpdateApplication()
 
     if (IsViewportEditorInputAllowed(playSession))
     {
-        HandleViewportRightClickSelection();
+        if (!IsViewportNavigateModeActive())
+            HandleViewportRightClickSelection();
         HandleViewportDuplicateShortcut();
     }
 
@@ -361,7 +409,7 @@ void UpdateApplication()
     }
 
     Camera debugCamera = appCamera;
-    if (playMode)
+    if (playMode && !navigateMode)
     {
         Camera sceneCamera = {0};
         if (GetSceneRenderCamera(&sceneCamera, nullptr))
@@ -426,19 +474,39 @@ void UpdateApplication()
 void RenderApplication()
 {
     double renderStart = GetTime();
-    bool playMode = IsPlayModeActive() && !IsPlayPaused();
+    bool playSession = IsPlayModeActive();
+    bool playMode = playSession && !IsPlayPaused();
+    bool navigateMode = IsViewportNavigateModeActive();
     Camera renderCamera = appCamera;
-    if (playMode)
+    ObjetoCena *renderCameraObject = GetViewportSceneCameraObject(&appCamera);
+    if (playSession)
     {
-        Camera sceneCamera = {0};
-        if (GetSceneRenderCamera(&sceneCamera, nullptr))
-            renderCamera = sceneCamera;
+        if (navigateMode)
+        {
+            renderCamera = appCamera;
+            renderCameraObject = nullptr;
+        }
+        else
+        {
+            Camera sceneCamera = {0};
+            int renderCameraObjectId = -1;
+            if (GetSceneRenderCamera(&sceneCamera, &renderCameraObjectId))
+            {
+                renderCamera = sceneCamera;
+                int idx = BuscarIndicePorId(renderCameraObjectId);
+                renderCameraObject = (idx != -1) ? &objetos[idx] : nullptr;
+            }
+            else
+            {
+                renderCameraObject = nullptr;
+            }
+        }
     }
 
     BeginDrawing();
     ClearBackground((Color){24, 26, 32, 255});
 
-    BeginMode3D(renderCamera);
+    BeginManagedMode3D(renderCamera, renderCameraObject);
 
     RenderModels();
     if (PropertiesShowCollisions())
@@ -459,7 +527,7 @@ void RenderApplication()
             DrawSphere(appRayEndPos, 0.08f, rayColor);
     }
 
-    EndMode3D();
+    EndManagedMode3D();
 
     DrawSelectedObjectOrigins(renderCamera);
 

@@ -47,6 +47,8 @@ typedef struct
     float cameraPerspectiveFov;
     float cameraOrthoSize;
     float cameraFocusDistance;
+    float cameraNearClip;
+    float cameraFarClip;
     // Física / colisão
     bool physStatic;
     bool physRigidbody;

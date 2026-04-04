@@ -460,9 +460,15 @@ void RenderGameApplication(void)
 
     if (runtimeProjectLoaded)
     {
-        BeginMode3D(runtimeCamera);
+        ObjetoCena *runtimeCameraObject = nullptr;
+        int runtimeCameraObjectId = GetSceneRenderCameraObjectId();
+        int runtimeCameraIndex = BuscarIndicePorId(runtimeCameraObjectId);
+        if (runtimeCameraIndex != -1)
+            runtimeCameraObject = &objetos[runtimeCameraIndex];
+
+        BeginManagedMode3D(runtimeCamera, runtimeCameraObject);
         RenderModels();
-        EndMode3D();
+        EndManagedMode3D();
     }
     else
     {

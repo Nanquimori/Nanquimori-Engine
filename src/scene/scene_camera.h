@@ -12,6 +12,9 @@ int GetSceneRenderCameraObjectId(void);
 bool BuildSceneCameraFromObject(const ObjetoCena *obj, Camera *out);
 bool CopySceneObjectFromCameraView(ObjetoCena *obj, const Camera *camera);
 bool GetSceneRenderCamera(Camera *out, int *objectId);
+bool GetSceneCameraClipPlanes(const ObjetoCena *obj, float *nearClip, float *farClip);
+void BeginManagedMode3D(Camera camera, const ObjetoCena *sceneCameraObject);
+void EndManagedMode3D(void);
 void DrawSceneCameraHelpers(Camera viewCamera);
 bool RaycastSceneCameraHelpers(Ray ray, Vector3 *hitPos, float *hitDist, int *hitObjectId);
 

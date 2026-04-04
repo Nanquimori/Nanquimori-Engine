@@ -3,47 +3,35 @@
 
 static bool mouseUIEnabled = false;
 
-// Estrutura para armazenar ângulos de Euler (em radianos)
 typedef struct
 {
-    float yaw;   // Rotação horizontal (eixo Y)
-    float pitch; // Rotação vertical (eixo X)
+    float yaw;
+    float pitch;
 } CameraRotation;
 
 static CameraRotation cameraRot = {0, 0};
+static CameraRotation flyRot = {0, 0};
 static float cameraDistance = 10.0f;
+static float flyMoveSpeed = 6.0f;
+static float flyLookSensitivity = 0.0035f;
+static bool flyModeWasActive = false;
+static bool flyCaptureActive = false;
 static Camera mainCamera = {0};
 
-static void SyncOrbitStateFromCamera(const Camera *cam)
+static float ClampFloat(float value, float minValue, float maxValue)
 {
-    if (!cam)
-        return;
-
-    Vector3 d = (Vector3){
-        cam->position.x - cam->target.x,
-        cam->position.y - cam->target.y,
-        cam->position.z - cam->target.z};
-    float dist = sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
-    if (dist < 0.0001f)
-        dist = 0.0001f;
-
-    cameraDistance = dist;
-    cameraRot.yaw = atan2f(d.x, d.z);
-
-    float s = d.y / dist;
-    if (s > 1.0f)
-        s = 1.0f;
-    if (s < -1.0f)
-        s = -1.0f;
-    cameraRot.pitch = asinf(s);
+    if (value < minValue)
+        return minValue;
+    if (value > maxValue)
+        return maxValue;
+    return value;
 }
 
-void SyncCameraControllerToCamera(const Camera *cam)
+static bool CtrlHeld(void)
 {
-    SyncOrbitStateFromCamera(cam);
+    return IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
 }
 
-// Funções auxiliares para vetores
 static Vector3 Vec3Sub(Vector3 a, Vector3 b)
 {
     return (Vector3){a.x - b.x, a.y - b.y, a.z - b.z};
@@ -80,7 +68,14 @@ static float Vec3Length(Vector3 v)
     return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
-// Converte ângulos de Euler para posição de câmera em órbita
+static Vector3 GetForwardFromRotation(float yaw, float pitch)
+{
+    return (Vector3){
+        sinf(yaw) * cosf(pitch),
+        sinf(pitch),
+        cosf(yaw) * cosf(pitch)};
+}
+
 static Vector3 EulerToOrbitalPosition(Vector3 target, float yaw, float pitch, float distance)
 {
     Vector3 pos;
@@ -88,6 +83,65 @@ static Vector3 EulerToOrbitalPosition(Vector3 target, float yaw, float pitch, fl
     pos.y = target.y + sinf(pitch) * distance;
     pos.z = target.z + cosf(yaw) * cosf(pitch) * distance;
     return pos;
+}
+
+static void SyncOrbitStateFromCamera(const Camera *cam)
+{
+    if (!cam)
+        return;
+
+    Vector3 d = (Vector3){
+        cam->position.x - cam->target.x,
+        cam->position.y - cam->target.y,
+        cam->position.z - cam->target.z};
+    float dist = sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
+    if (dist < 0.0001f)
+        dist = 0.0001f;
+
+    cameraDistance = dist;
+    cameraRot.yaw = atan2f(d.x, d.z);
+
+    float s = d.y / dist;
+    if (s > 1.0f)
+        s = 1.0f;
+    if (s < -1.0f)
+        s = -1.0f;
+    cameraRot.pitch = asinf(s);
+}
+
+static void SyncFlyStateFromCamera(const Camera *cam)
+{
+    if (!cam)
+        return;
+
+    Vector3 forward = Vec3Normalize(Vec3Sub(cam->target, cam->position));
+    if (Vec3Length(forward) < 0.0001f)
+        forward = (Vector3){0.0f, 0.0f, -1.0f};
+
+    flyRot.yaw = atan2f(forward.x, forward.z);
+
+    float s = forward.y;
+    if (s > 1.0f)
+        s = 1.0f;
+    if (s < -1.0f)
+        s = -1.0f;
+    flyRot.pitch = asinf(s);
+}
+
+void SyncCameraControllerToCamera(const Camera *cam)
+{
+    SyncOrbitStateFromCamera(cam);
+    SyncFlyStateFromCamera(cam);
+}
+
+static void ReleaseFlyCapture(void)
+{
+    if (!flyCaptureActive)
+        return;
+
+    if (IsCursorHidden())
+        EnableCursor();
+    flyCaptureActive = false;
 }
 
 void EnableMouseForUI(void)
@@ -105,22 +159,19 @@ bool IsMouseEnabledForUI(void)
     return mouseUIEnabled;
 }
 
-void UpdateEditorOrbitCamera(Camera *cam)
+static void UpdateEditorOrbitCamera(Camera *cam)
 {
-    if (mouseUIEnabled)
+    if (!cam || mouseUIEnabled)
         return;
 
     Vector2 mouseDelta = GetMouseDelta();
     float scrollDelta = GetMouseWheelMove();
 
-    // Calcula a distância atual da câmera até o alvo
     Vector3 direction = Vec3Sub(cam->position, cam->target);
     cameraDistance = Vec3Length(direction);
-
     if (cameraDistance < 0.1f)
         cameraDistance = 0.1f;
 
-    // Zoom com scroll do mouse
     if (scrollDelta != 0.0f)
     {
         cameraDistance -= scrollDelta * 1.0f;
@@ -130,40 +181,30 @@ void UpdateEditorOrbitCamera(Camera *cam)
             cameraDistance = 100.0f;
     }
 
-    // Rotação com botão do meio do mouse (sem Shift)
     if (IsMouseButtonDown(MOUSE_MIDDLE_BUTTON) &&
         !IsKeyDown(KEY_LEFT_SHIFT) && !IsKeyDown(KEY_RIGHT_SHIFT))
     {
-        // Sensibilidade da rotação
         float rotationSensitivity = 0.01f;
-
-        // Rotação horizontal (yaw) - movimento do mouse em X
         cameraRot.yaw -= mouseDelta.x * rotationSensitivity;
-
-        // Rotação vertical (pitch) - movimento do mouse em Y
         cameraRot.pitch += mouseDelta.y * rotationSensitivity;
 
-        // Limita o pitch para evitar inversão (gimbal lock)
         float pitchLimit = PI / 2.0f - 0.1f;
         if (cameraRot.pitch > pitchLimit)
             cameraRot.pitch = pitchLimit;
         if (cameraRot.pitch < -pitchLimit)
             cameraRot.pitch = -pitchLimit;
 
-        // Mantém o yaw normalizado entre -PI e PI
         while (cameraRot.yaw > PI)
             cameraRot.yaw -= 2.0f * PI;
         while (cameraRot.yaw < -PI)
             cameraRot.yaw += 2.0f * PI;
     }
 
-    // Pan com Shift + botão do meio do mouse
     if (IsMouseButtonDown(MOUSE_MIDDLE_BUTTON) &&
         (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)))
     {
         if (mouseDelta.x != 0.0f || mouseDelta.y != 0.0f)
         {
-            // Calcula os vetores right e up baseado na câmera atual
             Vector3 forward = Vec3Normalize(Vec3Sub(cam->target, cam->position));
             Vector3 right = Vec3Normalize(Vec3Cross(forward, cam->up));
             Vector3 up = Vec3Normalize(Vec3Cross(right, forward));
@@ -178,11 +219,124 @@ void UpdateEditorOrbitCamera(Camera *cam)
         }
     }
 
-    // Atualiza a posição da câmera baseado nos ângulos Euler
     cam->position = EulerToOrbitalPosition(cam->target, cameraRot.yaw, cameraRot.pitch, cameraDistance);
-
-    // Garante que o vetor up está correto
     cam->up = (Vector3){0, 1, 0};
+}
+
+static void UpdateEditorFlyCamera(Camera *cam)
+{
+    if (!cam)
+        return;
+
+    if (mouseUIEnabled)
+    {
+        ReleaseFlyCapture();
+        return;
+    }
+
+    float scrollDelta = GetMouseWheelMove();
+    if (scrollDelta != 0.0f)
+    {
+        if (CtrlHeld())
+        {
+            cam->fovy -= scrollDelta * 2.0f;
+            if (cam->projection == CAMERA_ORTHOGRAPHIC)
+                cam->fovy = ClampFloat(cam->fovy, 0.2f, 200.0f);
+            else
+                cam->fovy = ClampFloat(cam->fovy, 10.0f, 140.0f);
+        }
+        else
+        {
+            float speedScale = powf(1.18f, scrollDelta);
+            float lookScale = powf(1.10f, scrollDelta);
+            flyMoveSpeed = ClampFloat(flyMoveSpeed * speedScale, 0.5f, 180.0f);
+            flyLookSensitivity = ClampFloat(flyLookSensitivity * lookScale, 0.0010f, 0.03f);
+        }
+    }
+
+    bool wantsCapture = IsMouseButtonDown(MOUSE_RIGHT_BUTTON);
+    if (wantsCapture && !flyCaptureActive)
+    {
+        SyncFlyStateFromCamera(cam);
+        DisableCursor();
+        flyCaptureActive = true;
+    }
+    else if (!wantsCapture && flyCaptureActive)
+    {
+        ReleaseFlyCapture();
+        SyncOrbitStateFromCamera(cam);
+    }
+
+    if (!flyCaptureActive)
+        return;
+
+    Vector2 mouseDelta = GetMouseDelta();
+    flyRot.yaw -= mouseDelta.x * flyLookSensitivity;
+    flyRot.pitch -= mouseDelta.y * flyLookSensitivity;
+
+    float pitchLimit = PI / 2.0f - 0.02f;
+    if (flyRot.pitch > pitchLimit)
+        flyRot.pitch = pitchLimit;
+    if (flyRot.pitch < -pitchLimit)
+        flyRot.pitch = -pitchLimit;
+
+    while (flyRot.yaw > PI)
+        flyRot.yaw -= 2.0f * PI;
+    while (flyRot.yaw < -PI)
+        flyRot.yaw += 2.0f * PI;
+
+    Vector3 forward = Vec3Normalize(GetForwardFromRotation(flyRot.yaw, flyRot.pitch));
+    Vector3 worldUp = (Vector3){0.0f, 1.0f, 0.0f};
+    Vector3 right = Vec3Normalize(Vec3Cross(forward, worldUp));
+    if (Vec3Length(right) < 0.0001f)
+        right = (Vector3){1.0f, 0.0f, 0.0f};
+    Vector3 up = Vec3Normalize(Vec3Cross(right, forward));
+
+    Vector3 move = {0};
+    if (IsKeyDown(KEY_W))
+        move = Vec3Add(move, forward);
+    if (IsKeyDown(KEY_S))
+        move = Vec3Sub(move, forward);
+    if (IsKeyDown(KEY_D))
+        move = Vec3Add(move, right);
+    if (IsKeyDown(KEY_A))
+        move = Vec3Sub(move, right);
+
+    float moveLen = Vec3Length(move);
+    if (moveLen > 0.0001f)
+    {
+        float moveScale = flyMoveSpeed * GetFrameTime();
+        if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))
+            moveScale *= 2.5f;
+        move = Vec3Scale(move, 1.0f / moveLen);
+        move = Vec3Scale(move, moveScale);
+        cam->position = Vec3Add(cam->position, move);
+    }
+
+    cam->target = Vec3Add(cam->position, forward);
+    cam->up = up;
+    SyncOrbitStateFromCamera(cam);
+}
+
+void UpdateEditorViewportCamera(Camera *cam, bool flyModeActive)
+{
+    if (!cam)
+        return;
+
+    if (flyModeActive != flyModeWasActive)
+    {
+        ReleaseFlyCapture();
+        if (flyModeActive)
+            SyncFlyStateFromCamera(cam);
+        else
+            SyncOrbitStateFromCamera(cam);
+        flyModeWasActive = flyModeActive;
+    }
+
+    if (flyModeActive)
+        UpdateEditorFlyCamera(cam);
+    else
+        UpdateEditorOrbitCamera(cam);
 }
 
 Camera InitCamera()
@@ -192,7 +346,7 @@ Camera InitCamera()
     mainCamera.up = (Vector3){0, 1, 0};
     mainCamera.fovy = 45.0f;
     mainCamera.projection = CAMERA_PERSPECTIVE;
-    SyncOrbitStateFromCamera(&mainCamera);
-    
+    SyncCameraControllerToCamera(&mainCamera);
+
     return mainCamera;
 }

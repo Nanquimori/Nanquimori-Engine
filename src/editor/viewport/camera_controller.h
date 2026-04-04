@@ -4,12 +4,18 @@
 #include "raylib.h"
 
 /**
- * Atualiza a camera com controles de orbita do editor:
+ * Atualiza a camera da viewport do editor.
+ * Quando flyModeActive for falso, usa orbita:
  * - Shift + Botao Meio: Pan
  * - Botao Meio: Rotacao
  * - Scroll: Zoom
+ * Quando flyModeActive for verdadeiro, usa navegacao:
+ * - Botao Direito + Mouse: Olhar
+ * - WASD: Movimento
+ * - Scroll: Ajusta velocidade e sensibilidade
+ * - Ctrl + Scroll: Zoom
  */
-void UpdateEditorOrbitCamera(Camera *cam);
+void UpdateEditorViewportCamera(Camera *cam, bool flyModeActive);
 
 /**
  * Habilita o cursor para que o usuario possa interagir com a UI
@@ -33,7 +39,7 @@ bool IsMouseEnabledForUI(void);
 Camera InitCamera();
 
 /**
- * Sincroniza o estado interno de orbita (yaw/pitch/distancia) com a camera atual.
+ * Sincroniza o estado interno com a camera atual.
  * Use quando a camera for alterada externamente (ex.: ao carregar projeto).
  */
 void SyncCameraControllerToCamera(const Camera *cam);

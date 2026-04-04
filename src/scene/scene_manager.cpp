@@ -520,6 +520,8 @@ static void CarregarCena(int index)
             objetos[idx].cameraPerspectiveFov = src->cameraPerspectiveFov;
             objetos[idx].cameraOrthoSize = src->cameraOrthoSize;
             objetos[idx].cameraFocusDistance = src->cameraFocusDistance;
+            objetos[idx].cameraNearClip = src->cameraNearClip;
+            objetos[idx].cameraFarClip = src->cameraFarClip;
             objetos[idx].physStatic = src->physStatic;
             objetos[idx].physRigidbody = src->physRigidbody;
             objetos[idx].physCollider = src->physCollider;
@@ -1299,7 +1301,7 @@ bool SaveProject(void)
             fprintf(f,
                     "{\"id\":%d,\"name\":\"%s\",\"pos\":[%.4f,%.4f,%.4f],\"rot\":[%.4f,%.4f,%.4f],\"parent\":%d,\"active\":%d,\"model\":\"%s\","
                     "\"proto\":%d,\"pbase\":[%d,%d,%d],\"psec\":[%d,%d,%d],\"ppack\":%d,\"ppackv\":%d,\"pcustom\":\"%s\","
-                    "\"type\":%d,\"cammain\":%d,\"camproj\":%d,\"camfov\":%.3f,\"camortho\":%.3f,\"camfocus\":%.3f,"
+                    "\"type\":%d,\"cammain\":%d,\"camproj\":%d,\"camfov\":%.3f,\"camortho\":%.3f,\"camfocus\":%.3f,\"camnear\":%.3f,\"camfar\":%.3f,"
                     "\"pcustombase\":[%d,%d,%d],\"pcustomsec\":[%d,%d,%d],\"pcustoms\":\"%s\","
                     "\"pstatic\":%d,\"prb\":%d,\"pcollider\":%d,\"pgravity\":%d,\"pmass\":%.3f,\"pshape\":%d,\"psize\":[%.3f,%.3f,%.3f],\"pterrain\":%d}%s\n",
                     o->id,
@@ -1321,6 +1323,8 @@ bool SaveProject(void)
                     o->cameraPerspectiveFov,
                     o->cameraOrthoSize,
                     o->cameraFocusDistance,
+                    o->cameraNearClip,
+                    o->cameraFarClip,
                     (int)o->protoCustomBase.r, (int)o->protoCustomBase.g, (int)o->protoCustomBase.b,
                     (int)o->protoCustomSecondary.r, (int)o->protoCustomSecondary.g, (int)o->protoCustomSecondary.b,
                     pcustomsEsc,
@@ -1743,6 +1747,8 @@ bool LoadProject(const char *path)
                 float cameraFov = 60.0f;
                 float cameraOrtho = 5.0f;
                 float cameraFocus = 10.0f;
+                float cameraNear = 0.1f;
+                float cameraFar = 1000.0f;
                 int pstatic = 1, prb = 0, pcollider = 1, pgravity = 1, pterrain = 0;
                 float pmass = 1.0f;
                 float psx = 1.0f, psy = 1.0f, psz = 1.0f;
@@ -1806,6 +1812,12 @@ bool LoadProject(const char *path)
                     const char *camFocusPtr = strstr(objLine, "\"camfocus\":");
                     if (camFocusPtr)
                         sscanf(camFocusPtr, "\"camfocus\":%f", &cameraFocus);
+                    const char *camNearPtr = strstr(objLine, "\"camnear\":");
+                    if (camNearPtr)
+                        sscanf(camNearPtr, "\"camnear\":%f", &cameraNear);
+                    const char *camFarPtr = strstr(objLine, "\"camfar\":");
+                    if (camFarPtr)
+                        sscanf(camFarPtr, "\"camfar\":%f", &cameraFar);
                     const char *pcbasePtr = strstr(objLine, "\"pcustombase\":[");
                     if (pcbasePtr)
                         sscanf(pcbasePtr, "\"pcustombase\":[%d,%d,%d]", &pcbr, &pcbg, &pcbb);
@@ -1857,6 +1869,8 @@ bool LoadProject(const char *path)
                     o->cameraPerspectiveFov = cameraFov;
                     o->cameraOrthoSize = cameraOrtho;
                     o->cameraFocusDistance = cameraFocus;
+                    o->cameraNearClip = cameraNear;
+                    o->cameraFarClip = cameraFar;
                     if (pcustomEsc[0] != '\0')
                         UnescapeJsonString(pcustomEsc, o->protoCustomName, sizeof(o->protoCustomName));
                     else

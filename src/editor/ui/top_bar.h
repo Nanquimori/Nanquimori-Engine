@@ -21,5 +21,6 @@ void SetPlayPaused(bool paused);
 bool ConsumePlayStopRequested(void);
 bool ConsumePlayRestartRequested(void);
 bool IsTopBarMenuOpen(void);
+bool IsViewportNavigateModeActive(void);
 
 #endif // TOP_BAR_H

@@ -851,6 +851,8 @@ int RegistrarObjeto(const char *nome, Vector3 posicao, int paiId)
     obj->cameraPerspectiveFov = 60.0f;
     obj->cameraOrthoSize = 5.0f;
     obj->cameraFocusDistance = 10.0f;
+    obj->cameraNearClip = 0.1f;
+    obj->cameraFarClip = 1000.0f;
     obj->physStatic = true;
     obj->physRigidbody = false;
     obj->physCollider = true;

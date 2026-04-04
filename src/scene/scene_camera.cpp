@@ -1,10 +1,15 @@
 #include "scene_camera.h"
 
 #include "assets/model_manager.h"
+#include "rlgl.h"
 #include "raymath.h"
 #include <cmath>
 #include <cstring>
 #include <cstdio>
+
+static bool managedModeClipOverride = false;
+static double managedModeClipRestoreNear = 0.01;
+static double managedModeClipRestoreFar = 1000.0;
 
 static float ClampCameraPerspectiveFov(float value)
 {
@@ -21,6 +26,24 @@ static float ClampCameraOrthoSize(float value)
         return 0.1f;
     if (value > 200.0f)
         return 200.0f;
+    return value;
+}
+
+static float ClampCameraNearClip(float value)
+{
+    if (value < 0.01f)
+        return 0.01f;
+    if (value > 500.0f)
+        return 500.0f;
+    return value;
+}
+
+static float ClampCameraFarClip(float nearClip, float value)
+{
+    if (value < nearClip + 0.1f)
+        return nearClip + 0.1f;
+    if (value > 5000.0f)
+        return 5000.0f;
     return value;
 }
 
@@ -117,6 +140,8 @@ void ConfigureObjetoComoCamera(ObjetoCena *obj)
     obj->cameraPerspectiveFov = 60.0f;
     obj->cameraOrthoSize = 5.0f;
     obj->cameraFocusDistance = 10.0f;
+    obj->cameraNearClip = 0.1f;
+    obj->cameraFarClip = 1000.0f;
     obj->caminhoModelo[0] = '\0';
     obj->protoEnabled = false;
     obj->physStatic = true;
@@ -173,6 +198,21 @@ bool BuildSceneCameraFromObject(const ObjetoCena *obj, Camera *out)
     return true;
 }
 
+bool GetSceneCameraClipPlanes(const ObjetoCena *obj, float *nearClip, float *farClip)
+{
+    if (!obj || !ObjetoEhCamera(obj))
+        return false;
+
+    float nearValue = ClampCameraNearClip(obj->cameraNearClip);
+    float farValue = ClampCameraFarClip(nearValue, obj->cameraFarClip);
+
+    if (nearClip)
+        *nearClip = nearValue;
+    if (farClip)
+        *farClip = farValue;
+    return true;
+}
+
 bool CopySceneObjectFromCameraView(ObjetoCena *obj, const Camera *camera)
 {
     if (!obj || !camera || !ObjetoEhCamera(obj))
@@ -199,6 +239,36 @@ bool CopySceneObjectFromCameraView(ObjetoCena *obj, const Camera *camera)
     }
 
     return true;
+}
+
+void BeginManagedMode3D(Camera camera, const ObjetoCena *sceneCameraObject)
+{
+    managedModeClipOverride = false;
+    if (sceneCameraObject && ObjetoEhCamera(sceneCameraObject))
+    {
+        float nearClip = 0.1f;
+        float farClip = 1000.0f;
+        if (GetSceneCameraClipPlanes(sceneCameraObject, &nearClip, &farClip))
+        {
+            managedModeClipRestoreNear = rlGetCullDistanceNear();
+            managedModeClipRestoreFar = rlGetCullDistanceFar();
+            rlSetClipPlanes((double)nearClip, (double)farClip);
+            managedModeClipOverride = true;
+        }
+    }
+
+    BeginMode3D(camera);
+}
+
+void EndManagedMode3D(void)
+{
+    EndMode3D();
+
+    if (managedModeClipOverride)
+    {
+        rlSetClipPlanes(managedModeClipRestoreNear, managedModeClipRestoreFar);
+        managedModeClipOverride = false;
+    }
 }
 
 int AddCameraObjectFromView(const Camera *viewCamera)
