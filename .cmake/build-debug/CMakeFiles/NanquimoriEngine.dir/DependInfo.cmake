@@ -50,6 +50,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/physics/nanquimori_physics.cpp" "CMakeFiles/NanquimoriEngine.dir/src/physics/nanquimori_physics.cpp.obj" "gcc" "CMakeFiles/NanquimoriEngine.dir/src/physics/nanquimori_physics.cpp.obj.d"
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/runtime/game_application.cpp" "CMakeFiles/NanquimoriEngine.dir/src/runtime/game_application.cpp.obj" "gcc" "CMakeFiles/NanquimoriEngine.dir/src/runtime/game_application.cpp.obj.d"
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/scene/outliner.cpp" "CMakeFiles/NanquimoriEngine.dir/src/scene/outliner.cpp.obj" "gcc" "CMakeFiles/NanquimoriEngine.dir/src/scene/outliner.cpp.obj.d"
+  "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/scene/scene_camera.cpp" "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_camera.cpp.obj" "gcc" "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_camera.cpp.obj.d"
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/scene/scene_manager.cpp" "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_manager.cpp.obj" "gcc" "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_manager.cpp.obj.d"
   )
 

@@ -50,6 +50,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/runtime/game_application.cpp" "CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.obj" "gcc" "CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.obj.d"
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/runtime/game_main.cpp" "CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.obj" "gcc" "CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.obj.d"
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/scene/outliner.cpp" "CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj" "gcc" "CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj.d"
+  "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/scene/scene_camera.cpp" "CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj" "gcc" "CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj.d"
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/scene/scene_manager.cpp" "CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj" "gcc" "CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj.d"
   )
 

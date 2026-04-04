@@ -500,6 +500,7 @@ static void CarregarCena(int index)
         {
             objetos[idx].ativo = src->ativo;
             objetos[idx].selecionado = false;
+            objetos[idx].rotacao = src->rotacao;
             strncpy(objetos[idx].caminhoModelo, src->caminhoModelo, 255);
             objetos[idx].caminhoModelo[255] = '\0';
             objetos[idx].protoEnabled = src->protoEnabled;
@@ -513,6 +514,12 @@ static void CarregarCena(int index)
             objetos[idx].protoCustomCount = src->protoCustomCount;
             for (int c = 0; c < src->protoCustomCount && c < MAX_PROTO_CUSTOM; c++)
                 objetos[idx].protoCustomEntries[c] = src->protoCustomEntries[c];
+            objetos[idx].tipo = src->tipo;
+            objetos[idx].cameraPrincipal = src->cameraPrincipal;
+            objetos[idx].cameraProjection = src->cameraProjection;
+            objetos[idx].cameraPerspectiveFov = src->cameraPerspectiveFov;
+            objetos[idx].cameraOrthoSize = src->cameraOrthoSize;
+            objetos[idx].cameraFocusDistance = src->cameraFocusDistance;
             objetos[idx].physStatic = src->physStatic;
             objetos[idx].physRigidbody = src->physRigidbody;
             objetos[idx].physCollider = src->physCollider;
@@ -1292,6 +1299,7 @@ bool SaveProject(void)
             fprintf(f,
                     "{\"id\":%d,\"name\":\"%s\",\"pos\":[%.4f,%.4f,%.4f],\"rot\":[%.4f,%.4f,%.4f],\"parent\":%d,\"active\":%d,\"model\":\"%s\","
                     "\"proto\":%d,\"pbase\":[%d,%d,%d],\"psec\":[%d,%d,%d],\"ppack\":%d,\"ppackv\":%d,\"pcustom\":\"%s\","
+                    "\"type\":%d,\"cammain\":%d,\"camproj\":%d,\"camfov\":%.3f,\"camortho\":%.3f,\"camfocus\":%.3f,"
                     "\"pcustombase\":[%d,%d,%d],\"pcustomsec\":[%d,%d,%d],\"pcustoms\":\"%s\","
                     "\"pstatic\":%d,\"prb\":%d,\"pcollider\":%d,\"pgravity\":%d,\"pmass\":%.3f,\"pshape\":%d,\"psize\":[%.3f,%.3f,%.3f],\"pterrain\":%d}%s\n",
                     o->id,
@@ -1307,6 +1315,12 @@ bool SaveProject(void)
                     o->protoPack,
                     PROTO_PACK_LAYOUT_VERSION,
                     pcustomEsc,
+                    o->tipo,
+                    o->cameraPrincipal ? 1 : 0,
+                    o->cameraProjection,
+                    o->cameraPerspectiveFov,
+                    o->cameraOrthoSize,
+                    o->cameraFocusDistance,
                     (int)o->protoCustomBase.r, (int)o->protoCustomBase.g, (int)o->protoCustomBase.b,
                     (int)o->protoCustomSecondary.r, (int)o->protoCustomSecondary.g, (int)o->protoCustomSecondary.b,
                     pcustomsEsc,
@@ -1723,6 +1737,12 @@ bool LoadProject(const char *path)
                 int pcsr = -1, pcsg = -1, pcsb = -1;
                 int ppack = 0;
                 int ppackVersion = 0;
+                int objectType = OBJETO_TIPO_VAZIO;
+                int cameraMain = 0;
+                int cameraProjection = CAMERA_PERSPECTIVE;
+                float cameraFov = 60.0f;
+                float cameraOrtho = 5.0f;
+                float cameraFocus = 10.0f;
                 int pstatic = 1, prb = 0, pcollider = 1, pgravity = 1, pterrain = 0;
                 float pmass = 1.0f;
                 float psx = 1.0f, psy = 1.0f, psz = 1.0f;
@@ -1768,6 +1788,24 @@ bool LoadProject(const char *path)
                         sscanf(ppackVersionPtr, "\"ppackv\":%d", &ppackVersion);
                     ExtractJsonString(objLine, "\"pcustom\":\"", pcustomEsc, sizeof(pcustomEsc));
                     ExtractJsonString(objLine, "\"pcustoms\":\"", pcustomsEsc, sizeof(pcustomsEsc));
+                    const char *typePtr = strstr(objLine, "\"type\":");
+                    if (typePtr)
+                        sscanf(typePtr, "\"type\":%d", &objectType);
+                    const char *camMainPtr = strstr(objLine, "\"cammain\":");
+                    if (camMainPtr)
+                        sscanf(camMainPtr, "\"cammain\":%d", &cameraMain);
+                    const char *camProjPtr = strstr(objLine, "\"camproj\":");
+                    if (camProjPtr)
+                        sscanf(camProjPtr, "\"camproj\":%d", &cameraProjection);
+                    const char *camFovPtr = strstr(objLine, "\"camfov\":");
+                    if (camFovPtr)
+                        sscanf(camFovPtr, "\"camfov\":%f", &cameraFov);
+                    const char *camOrthoPtr = strstr(objLine, "\"camortho\":");
+                    if (camOrthoPtr)
+                        sscanf(camOrthoPtr, "\"camortho\":%f", &cameraOrtho);
+                    const char *camFocusPtr = strstr(objLine, "\"camfocus\":");
+                    if (camFocusPtr)
+                        sscanf(camFocusPtr, "\"camfocus\":%f", &cameraFocus);
                     const char *pcbasePtr = strstr(objLine, "\"pcustombase\":[");
                     if (pcbasePtr)
                         sscanf(pcbasePtr, "\"pcustombase\":[%d,%d,%d]", &pcbr, &pcbg, &pcbb);
@@ -1813,6 +1851,12 @@ bool LoadProject(const char *path)
                     o->protoBaseColor = (Color){ClampByte(pbr), ClampByte(pbg), ClampByte(pbb), 255};
                     o->protoSecondaryColor = (Color){ClampByte(psr), ClampByte(psg), ClampByte(psb), 255};
                     o->protoPack = ppack;
+                    o->tipo = objectType;
+                    o->cameraPrincipal = (cameraMain != 0);
+                    o->cameraProjection = cameraProjection;
+                    o->cameraPerspectiveFov = cameraFov;
+                    o->cameraOrthoSize = cameraOrtho;
+                    o->cameraFocusDistance = cameraFocus;
                     if (pcustomEsc[0] != '\0')
                         UnescapeJsonString(pcustomEsc, o->protoCustomName, sizeof(o->protoCustomName));
                     else

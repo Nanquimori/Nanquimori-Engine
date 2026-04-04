@@ -27,4 +27,7 @@ void UpdateApplication();
  */
 void RenderApplication();
 
+Camera GetEditorViewportCamera(void);
+void SetEditorViewportCamera(const Camera *camera);
+
 #endif // APPLICATION_H

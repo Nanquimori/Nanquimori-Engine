@@ -2,7 +2,9 @@
 #include "file_explorer.h"
 #include "help_panel.h"
 #include "splash_screen.h"
+#include "app/application.h"
 #include "scene/outliner.h"
+#include "scene/scene_camera.h"
 #include "properties_panel.h"
 #include "assets/model_manager.h"
 #include "ui_button.h"
@@ -229,9 +231,10 @@ void UpdateTopBar()
     }
 
     const float addItemH = 24.0f;
-    Rectangle addMenuRect = {areaAdd.x, 24.0f, 220.0f, addItemH * 2.0f};
+    Rectangle addMenuRect = {areaAdd.x, 24.0f, 220.0f, addItemH * 3.0f};
     Rectangle itemEmpty = {addMenuRect.x, addMenuRect.y, addMenuRect.width, addItemH};
-    Rectangle itemGeometry = {addMenuRect.x, addMenuRect.y + addItemH, addMenuRect.width, addItemH};
+    Rectangle itemCamera = {addMenuRect.x, addMenuRect.y + addItemH, addMenuRect.width, addItemH};
+    Rectangle itemGeometry = {addMenuRect.x, addMenuRect.y + addItemH * 2.0f, addMenuRect.width, addItemH};
     const int addShapeCount = (int)(sizeof(addPrimitiveTypes) / sizeof(addPrimitiveTypes[0]));
     Rectangle addShapesRect = {addMenuRect.x + addMenuRect.width + 2.0f, itemGeometry.y, 180.0f, addShapeCount * addItemH};
 
@@ -243,11 +246,13 @@ void UpdateTopBar()
         bool clicked = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
         if (CheckCollisionPointRec(mouse, itemEmpty))
             addMainHoverItem = 0;
-        else if (CheckCollisionPointRec(mouse, itemGeometry))
+        else if (CheckCollisionPointRec(mouse, itemCamera))
             addMainHoverItem = 1;
+        else if (CheckCollisionPointRec(mouse, itemGeometry))
+            addMainHoverItem = 2;
 
         bool mouseInSubmenu = CheckCollisionPointRec(mouse, addShapesRect);
-        addShapesSubmenuOpen = (addMainHoverItem == 1) || mouseInSubmenu;
+        addShapesSubmenuOpen = (addMainHoverItem == 2) || mouseInSubmenu;
 
         if (addShapesSubmenuOpen)
         {
@@ -267,6 +272,13 @@ void UpdateTopBar()
             if (addMainHoverItem == 0)
             {
                 AddEmptyObject();
+                addMenuOpen = false;
+                addShapesSubmenuOpen = false;
+            }
+            else if (addMainHoverItem == 1)
+            {
+                Camera viewCamera = GetEditorViewportCamera();
+                AddCameraObjectFromView(&viewCamera);
                 addMenuOpen = false;
                 addShapesSubmenuOpen = false;
             }
@@ -393,26 +405,32 @@ void DrawTopBar()
     if (addMenuOpen)
     {
         const float addItemH = 24.0f;
-        Rectangle addMenuRect = {addMenuX, 24.0f, 220.0f, addItemH * 2.0f};
+        Rectangle addMenuRect = {addMenuX, 24.0f, 220.0f, addItemH * 3.0f};
         Rectangle itemEmpty = {addMenuRect.x, addMenuRect.y, addMenuRect.width, addItemH};
-        Rectangle itemGeometry = {addMenuRect.x, addMenuRect.y + addItemH, addMenuRect.width, addItemH};
+        Rectangle itemCamera = {addMenuRect.x, addMenuRect.y + addItemH, addMenuRect.width, addItemH};
+        Rectangle itemGeometry = {addMenuRect.x, addMenuRect.y + addItemH * 2.0f, addMenuRect.width, addItemH};
         const int addShapeCount = (int)(sizeof(addPrimitiveLabels) / sizeof(addPrimitiveLabels[0]));
         Rectangle addShapesRect = {addMenuRect.x + addMenuRect.width + 2.0f, itemGeometry.y, 180.0f, addShapeCount * addItemH};
 
         DrawRectangleRec(addMenuRect, style->buttonBg);
         DrawRectangleLinesEx(addMenuRect, 1.0f, style->panelBorder);
         DrawRectangleRec(itemEmpty, (addMainHoverItem == 0) ? TopBarMenuHoverColor() : style->buttonBg);
-        DrawRectangleRec(itemGeometry, (addMainHoverItem == 1 || addShapesSubmenuOpen) ? TopBarMenuHoverColor() : style->buttonBg);
+        DrawRectangleRec(itemCamera, (addMainHoverItem == 1) ? TopBarMenuHoverColor() : style->buttonBg);
+        DrawRectangleRec(itemGeometry, (addMainHoverItem == 2 || addShapesSubmenuOpen) ? TopBarMenuHoverColor() : style->buttonBg);
         if (addMainHoverItem == 0)
             DrawRectangleLinesEx(itemEmpty, 1.0f, TopBarMenuBorderColor());
-        if (addMainHoverItem == 1 || addShapesSubmenuOpen)
+        if (addMainHoverItem == 1)
+            DrawRectangleLinesEx(itemCamera, 1.0f, TopBarMenuBorderColor());
+        if (addMainHoverItem == 2 || addShapesSubmenuOpen)
             DrawRectangleLinesEx(itemGeometry, 1.0f, TopBarMenuBorderColor());
         DrawText("Empty Object", (int)(itemEmpty.x + 10.0f), (int)(itemEmpty.y + 6.0f), 12,
                  (addMainHoverItem == 0) ? style->buttonTextHover : style->buttonText);
+        DrawText("Camera", (int)(itemCamera.x + 10.0f), (int)(itemCamera.y + 6.0f), 12,
+                 (addMainHoverItem == 1) ? style->buttonTextHover : style->buttonText);
         DrawText("Geometric Shapes", (int)(itemGeometry.x + 10.0f), (int)(itemGeometry.y + 6.0f), 12,
-                 (addMainHoverItem == 1 || addShapesSubmenuOpen) ? style->buttonTextHover : style->buttonText);
+                 (addMainHoverItem == 2 || addShapesSubmenuOpen) ? style->buttonTextHover : style->buttonText);
         DrawText(">", (int)(itemGeometry.x + itemGeometry.width - 18.0f), (int)(itemGeometry.y + 6.0f), 12,
-                 (addMainHoverItem == 1 || addShapesSubmenuOpen) ? style->buttonTextHover : style->buttonText);
+                 (addMainHoverItem == 2 || addShapesSubmenuOpen) ? style->buttonTextHover : style->buttonText);
 
         if (addShapesSubmenuOpen)
         {

@@ -1,5 +1,7 @@
 #include "properties_panel.h"
+#include "app/application.h"
 #include "scene/scene_manager.h"
+#include "scene/scene_camera.h"
 #include "editor/ui/color_picker.h"
 #include "editor/ui/drag_float_input.h"
 #include "editor/ui/text_input.h"
@@ -20,6 +22,7 @@
 
 static bool propertiesObjectExpanded = true;
 static bool propertiesTransformExpanded = true;
+static bool propertiesCameraExpanded = true;
 static bool propertiesPhysicsExpanded = true;
 static bool propertiesPrototypeExpanded = true;
 
@@ -43,6 +46,7 @@ static bool DrawSectionHeader(const char *title, int x, int *y, bool *expanded, 
 static void FocusPropertiesSection(bool *expandedSection)
 {
     propertiesTransformExpanded = (expandedSection == &propertiesTransformExpanded);
+    propertiesCameraExpanded = (expandedSection == &propertiesCameraExpanded);
     propertiesPhysicsExpanded = (expandedSection == &propertiesPhysicsExpanded);
     propertiesPrototypeExpanded = (expandedSection == &propertiesPrototypeExpanded);
 }
@@ -558,6 +562,16 @@ static void DrawFloatSlider(const char *label, float *value, float minValue, flo
     *y += 28;
 }
 
+static bool DrawOptionButton(Rectangle rect, const char *label, bool active, bool allowInput, Vector2 mouse)
+{
+    bool hover = CheckCollisionPointRec(mouse, rect);
+    Color bg = active ? COR_ITEM_SEL : (hover ? COR_ITEM : COR_PAINEL);
+    DrawRectangleRec(rect, bg);
+    DrawRectangleLinesEx(rect, 1, COR_BORDA);
+    DrawText(label, (int)rect.x + 6, (int)rect.y + 3, 11, active ? GetUIStyle()->buttonTextHover : COR_TEXTO);
+    return allowInput && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+}
+
 static void DrawVec3Inputs(const char *label, Vector3 *value, int baseIndex, int x, int *y, bool allowInput, bool useDegrees)
 {
     DrawText(label, x + 14, *y, 12, COR_TEXTO);
@@ -687,6 +701,7 @@ void DrawPropertiesPanel(void)
     if (objectClicked && CtrlHeld() && propertiesObjectExpanded)
     {
         propertiesTransformExpanded = true;
+        propertiesCameraExpanded = true;
         propertiesPhysicsExpanded = true;
         propertiesPrototypeExpanded = true;
     }
@@ -704,6 +719,7 @@ void DrawPropertiesPanel(void)
     if (propertiesObjectExpanded && selIdx >= 0)
     {
         ObjetoCena *obj = &objetos[selIdx];
+        bool isCamera = ObjetoEhCamera(obj);
         bool transformClicked = DrawSectionHeader("Transform", x, &y, &propertiesTransformExpanded, allowInput, mouse);
         if (transformClicked && CtrlHeld() && propertiesTransformExpanded)
             FocusPropertiesSection(&propertiesTransformExpanded);
@@ -736,6 +752,67 @@ void DrawPropertiesPanel(void)
         }
 
         y += 6;
+        if (isCamera)
+        {
+            bool cameraClicked = DrawSectionHeader("Camera", x, &y, &propertiesCameraExpanded, allowInput, mouse);
+            if (cameraClicked && CtrlHeld() && propertiesCameraExpanded)
+                FocusPropertiesSection(&propertiesCameraExpanded);
+            if (propertiesCameraExpanded)
+            {
+                DrawText("Ativar Camera", x + 14, y, 12, COR_TEXTO);
+                Rectangle mainToggle = {(float)(contentRight - 16), (float)(y - 2), 16.0f, 16.0f};
+                DrawRectangleLinesEx(mainToggle, 1, COR_BORDA);
+                if (obj->cameraPrincipal)
+                    DrawRectangle((int)mainToggle.x + 3, (int)mainToggle.y + 3, 10, 10, COR_ITEM_SEL);
+                if (allowInput && CheckCollisionPointRec(mouse, mainToggle) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+                {
+                    if (obj->cameraPrincipal)
+                        obj->cameraPrincipal = false;
+                    else
+                        SetSceneRenderCameraObjectId(selId);
+                }
+                y += 22;
+
+                DrawText("Projection", x + 14, y, 12, COR_TEXTO);
+                y += 18;
+                int projectionGap = 6;
+                int projectionWidth = (PROPERTIES_PAINEL_LARGURA - 28 - projectionGap) / 2;
+                Rectangle perspectiveBtn = {(float)(x + 14), (float)y, (float)projectionWidth, 20.0f};
+                Rectangle orthoBtn = {(float)(x + 14 + projectionWidth + projectionGap), (float)y, (float)projectionWidth, 20.0f};
+                if (DrawOptionButton(perspectiveBtn, "Perspective", obj->cameraProjection == CAMERA_PERSPECTIVE, allowInput, mouse))
+                    obj->cameraProjection = CAMERA_PERSPECTIVE;
+                if (DrawOptionButton(orthoBtn, "Orthographic", obj->cameraProjection == CAMERA_ORTHOGRAPHIC, allowInput, mouse))
+                    obj->cameraProjection = CAMERA_ORTHOGRAPHIC;
+                y += 28;
+
+                if (obj->cameraProjection == CAMERA_ORTHOGRAPHIC)
+                    DrawFloatSlider("Size", &obj->cameraOrthoSize, 0.1f, 50.0f, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput);
+                else
+                    DrawFloatSlider("Field of View", &obj->cameraPerspectiveFov, 10.0f, 140.0f, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput);
+
+                int actionGap = 6;
+                int actionWidth = (PROPERTIES_PAINEL_LARGURA - 28 - actionGap) / 2;
+                Rectangle useViewBtn = {(float)(x + 14), (float)y, (float)actionWidth, 20.0f};
+                Rectangle lookBtn = {(float)(x + 14 + actionWidth + actionGap), (float)y, (float)actionWidth, 20.0f};
+                if (DrawOptionButton(useViewBtn, "Use View", false, allowInput, mouse))
+                {
+                    Camera viewCamera = GetEditorViewportCamera();
+                    CopySceneObjectFromCameraView(obj, &viewCamera);
+                }
+                if (DrawOptionButton(lookBtn, "Look Through", false, allowInput, mouse))
+                {
+                    Camera objectCamera = {0};
+                    if (BuildSceneCameraFromObject(obj, &objectCamera))
+                        SetEditorViewportCamera(&objectCamera);
+                }
+                y += 30;
+            }
+
+            y += 6;
+        }
+
+        if (!isCamera)
+        {
         bool physicsClicked = DrawSectionHeader("Fisica", x, &y, &propertiesPhysicsExpanded, allowInput, mouse);
         if (physicsClicked && CtrlHeld() && propertiesPhysicsExpanded)
             FocusPropertiesSection(&propertiesPhysicsExpanded);
@@ -1111,6 +1188,7 @@ void DrawPropertiesPanel(void)
             y += 16;
         }
     }
+        }
     }
     else if (propertiesObjectExpanded)
     {

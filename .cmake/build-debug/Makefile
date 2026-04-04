@@ -917,6 +917,33 @@ src/scene/outliner.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.s
 .PHONY : src/scene/outliner.cpp.s
 
+src/scene/scene_camera.obj: src/scene/scene_camera.cpp.obj
+.PHONY : src/scene/scene_camera.obj
+
+# target to build an object file
+src/scene/scene_camera.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/scene/scene_camera.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj
+.PHONY : src/scene/scene_camera.cpp.obj
+
+src/scene/scene_camera.i: src/scene/scene_camera.cpp.i
+.PHONY : src/scene/scene_camera.i
+
+# target to preprocess a source file
+src/scene/scene_camera.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/scene/scene_camera.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.i
+.PHONY : src/scene/scene_camera.cpp.i
+
+src/scene/scene_camera.s: src/scene/scene_camera.cpp.s
+.PHONY : src/scene/scene_camera.s
+
+# target to generate assembly for a file
+src/scene/scene_camera.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/scene/scene_camera.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.s
+.PHONY : src/scene/scene_camera.cpp.s
+
 src/scene/scene_manager.obj: src/scene/scene_manager.cpp.obj
 .PHONY : src/scene/scene_manager.obj
 
@@ -1038,6 +1065,9 @@ help:
 	@echo ... src/scene/outliner.obj
 	@echo ... src/scene/outliner.i
 	@echo ... src/scene/outliner.s
+	@echo ... src/scene/scene_camera.obj
+	@echo ... src/scene/scene_camera.i
+	@echo ... src/scene/scene_camera.s
 	@echo ... src/scene/scene_manager.obj
 	@echo ... src/scene/scene_manager.i
 	@echo ... src/scene/scene_manager.s

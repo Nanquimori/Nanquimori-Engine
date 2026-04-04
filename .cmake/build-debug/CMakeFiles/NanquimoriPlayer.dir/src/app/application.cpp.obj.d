@@ -23,8 +23,9 @@ CMakeFiles/NanquimoriPlayer.dir/src/app/application.cpp.obj: \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/export_dialog.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/properties_panel.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/physics/nanquimori_physics.h \
- C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/scene_manager.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/scene_camera.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/outliner.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/scene_manager.h \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\app\window_icon_win32.h \
  C:/raylib/raylib/src/raymath.h \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/math.h \

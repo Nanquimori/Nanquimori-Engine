@@ -11,6 +11,7 @@
 #include "editor/ui/export_dialog.h"
 #include "editor/ui/properties_panel.h"
 #include "physics/nanquimori_physics.h"
+#include "scene/scene_camera.h"
 #include "scene/scene_manager.h"
 #include "window_icon_win32.h"
 #include "raymath.h"
@@ -24,6 +25,8 @@ static bool appRayHit = false;
 static float profLogicMs = 0.0f;
 static float profPhysicsMs = 0.0f;
 static float profRenderMs = 0.0f;
+static Camera editorCameraBeforePlay = {0};
+static bool editorCameraBeforePlaySaved = false;
 
 static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativePath, char *out, size_t outSize)
 {
@@ -165,10 +168,23 @@ static void HandleViewportRightClickSelection(void)
         return;
 
     Ray ray = GetMouseRay(GetMousePosition(), appCamera);
-    Vector3 hitPos = {0};
-    float hitDist = 0.0f;
+    Vector3 modelHitPos = {0};
+    float modelHitDist = 0.0f;
+    int modelHitObjectId = -1;
+    bool modelHit = RaycastModelsEx(ray, &modelHitPos, &modelHitDist, &modelHitObjectId) && modelHitObjectId > 0;
+
+    Vector3 cameraHitPos = {0};
+    float cameraHitDist = 0.0f;
+    int cameraHitObjectId = -1;
+    bool cameraHit = RaycastSceneCameraHelpers(ray, &cameraHitPos, &cameraHitDist, &cameraHitObjectId) && cameraHitObjectId > 0;
+
     int hitObjectId = -1;
-    if (RaycastModelsEx(ray, &hitPos, &hitDist, &hitObjectId) && hitObjectId > 0)
+    if (modelHit && (!cameraHit || modelHitDist <= cameraHitDist))
+        hitObjectId = modelHitObjectId;
+    else if (cameraHit)
+        hitObjectId = cameraHitObjectId;
+
+    if (hitObjectId > 0)
     {
         if (ShiftHeld())
             AdicionarObjetoSelecionadoPorId(hitObjectId);
@@ -251,14 +267,6 @@ void UpdateApplication()
     if (!handledTransformShortcut && IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_Z))
         Undo();
 
-    if (IsMouseOverUIRoot())
-        EnableMouseForUI();
-    else
-        DisableMouseForUI();
-
-    UpdateEditorOrbitCamera(&appCamera);
-    SetProjectCameraState(appCamera.position, appCamera.target);
-
     bool ctrlPressed = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
     if (ctrlPressed && IsKeyPressed(KEY_S))
     {
@@ -272,6 +280,17 @@ void UpdateApplication()
     bool playMode = playSession && !playPaused;
     bool stopRequested = ConsumePlayStopRequested();
     bool restartRequested = ConsumePlayRestartRequested();
+
+    if (IsMouseOverUIRoot())
+        EnableMouseForUI();
+    else
+        DisableMouseForUI();
+
+    if (!playSession)
+    {
+        UpdateEditorOrbitCamera(&appCamera);
+        SetProjectCameraState(appCamera.position, appCamera.target);
+    }
 
     if (stopRequested)
     {
@@ -295,10 +314,18 @@ void UpdateApplication()
     {
         SaveActiveSceneSnapshot();
         ResetNanquimoriPhysicsWorld();
+        editorCameraBeforePlay = appCamera;
+        editorCameraBeforePlaySaved = true;
     }
     else if (playSessionPrev && !playSession)
     {
         ResetNanquimoriPhysicsWorld();
+        if (editorCameraBeforePlaySaved)
+        {
+            appCamera = editorCameraBeforePlay;
+            SyncCameraControllerToCamera(&appCamera);
+            editorCameraBeforePlaySaved = false;
+        }
     }
     playSessionPrev = playSession;
 
@@ -320,7 +347,8 @@ void UpdateApplication()
         HandleViewportDuplicateShortcut();
     }
 
-    UpdateMoveGizmo(appCamera);
+    if (!playMode)
+        UpdateMoveGizmo(appCamera);
 
     if (playMode)
     {
@@ -332,11 +360,19 @@ void UpdateApplication()
         profPhysicsMs = 0.0f;
     }
 
+    Camera debugCamera = appCamera;
+    if (playMode)
+    {
+        Camera sceneCamera = {0};
+        if (GetSceneRenderCamera(&sceneCamera, nullptr))
+            debugCamera = sceneCamera;
+    }
+
     const float MAX_DIST = 1000.0f;
     Vector3 dir = {
-        appCamera.target.x - appCamera.position.x,
-        appCamera.target.y - appCamera.position.y,
-        appCamera.target.z - appCamera.position.z};
+        debugCamera.target.x - debugCamera.position.x,
+        debugCamera.target.y - debugCamera.position.y,
+        debugCamera.target.z - debugCamera.position.z};
     float dirLen = sqrtf(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
     if (dirLen < 0.0001f)
         dirLen = 1.0f;
@@ -349,7 +385,7 @@ void UpdateApplication()
 
     if (IsRaycastLineVisible())
     {
-        Ray ray = {appCamera.position, dir};
+        Ray ray = {debugCamera.position, dir};
         Vector3 hitPos = {0};
         hit = RaycastModels(ray, &hitPos, &hitDist);
         if (!hit)
@@ -362,22 +398,22 @@ void UpdateApplication()
         else
         {
             appRayEndPos = (Vector3){
-                appCamera.position.x + dir.x * MAX_DIST,
-                appCamera.position.y + dir.y * MAX_DIST,
-                appCamera.position.z + dir.z * MAX_DIST};
+                debugCamera.position.x + dir.x * MAX_DIST,
+                debugCamera.position.y + dir.y * MAX_DIST,
+                debugCamera.position.z + dir.z * MAX_DIST};
         }
     }
     else
     {
         appRayEndPos = (Vector3){
-            appCamera.position.x + dir.x * MAX_DIST,
-            appCamera.position.y + dir.y * MAX_DIST,
-            appCamera.position.z + dir.z * MAX_DIST};
+            debugCamera.position.x + dir.x * MAX_DIST,
+            debugCamera.position.y + dir.y * MAX_DIST,
+            debugCamera.position.z + dir.z * MAX_DIST};
     }
 
     appRayHit = hit;
 
-    UpdateInfoPanel(appCamera.position, appCamera.target, hitDist, hit);
+    UpdateInfoPanel(debugCamera.position, debugCamera.target, hitDist, hit);
     if (!playMode)
     {
         UpdateFileMenu();
@@ -390,29 +426,42 @@ void UpdateApplication()
 void RenderApplication()
 {
     double renderStart = GetTime();
+    bool playMode = IsPlayModeActive() && !IsPlayPaused();
+    Camera renderCamera = appCamera;
+    if (playMode)
+    {
+        Camera sceneCamera = {0};
+        if (GetSceneRenderCamera(&sceneCamera, nullptr))
+            renderCamera = sceneCamera;
+    }
+
     BeginDrawing();
     ClearBackground((Color){24, 26, 32, 255});
 
-    BeginMode3D(appCamera);
+    BeginMode3D(renderCamera);
 
     RenderModels();
     if (PropertiesShowCollisions())
         DrawNanquimoriPhysicsDebug();
 
     DrawGrid(10, 1.0f);
-    DrawMoveGizmo(appCamera);
+    if (!playMode)
+    {
+        DrawMoveGizmo(renderCamera);
+        DrawSceneCameraHelpers(renderCamera);
+    }
 
     if (IsRaycastLineVisible())
     {
         Color rayColor = appRayHit ? GREEN : RED;
-        DrawLine3D(appCamera.position, appRayEndPos, rayColor);
+        DrawLine3D(renderCamera.position, appRayEndPos, rayColor);
         if (IsRaycast3DVisible())
             DrawSphere(appRayEndPos, 0.08f, rayColor);
     }
 
     EndMode3D();
 
-    DrawSelectedObjectOrigins(appCamera);
+    DrawSelectedObjectOrigins(renderCamera);
 
     char pendingIconPath[512] = {0};
     if (ConsumePendingProjectIconPath(pendingIconPath, (int)sizeof(pendingIconPath)))
@@ -421,12 +470,12 @@ void RenderApplication()
     if (IsRaycast2DVisible())
     {
         Color rayColor = appRayHit ? GREEN : RED;
-        Vector2 screenPos = GetWorldToScreen(appRayEndPos, appCamera);
+        Vector2 screenPos = GetWorldToScreen(appRayEndPos, renderCamera);
         DrawCircleV(screenPos, 5.0f, rayColor);
         DrawCircleLines((int)screenPos.x, (int)screenPos.y, 6.0f, BLACK);
     }
 
-    DrawGizmo(appCamera, GetScreenWidth());
+    DrawGizmo(renderCamera, GetScreenWidth());
     DrawInfoPanel();
     DrawOutliner();
     DrawPropertiesPanel();
@@ -441,4 +490,18 @@ void RenderApplication()
 
     profRenderMs = (float)((GetTime() - renderStart) * 1000.0);
     UpdateInfoPanelProfile(profLogicMs, profPhysicsMs, profRenderMs);
+}
+
+Camera GetEditorViewportCamera(void)
+{
+    return appCamera;
+}
+
+void SetEditorViewportCamera(const Camera *camera)
+{
+    if (!camera)
+        return;
+
+    appCamera = *camera;
+    SyncCameraControllerToCamera(&appCamera);
 }

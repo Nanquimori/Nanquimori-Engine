@@ -9,6 +9,12 @@
 #define MAX_NOME 31
 #define MAX_PROTO_CUSTOM 16
 
+typedef enum
+{
+    OBJETO_TIPO_VAZIO = 0,
+    OBJETO_TIPO_CAMERA = 1
+} TipoObjetoCena;
+
 typedef struct
 {
     char name[32];
@@ -35,6 +41,12 @@ typedef struct
     Color protoCustomSecondary;
     int protoCustomCount;
     ProtoCustomEntry protoCustomEntries[MAX_PROTO_CUSTOM];
+    int tipo;
+    bool cameraPrincipal;
+    int cameraProjection;
+    float cameraPerspectiveFov;
+    float cameraOrthoSize;
+    float cameraFocusDistance;
     // Física / colisão
     bool physStatic;
     bool physRigidbody;

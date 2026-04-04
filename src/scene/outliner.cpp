@@ -551,6 +551,8 @@ static bool DuplicarObjetosPorLista(const int *sourceIds, int sourceCount,
         objetos[newIdx].posicao = newPos;
         objetos[newIdx].paiId = -1;
         objetos[newIdx].selecionado = false;
+        if (objetos[newIdx].tipo == OBJETO_TIPO_CAMERA)
+            objetos[newIdx].cameraPrincipal = false;
 
         oldIds[createdCount] = src.id;
         newIds[createdCount] = newId;
@@ -843,6 +845,12 @@ int RegistrarObjeto(const char *nome, Vector3 posicao, int paiId)
     obj->protoCustomBase = DefaultPrototypeCustomBaseColor();
     obj->protoCustomSecondary = DefaultPrototypeCustomSecondaryColor();
     obj->protoCustomCount = 0;
+    obj->tipo = OBJETO_TIPO_VAZIO;
+    obj->cameraPrincipal = false;
+    obj->cameraProjection = CAMERA_PERSPECTIVE;
+    obj->cameraPerspectiveFov = 60.0f;
+    obj->cameraOrthoSize = 5.0f;
+    obj->cameraFocusDistance = 10.0f;
     obj->physStatic = true;
     obj->physRigidbody = false;
     obj->physCollider = true;
@@ -1036,6 +1044,14 @@ static int DrawOutlinerItem(int id, int nivel, int y)
     else
     {
         DrawText(objetos[index].nome, (int)item.x + 6, y + 4, 14, UiTextForBackground(fundo));
+        if (objetos[index].tipo == OBJETO_TIPO_CAMERA)
+        {
+            Rectangle tag = {item.x + item.width - 40.0f, item.y + 4.0f, 30.0f, 14.0f};
+            Color tagBg = objetos[index].cameraPrincipal ? (Color){54, 118, 144, 255} : (Color){92, 78, 42, 255};
+            DrawRectangleRec(tag, tagBg);
+            DrawRectangleLinesEx(tag, 1, COR_BORDA);
+            DrawText("CAM", (int)tag.x + 6, (int)tag.y + 2, 10, RAYWHITE);
+        }
     }
 
     if (hoverItem)

@@ -46,6 +46,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/NanquimoriEngine.dir/src/runtime/game_application.cpp.obj.d"
   "CMakeFiles/NanquimoriEngine.dir/src/scene/outliner.cpp.obj"
   "CMakeFiles/NanquimoriEngine.dir/src/scene/outliner.cpp.obj.d"
+  "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_camera.cpp.obj"
+  "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_camera.cpp.obj.d"
   "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_manager.cpp.obj"
   "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_manager.cpp.obj.d"
   "NanquimoriEngine.exe"

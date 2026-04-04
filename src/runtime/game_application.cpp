@@ -5,6 +5,7 @@
 #include "editor/ui/properties_panel.h"
 #include "physics/nanquimori_physics.h"
 #include "raylib.h"
+#include "scene/scene_camera.h"
 #include "scene/scene_manager.h"
 #include <stdio.h>
 #include <string.h>
@@ -365,6 +366,8 @@ static bool ReloadRuntimeProject(void)
     SetWin32ConsoleVisible(exportSettings.showConsole);
 
     ResetNanquimoriPhysicsWorld();
+    if (!GetSceneRenderCamera(&runtimeCamera, nullptr))
+        runtimeCamera = CreateDefaultRuntimeCamera();
     runtimeProjectLoaded = true;
     return true;
 }
@@ -445,6 +448,8 @@ void UpdateGameApplication(void)
     if (!runtimeProjectLoaded)
         return;
 
+    if (!GetSceneRenderCamera(&runtimeCamera, nullptr))
+        runtimeCamera = CreateDefaultRuntimeCamera();
     StepNanquimoriPhysics(GetFrameTime());
 }
 
