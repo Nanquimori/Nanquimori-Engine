@@ -1334,7 +1334,7 @@ static bool DrawOutlinerCheckboxRow(const char *label, bool checked, int x, int 
     const float toggleSize = 14.0f;
     Rectangle row = {(float)(x + 14), (float)(*y), width, rowHeight};
     Rectangle toggle = {row.x, row.y + (row.height - toggleSize) * 0.5f, toggleSize, toggleSize};
-    int textY = (int)(row.y + (row.height - 14.0f) * 0.5f);
+    int textY = (int)(row.y + (row.height - 14.0f) * 0.5f + 1.0f);
 
     DrawRectangleLinesEx(toggle, 1, COR_BORDA);
     if (checked)
