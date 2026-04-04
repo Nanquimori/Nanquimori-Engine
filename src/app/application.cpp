@@ -512,7 +512,8 @@ void RenderApplication()
     if (PropertiesShowCollisions())
         DrawNanquimoriPhysicsDebug();
 
-    DrawGrid(10, 1.0f);
+    if (!playSession)
+        DrawGrid(10, 1.0f);
     if (!playMode)
     {
         DrawMoveGizmo(renderCamera);

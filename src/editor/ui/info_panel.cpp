@@ -146,13 +146,27 @@ void DrawInfoPanel(void)
 
     if (btn2DState.clicked)
     {
-        raycast2DVisible = true;
-        raycast3DVisible = false;
+        if (active2D)
+        {
+            raycast2DVisible = false;
+        }
+        else
+        {
+            raycast2DVisible = true;
+            raycast3DVisible = false;
+        }
     }
     if (btn3DState.clicked)
     {
-        raycast3DVisible = true;
-        raycast2DVisible = false;
+        if (active3D)
+        {
+            raycast3DVisible = false;
+        }
+        else
+        {
+            raycast3DVisible = true;
+            raycast2DVisible = false;
+        }
     }
 
     raycastLineVisible = raycast2DVisible || raycast3DVisible;
