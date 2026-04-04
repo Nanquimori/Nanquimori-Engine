@@ -14,6 +14,12 @@ typedef enum
     FILE_EXPLORER_PICK_EXPORT_ICON
 } FileExplorerPickPurpose;
 
+typedef enum
+{
+    FILE_EXPLORER_VIEW_LIST = 0,
+    FILE_EXPLORER_VIEW_THUMBNAILS
+} FileExplorerViewMode;
+
 typedef struct
 {
     bool aberto;
@@ -31,6 +37,8 @@ typedef struct
     int itemHoverFile;
     int itemHoverImport;
     bool menuFileAbertoEsteFrame;
+    FileExplorerViewMode viewMode;
+    float scrollOffset;
     FileExplorerPickPurpose pickPurpose;
     FileExplorerPickPurpose selectedPurpose;
     bool modoProjetoAbrir;

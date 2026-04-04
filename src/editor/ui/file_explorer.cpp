@@ -7,6 +7,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <math.h>
 #ifdef _WIN32
 #include <direct.h>
 #else
@@ -15,6 +16,13 @@
 
 #define ITEM_ALTURA 36
 #define BARRA_SUPERIOR 72
+#define FILE_EXPLORER_PAINEL_LARGURA 700
+#define FILE_EXPLORER_PAINEL_ALTURA 500
+#define FILE_EXPLORER_CARD_LARGURA 152.0f
+#define FILE_EXPLORER_CARD_ALTURA 168.0f
+#define FILE_EXPLORER_CARD_GAP 12.0f
+#define FILE_EXPLORER_PREVIEW_CACHE_SIZE 64
+#define FILE_EXPLORER_PREVIEW_TAMANHO 192
 
 // Cores
 #define COR_FUNDO (GetUIStyle()->panelBgAlt)
@@ -28,6 +36,758 @@
 FileExplorer fileExplorer = {0};
 static bool pathFeedbackInvalid = false;
 static double pathFeedbackUntil = 0.0;
+
+typedef enum
+{
+    FILE_EXPLORER_ENTRY_FOLDER = 0,
+    FILE_EXPLORER_ENTRY_PROJECT,
+    FILE_EXPLORER_ENTRY_IMAGE,
+    FILE_EXPLORER_ENTRY_MODEL,
+    FILE_EXPLORER_ENTRY_FILE
+} FileExplorerEntryType;
+
+typedef enum
+{
+    FILE_EXPLORER_PREVIEW_STORAGE_NONE = 0,
+    FILE_EXPLORER_PREVIEW_STORAGE_TEXTURE,
+    FILE_EXPLORER_PREVIEW_STORAGE_RENDER_TEXTURE
+} FileExplorerPreviewStorage;
+
+typedef struct
+{
+    Rectangle panel;
+    Rectangle pathBox;
+    Rectangle backButton;
+    Rectangle searchBox;
+    Rectangle listButton;
+    Rectangle thumbButton;
+    Rectangle contentArea;
+} FileExplorerLayout;
+
+typedef struct
+{
+    bool valid;
+    bool failed;
+    unsigned int lastUsed;
+    char key[MAX_FILEPATH_SIZE];
+    FileExplorerPreviewStorage storage;
+    Texture2D texture;
+    RenderTexture2D renderTexture;
+} FileExplorerPreviewCacheEntry;
+
+static FileExplorerPreviewCacheEntry previewCache[FILE_EXPLORER_PREVIEW_CACHE_SIZE] = {0};
+static unsigned int previewCacheCounter = 1;
+
+static bool MatchFiltroExtensao(const char *caminho, int filtro);
+static bool MatchBuscaTexto(const char *caminho, const char *texto);
+static bool TrySetCurrentPath(const char *newPath);
+
+static float ClampFloat(float value, float minValue, float maxValue)
+{
+    if (value < minValue)
+        return minValue;
+    if (value > maxValue)
+        return maxValue;
+    return value;
+}
+
+static Color LerpColor(Color from, Color to, float amount)
+{
+    amount = ClampFloat(amount, 0.0f, 1.0f);
+
+    Color result = {0};
+    result.r = (unsigned char)(from.r + (to.r - from.r) * amount);
+    result.g = (unsigned char)(from.g + (to.g - from.g) * amount);
+    result.b = (unsigned char)(from.b + (to.b - from.b) * amount);
+    result.a = (unsigned char)(from.a + (to.a - from.a) * amount);
+    return result;
+}
+
+static void FitTextToWidth(const char *text, char *out, size_t outSize, int fontSize, float maxWidth)
+{
+    if (!out || outSize == 0)
+        return;
+    out[0] = '\0';
+    if (!text)
+        return;
+
+    strncpy(out, text, outSize - 1);
+    out[outSize - 1] = '\0';
+
+    if (maxWidth <= 0.0f || MeasureText(out, fontSize) <= maxWidth)
+        return;
+
+    const char *ellipsis = "...";
+    int ellipsisWidth = MeasureText(ellipsis, fontSize);
+    if ((float)ellipsisWidth >= maxWidth)
+    {
+        out[0] = '\0';
+        return;
+    }
+
+    size_t length = strlen(out);
+    while (length > 0)
+    {
+        out[length - 1] = '\0';
+        if ((float)(MeasureText(out, fontSize) + ellipsisWidth) <= maxWidth)
+            break;
+        length--;
+    }
+
+    size_t baseLength = strlen(out);
+    if (baseLength + 3 >= outSize)
+        baseLength = outSize - 4;
+    memcpy(out + baseLength, ellipsis, 3);
+    out[baseLength + 3] = '\0';
+}
+
+static bool IsImagePreviewFile(const char *path)
+{
+    if (!path || !IsPathFile(path))
+        return false;
+
+    const char *ext = GetFileExtension(path);
+    if (!ext)
+        return false;
+
+    return TextIsEqual(ext, ".png") || TextIsEqual(ext, ".jpg") || TextIsEqual(ext, ".jpeg") ||
+           TextIsEqual(ext, ".bmp") || TextIsEqual(ext, ".ico");
+}
+
+static bool IsModelPreviewFile(const char *path)
+{
+    if (!path || !IsPathFile(path))
+        return false;
+
+    const char *ext = GetFileExtension(path);
+    if (!ext)
+        return false;
+
+    return TextIsEqual(ext, ".obj") || TextIsEqual(ext, ".glb") || TextIsEqual(ext, ".gltf") ||
+           TextIsEqual(ext, ".fbx") || TextIsEqual(ext, ".iqm");
+}
+
+static bool IsProjectJsonFile(const char *path)
+{
+    if (!path || !IsPathFile(path))
+        return false;
+    return TextIsEqual(GetFileName(path), "project.json");
+}
+
+static void BuildSiblingPath(const char *basePath, const char *fileName, char *out, size_t outSize)
+{
+    if (!out || outSize == 0)
+        return;
+    out[0] = '\0';
+    if (!basePath || basePath[0] == '\0' || !fileName || fileName[0] == '\0')
+        return;
+
+    const char *directoryPath = GetDirectoryPath(basePath);
+    if (!directoryPath || directoryPath[0] == '\0')
+        return;
+
+    char directory[MAX_FILEPATH_SIZE] = {0};
+    TextCopy(directory, directoryPath);
+    if (directory[0] == '\0')
+        return;
+
+    snprintf(out, outSize, "%s/%s", directory, fileName);
+    out[outSize - 1] = '\0';
+}
+
+static bool EntryHasProjectFile(const char *path, char *projectJsonOut, size_t projectJsonOutSize)
+{
+    if (projectJsonOut && projectJsonOutSize > 0)
+        projectJsonOut[0] = '\0';
+    if (!path || path[0] == '\0')
+        return false;
+
+    if (IsProjectJsonFile(path))
+    {
+        if (projectJsonOut && projectJsonOutSize > 0)
+            TextCopy(projectJsonOut, path);
+        return true;
+    }
+
+    if (!DirectoryExists(path))
+        return false;
+
+    char projectJson[MAX_FILEPATH_SIZE] = {0};
+    snprintf(projectJson, sizeof(projectJson), "%s/project.json", path);
+    projectJson[sizeof(projectJson) - 1] = '\0';
+    if (!FileExists(projectJson))
+        return false;
+
+    if (projectJsonOut && projectJsonOutSize > 0)
+        TextCopy(projectJsonOut, projectJson);
+    return true;
+}
+
+static bool ResolveProjectIconPath(const char *path, char *iconOut, size_t iconOutSize)
+{
+    if (!iconOut || iconOutSize == 0)
+        return false;
+    iconOut[0] = '\0';
+    if (!path || path[0] == '\0')
+        return false;
+
+    char projectJson[MAX_FILEPATH_SIZE] = {0};
+    if (!EntryHasProjectFile(path, projectJson, sizeof(projectJson)))
+        return false;
+
+    BuildSiblingPath(projectJson, "icon.png", iconOut, iconOutSize);
+    return iconOut[0] != '\0' && FileExists(iconOut);
+}
+
+static FileExplorerEntryType GetFileExplorerEntryType(const char *path)
+{
+    if (!path || path[0] == '\0')
+        return FILE_EXPLORER_ENTRY_FILE;
+
+    if (!IsPathFile(path))
+    {
+        if (DirectoryExists(path))
+        {
+            char projectJson[MAX_FILEPATH_SIZE] = {0};
+            if (EntryHasProjectFile(path, projectJson, sizeof(projectJson)))
+                return FILE_EXPLORER_ENTRY_PROJECT;
+            return FILE_EXPLORER_ENTRY_FOLDER;
+        }
+    }
+
+    if (IsProjectJsonFile(path))
+        return FILE_EXPLORER_ENTRY_PROJECT;
+    if (IsImagePreviewFile(path))
+        return FILE_EXPLORER_ENTRY_IMAGE;
+    if (IsModelPreviewFile(path))
+        return FILE_EXPLORER_ENTRY_MODEL;
+    return FILE_EXPLORER_ENTRY_FILE;
+}
+
+static const char *GetFileExplorerEntryTypeLabel(FileExplorerEntryType type)
+{
+    switch (type)
+    {
+    case FILE_EXPLORER_ENTRY_FOLDER:
+        return "PASTA";
+    case FILE_EXPLORER_ENTRY_PROJECT:
+        return "PROJETO";
+    case FILE_EXPLORER_ENTRY_IMAGE:
+        return "IMAGEM";
+    case FILE_EXPLORER_ENTRY_MODEL:
+        return "MODELO 3D";
+    default:
+        return "ARQUIVO";
+    }
+}
+
+static FileExplorerLayout GetFileExplorerLayout(void)
+{
+    FileExplorerLayout layout = {0};
+
+    int larguraTela = GetScreenWidth();
+    int alturaTela = GetScreenHeight();
+    float painelX = (float)((larguraTela - FILE_EXPLORER_PAINEL_LARGURA) / 2);
+    float painelY = (float)((alturaTela - FILE_EXPLORER_PAINEL_ALTURA) / 2);
+
+    layout.panel = (Rectangle){painelX, painelY, (float)FILE_EXPLORER_PAINEL_LARGURA, (float)FILE_EXPLORER_PAINEL_ALTURA};
+    layout.pathBox = (Rectangle){painelX + 74.0f, painelY + 20.0f, layout.panel.width - 128.0f, 24.0f};
+    layout.backButton = (Rectangle){painelX + layout.panel.width - 44.0f, painelY + 20.0f, 24.0f, 24.0f};
+
+    const float toggleWidth = 68.0f;
+    const float toggleGap = 8.0f;
+    layout.thumbButton = (Rectangle){layout.panel.x + layout.panel.width - 16.0f - toggleWidth, painelY + BARRA_SUPERIOR + 8.0f, toggleWidth, 24.0f};
+    layout.listButton = (Rectangle){layout.thumbButton.x - toggleGap - toggleWidth, layout.thumbButton.y, toggleWidth, 24.0f};
+    layout.searchBox = (Rectangle){painelX + 16.0f, painelY + BARRA_SUPERIOR + 8.0f, layout.listButton.x - (painelX + 28.0f), 24.0f};
+    layout.contentArea = (Rectangle){painelX + 8.0f, painelY + BARRA_SUPERIOR + 40.0f, layout.panel.width - 16.0f, layout.panel.height - BARRA_SUPERIOR - 48.0f};
+    return layout;
+}
+
+static Rectangle GetExplorerContentInnerArea(Rectangle contentArea)
+{
+    Rectangle inner = {
+        contentArea.x + 8.0f,
+        contentArea.y + 8.0f,
+        contentArea.width - 16.0f,
+        contentArea.height - 16.0f};
+
+    if (inner.width < 40.0f)
+        inner.width = 40.0f;
+    if (inner.height < 40.0f)
+        inner.height = 40.0f;
+    return inner;
+}
+
+static void ClearPreviewCacheEntry(FileExplorerPreviewCacheEntry *entry)
+{
+    if (!entry)
+        return;
+
+    if (entry->valid)
+    {
+        if (entry->storage == FILE_EXPLORER_PREVIEW_STORAGE_TEXTURE && entry->texture.id > 0)
+            UnloadTexture(entry->texture);
+        else if (entry->storage == FILE_EXPLORER_PREVIEW_STORAGE_RENDER_TEXTURE && entry->renderTexture.id > 0)
+            UnloadRenderTexture(entry->renderTexture);
+    }
+
+    *entry = (FileExplorerPreviewCacheEntry){0};
+}
+
+static void ClearFileExplorerPreviewCache(void)
+{
+    for (int i = 0; i < FILE_EXPLORER_PREVIEW_CACHE_SIZE; i++)
+        ClearPreviewCacheEntry(&previewCache[i]);
+    previewCacheCounter = 1;
+}
+
+static FileExplorerPreviewCacheEntry *FindPreviewCacheEntry(const char *key)
+{
+    if (!key || key[0] == '\0')
+        return NULL;
+
+    for (int i = 0; i < FILE_EXPLORER_PREVIEW_CACHE_SIZE; i++)
+    {
+        if ((previewCache[i].valid || previewCache[i].failed) && strcmp(previewCache[i].key, key) == 0)
+            return &previewCache[i];
+    }
+    return NULL;
+}
+
+static FileExplorerPreviewCacheEntry *AcquirePreviewCacheSlot(const char *key)
+{
+    if (!key || key[0] == '\0')
+        return NULL;
+
+    FileExplorerPreviewCacheEntry *existing = FindPreviewCacheEntry(key);
+    if (existing)
+        return existing;
+
+    int freeSlot = -1;
+    unsigned int oldestUse = 0;
+    int oldestSlot = 0;
+
+    for (int i = 0; i < FILE_EXPLORER_PREVIEW_CACHE_SIZE; i++)
+    {
+        if (!previewCache[i].valid && !previewCache[i].failed)
+        {
+            freeSlot = i;
+            break;
+        }
+
+        if (i == 0 || previewCache[i].lastUsed < oldestUse)
+        {
+            oldestUse = previewCache[i].lastUsed;
+            oldestSlot = i;
+        }
+    }
+
+    int slot = (freeSlot >= 0) ? freeSlot : oldestSlot;
+    ClearPreviewCacheEntry(&previewCache[slot]);
+    TextCopy(previewCache[slot].key, key);
+    return &previewCache[slot];
+}
+
+static bool RenderModelPreviewToTexture(const char *filepath, RenderTexture2D *target)
+{
+    if (!filepath || !target || target->id == 0 || !IsModelPreviewFile(filepath))
+        return false;
+
+    Model model = LoadModel(filepath);
+    if (model.meshCount <= 0)
+        return false;
+
+    BoundingBox bounds = GetModelBoundingBox(model);
+    Vector3 size = {
+        bounds.max.x - bounds.min.x,
+        bounds.max.y - bounds.min.y,
+        bounds.max.z - bounds.min.z};
+    Vector3 center = {
+        (bounds.min.x + bounds.max.x) * 0.5f,
+        (bounds.min.y + bounds.max.y) * 0.5f,
+        (bounds.min.z + bounds.max.z) * 0.5f};
+
+    float maxExtent = fmaxf(size.x, fmaxf(size.y, size.z));
+    if (maxExtent < 0.001f)
+        maxExtent = 1.0f;
+
+    Camera3D camera = {0};
+    camera.target = (Vector3){0.0f, size.y * 0.1f, 0.0f};
+    camera.position = (Vector3){maxExtent * 1.45f, maxExtent * 1.05f, maxExtent * 1.55f};
+    camera.up = (Vector3){0.0f, 1.0f, 0.0f};
+    camera.fovy = 38.0f;
+    camera.projection = CAMERA_PERSPECTIVE;
+
+    Vector3 drawPosition = {-center.x, -center.y, -center.z};
+
+    BeginTextureMode(*target);
+    ClearBackground((Color){20, 18, 18, 255});
+    BeginMode3D(camera);
+    DrawGrid(10, maxExtent * 0.25f);
+    DrawModel(model, drawPosition, 1.0f, WHITE);
+    DrawModelWires(model, drawPosition, 1.0f, Fade(BLACK, 0.35f));
+    EndMode3D();
+    EndTextureMode();
+
+    UnloadModel(model);
+    return true;
+}
+
+static bool TryCacheTexturePreview(const char *key, FileExplorerPreviewCacheEntry **outEntry)
+{
+    FileExplorerPreviewCacheEntry *entry = AcquirePreviewCacheSlot(key);
+    if (!entry)
+        return false;
+
+    if (entry->valid || entry->failed)
+    {
+        entry->lastUsed = previewCacheCounter++;
+        if (outEntry)
+            *outEntry = entry;
+        return entry->valid;
+    }
+
+    Texture2D texture = LoadTexture(key);
+    if (texture.id == 0)
+    {
+        entry->failed = true;
+        entry->lastUsed = previewCacheCounter++;
+        if (outEntry)
+            *outEntry = entry;
+        return false;
+    }
+
+    entry->valid = true;
+    entry->storage = FILE_EXPLORER_PREVIEW_STORAGE_TEXTURE;
+    entry->texture = texture;
+    entry->lastUsed = previewCacheCounter++;
+    if (outEntry)
+        *outEntry = entry;
+    return true;
+}
+
+static bool TryCacheModelPreview(const char *key, FileExplorerPreviewCacheEntry **outEntry)
+{
+    FileExplorerPreviewCacheEntry *entry = AcquirePreviewCacheSlot(key);
+    if (!entry)
+        return false;
+
+    if (entry->valid || entry->failed)
+    {
+        entry->lastUsed = previewCacheCounter++;
+        if (outEntry)
+            *outEntry = entry;
+        return entry->valid;
+    }
+
+    RenderTexture2D renderTexture = LoadRenderTexture(FILE_EXPLORER_PREVIEW_TAMANHO, FILE_EXPLORER_PREVIEW_TAMANHO);
+    if (renderTexture.id == 0 || !RenderModelPreviewToTexture(key, &renderTexture))
+    {
+        if (renderTexture.id > 0)
+            UnloadRenderTexture(renderTexture);
+        entry->failed = true;
+        entry->lastUsed = previewCacheCounter++;
+        if (outEntry)
+            *outEntry = entry;
+        return false;
+    }
+
+    entry->valid = true;
+    entry->storage = FILE_EXPLORER_PREVIEW_STORAGE_RENDER_TEXTURE;
+    entry->renderTexture = renderTexture;
+    entry->lastUsed = previewCacheCounter++;
+    if (outEntry)
+        *outEntry = entry;
+    return true;
+}
+
+static FileExplorerPreviewCacheEntry *GetFileExplorerPreview(const char *path, FileExplorerEntryType type)
+{
+    if (!path || path[0] == '\0')
+        return NULL;
+
+    FileExplorerPreviewCacheEntry *entry = NULL;
+    char previewPath[MAX_FILEPATH_SIZE] = {0};
+
+    if (type == FILE_EXPLORER_ENTRY_PROJECT && ResolveProjectIconPath(path, previewPath, sizeof(previewPath)))
+    {
+        TryCacheTexturePreview(previewPath, &entry);
+        return entry;
+    }
+
+    if (type == FILE_EXPLORER_ENTRY_IMAGE)
+    {
+        TryCacheTexturePreview(path, &entry);
+        return entry;
+    }
+
+    if (type == FILE_EXPLORER_ENTRY_MODEL)
+    {
+        TryCacheModelPreview(path, &entry);
+        return entry;
+    }
+
+    return NULL;
+}
+
+static void DrawPreviewTextureFit(const FileExplorerPreviewCacheEntry *entry, Rectangle bounds, Color tint)
+{
+    if (!entry || !entry->valid)
+        return;
+
+    Rectangle source = {0};
+    float textureWidth = 0.0f;
+    float textureHeight = 0.0f;
+
+    if (entry->storage == FILE_EXPLORER_PREVIEW_STORAGE_TEXTURE)
+    {
+        textureWidth = (float)entry->texture.width;
+        textureHeight = (float)entry->texture.height;
+        source = (Rectangle){0.0f, 0.0f, textureWidth, textureHeight};
+    }
+    else if (entry->storage == FILE_EXPLORER_PREVIEW_STORAGE_RENDER_TEXTURE)
+    {
+        textureWidth = (float)entry->renderTexture.texture.width;
+        textureHeight = (float)entry->renderTexture.texture.height;
+        source = (Rectangle){0.0f, 0.0f, textureWidth, -textureHeight};
+    }
+
+    if (textureWidth <= 0.0f || textureHeight <= 0.0f)
+        return;
+
+    float scale = fminf(bounds.width / textureWidth, bounds.height / textureHeight);
+    float drawWidth = textureWidth * scale;
+    float drawHeight = textureHeight * scale;
+    Rectangle dest = {
+        bounds.x + (bounds.width - drawWidth) * 0.5f,
+        bounds.y + (bounds.height - drawHeight) * 0.5f,
+        drawWidth,
+        drawHeight};
+
+    if (entry->storage == FILE_EXPLORER_PREVIEW_STORAGE_TEXTURE)
+        DrawTexturePro(entry->texture, source, dest, (Vector2){0}, 0.0f, tint);
+    else if (entry->storage == FILE_EXPLORER_PREVIEW_STORAGE_RENDER_TEXTURE)
+        DrawTexturePro(entry->renderTexture.texture, source, dest, (Vector2){0}, 0.0f, tint);
+}
+
+static void DrawFileExplorerPlaceholder(Rectangle bounds, FileExplorerEntryType type, bool hovered)
+{
+    const UIStyle *style = GetUIStyle();
+    Color fill = hovered ? LerpColor(style->panelBgAlt, style->panelBgHover, 0.8f) : style->panelBgAlt;
+    Color line = hovered ? LerpColor(style->panelBorderSoft, style->buttonBorder, 0.8f) : style->panelBorderSoft;
+
+    DrawRectangleRec(bounds, fill);
+    DrawRectangleLinesEx(bounds, 1.0f, line);
+
+    if (type == FILE_EXPLORER_ENTRY_FOLDER || type == FILE_EXPLORER_ENTRY_PROJECT)
+    {
+        Rectangle tab = {bounds.x + 12.0f, bounds.y + 16.0f, bounds.width * 0.34f, bounds.height * 0.12f};
+        Rectangle body = {bounds.x + 10.0f, bounds.y + 24.0f, bounds.width - 20.0f, bounds.height - 34.0f};
+        DrawRectangleRounded(body, 0.12f, 8, hovered ? style->buttonBgHover : style->buttonBg);
+        DrawRectangleRounded(tab, 0.18f, 8, hovered ? style->buttonBorder : style->panelBorder);
+        if (type == FILE_EXPLORER_ENTRY_PROJECT)
+            DrawText("P", (int)(bounds.x + bounds.width * 0.5f - 6.0f), (int)(bounds.y + bounds.height * 0.5f - 10.0f), 20, style->buttonTextHover);
+    }
+    else if (type == FILE_EXPLORER_ENTRY_MODEL)
+    {
+        Rectangle cube = {bounds.x + 18.0f, bounds.y + 18.0f, bounds.width - 36.0f, bounds.height - 36.0f};
+        DrawRectangleRounded(cube, 0.1f, 10, hovered ? style->buttonBgHover : style->buttonBg);
+        DrawRectangleLinesEx(cube, 1.0f, hovered ? style->buttonBorder : style->panelBorderSoft);
+        DrawLineEx((Vector2){cube.x, cube.y + cube.height * 0.25f}, (Vector2){cube.x + cube.width * 0.5f, cube.y}, 2.0f, style->panelBorderSoft);
+        DrawLineEx((Vector2){cube.x + cube.width, cube.y + cube.height * 0.25f}, (Vector2){cube.x + cube.width * 0.5f, cube.y}, 2.0f, style->panelBorderSoft);
+        DrawLineEx((Vector2){cube.x, cube.y + cube.height * 0.25f}, (Vector2){cube.x, cube.y + cube.height * 0.75f}, 2.0f, style->panelBorderSoft);
+        DrawLineEx((Vector2){cube.x + cube.width, cube.y + cube.height * 0.25f}, (Vector2){cube.x + cube.width, cube.y + cube.height * 0.75f}, 2.0f, style->panelBorderSoft);
+        DrawLineEx((Vector2){cube.x + cube.width * 0.5f, cube.y}, (Vector2){cube.x + cube.width * 0.5f, cube.y + cube.height * 0.5f}, 2.0f, style->panelBorderSoft);
+        DrawLineEx((Vector2){cube.x, cube.y + cube.height * 0.75f}, (Vector2){cube.x + cube.width * 0.5f, cube.y + cube.height}, 2.0f, style->panelBorderSoft);
+        DrawLineEx((Vector2){cube.x + cube.width, cube.y + cube.height * 0.75f}, (Vector2){cube.x + cube.width * 0.5f, cube.y + cube.height}, 2.0f, style->panelBorderSoft);
+    }
+    else
+    {
+        Rectangle paper = {bounds.x + 20.0f, bounds.y + 14.0f, bounds.width - 40.0f, bounds.height - 28.0f};
+        DrawRectangleRounded(paper, 0.08f, 8, hovered ? style->buttonBgHover : style->buttonBg);
+        DrawRectangleLinesEx(paper, 1.0f, style->panelBorderSoft);
+        for (int i = 0; i < 4; i++)
+        {
+            float lineY = paper.y + 18.0f + i * 14.0f;
+            DrawLine((int)(paper.x + 12.0f), (int)lineY, (int)(paper.x + paper.width - 12.0f), (int)lineY, style->panelBorderSoft);
+        }
+    }
+}
+
+static int BuildVisibleEntryIndexList(int **outIndices)
+{
+    if (outIndices)
+        *outIndices = NULL;
+
+    if (!fileExplorer.arquivosCarregados || fileExplorer.arquivos.count <= 0)
+        return 0;
+
+    int total = 0;
+    for (int i = 0; i < (int)fileExplorer.arquivos.count; i++)
+    {
+        if (!MatchFiltroExtensao(fileExplorer.arquivos.paths[i], fileExplorer.extensaoFiltro))
+            continue;
+        if (!MatchBuscaTexto(fileExplorer.arquivos.paths[i], fileExplorer.bufferTexto))
+            continue;
+        total++;
+    }
+
+    if (total <= 0 || !outIndices)
+        return total;
+
+    int *indices = (int *)MemAlloc(sizeof(int) * (size_t)total);
+    if (!indices)
+        return 0;
+
+    int cursor = 0;
+    for (int i = 0; i < (int)fileExplorer.arquivos.count; i++)
+    {
+        if (!MatchFiltroExtensao(fileExplorer.arquivos.paths[i], fileExplorer.extensaoFiltro))
+            continue;
+        if (!MatchBuscaTexto(fileExplorer.arquivos.paths[i], fileExplorer.bufferTexto))
+            continue;
+        indices[cursor++] = i;
+    }
+
+    *outIndices = indices;
+    return total;
+}
+
+static int GetExplorerGridColumns(Rectangle contentArea)
+{
+    float fullCardWidth = FILE_EXPLORER_CARD_LARGURA + FILE_EXPLORER_CARD_GAP;
+    int columns = (int)((contentArea.width + FILE_EXPLORER_CARD_GAP) / fullCardWidth);
+    if (columns < 1)
+        columns = 1;
+    return columns;
+}
+
+static float GetExplorerContentHeight(int itemCount, Rectangle contentArea)
+{
+    if (itemCount <= 0)
+        return 0.0f;
+
+    if (fileExplorer.viewMode == FILE_EXPLORER_VIEW_LIST)
+        return itemCount * ITEM_ALTURA;
+
+    int columns = GetExplorerGridColumns(contentArea);
+    int rows = (itemCount + columns - 1) / columns;
+    return rows * FILE_EXPLORER_CARD_ALTURA + (rows - 1) * FILE_EXPLORER_CARD_GAP;
+}
+
+static float GetExplorerMaxScroll(int itemCount, Rectangle contentArea)
+{
+    float contentHeight = GetExplorerContentHeight(itemCount, contentArea);
+    float maxScroll = contentHeight - contentArea.height;
+    if (maxScroll < 0.0f)
+        maxScroll = 0.0f;
+    return maxScroll;
+}
+
+static Rectangle GetExplorerItemRect(Rectangle contentArea, int visualIndex)
+{
+    if (fileExplorer.viewMode == FILE_EXPLORER_VIEW_LIST)
+    {
+        return (Rectangle){
+            contentArea.x,
+            contentArea.y + visualIndex * ITEM_ALTURA - fileExplorer.scrollOffset,
+            contentArea.width,
+            (float)(ITEM_ALTURA - 4)};
+    }
+
+    int columns = GetExplorerGridColumns(contentArea);
+    int row = visualIndex / columns;
+    int column = visualIndex % columns;
+    return (Rectangle){
+        contentArea.x + column * (FILE_EXPLORER_CARD_LARGURA + FILE_EXPLORER_CARD_GAP),
+        contentArea.y + row * (FILE_EXPLORER_CARD_ALTURA + FILE_EXPLORER_CARD_GAP) - fileExplorer.scrollOffset,
+        FILE_EXPLORER_CARD_LARGURA,
+        FILE_EXPLORER_CARD_ALTURA};
+}
+
+static Rectangle GetExplorerInteractiveItemRect(Rectangle contentArea, int visualIndex, float maxScroll)
+{
+    Rectangle rect = GetExplorerItemRect(contentArea, visualIndex);
+    if (fileExplorer.viewMode == FILE_EXPLORER_VIEW_LIST)
+    {
+        rect.width -= 6.0f;
+        if (maxScroll > 0.0f)
+            rect.width -= 8.0f;
+    }
+    return rect;
+}
+
+static bool IsItemVisibleInContent(Rectangle itemRect, Rectangle contentArea)
+{
+    Rectangle clipped = {
+        itemRect.x,
+        itemRect.y,
+        itemRect.width,
+        itemRect.height};
+    return CheckCollisionRecs(clipped, contentArea);
+}
+
+static bool HandleFileExplorerItemClick(const char *path)
+{
+    if (!path || path[0] == '\0')
+        return false;
+
+    bool isDirectory = !IsPathFile(path);
+    bool directoryExists = isDirectory && DirectoryExists(path);
+
+    if (directoryExists)
+    {
+        if (fileExplorer.modoProjetoAbrir)
+        {
+            char projectJson[MAX_FILEPATH_SIZE] = {0};
+            if (EntryHasProjectFile(path, projectJson, sizeof(projectJson)))
+            {
+                OpenProject(projectJson);
+                CloseFileExplorer();
+                return true;
+            }
+        }
+
+        if (TrySetCurrentPath(path))
+            return true;
+        return false;
+    }
+
+    if (fileExplorer.modoProjetoAbrir)
+    {
+        if (IsProjectJsonFile(path))
+        {
+            OpenProject(path);
+            CloseFileExplorer();
+            return true;
+        }
+        return false;
+    }
+
+    TextCopy(fileExplorer.caminhoSelecionado, path);
+    fileExplorer.selectedPurpose = fileExplorer.pickPurpose;
+    CloseFileExplorer();
+    return true;
+}
+
+static void DrawExplorerScrollBar(Rectangle contentArea, int itemCount)
+{
+    float maxScroll = GetExplorerMaxScroll(itemCount, contentArea);
+    if (maxScroll <= 0.0f)
+        return;
+
+    const UIStyle *style = GetUIStyle();
+    float contentHeight = GetExplorerContentHeight(itemCount, contentArea);
+    float ratio = contentArea.height / contentHeight;
+    float thumbHeight = ClampFloat(contentArea.height * ratio, 28.0f, contentArea.height);
+    float trackHeight = contentArea.height - thumbHeight;
+    float scrollRatio = (maxScroll > 0.0f) ? (fileExplorer.scrollOffset / maxScroll) : 0.0f;
+    Rectangle track = {contentArea.x + contentArea.width - 6.0f, contentArea.y + 2.0f, 4.0f, contentArea.height - 4.0f};
+    Rectangle thumb = {track.x, track.y + trackHeight * scrollRatio, track.width, thumbHeight};
+
+    DrawRectangleRounded(track, 1.0f, 4, style->panelBgAlt);
+    DrawRectangleRounded(thumb, 1.0f, 4, style->accentSoft);
+}
 
 static Color FileMenuOptionHoverColor(void)
 {
@@ -60,7 +820,7 @@ static void EnsureProjectsRootPath(char *out, size_t outSize)
     }
 }
 
-bool MatchFiltroExtensao(const char *caminho, int filtro)
+static bool MatchFiltroExtensao(const char *caminho, int filtro)
 {
     if (!IsPathFile(caminho))
         return true; // Diretórios sempre passam
@@ -92,7 +852,7 @@ bool MatchFiltroExtensao(const char *caminho, int filtro)
     }
 }
 
-bool MatchBuscaTexto(const char *caminho, const char *texto)
+static bool MatchBuscaTexto(const char *caminho, const char *texto)
 {
     if (texto[0] == '\0')
         return true; // Se não há texto, aceita tudo
@@ -160,6 +920,7 @@ static bool TrySetCurrentPath(const char *newPath)
         UnloadDirectoryFiles(fileExplorer.arquivos);
     fileExplorer.arquivos = LoadDirectoryFiles(fileExplorer.caminhoAtual);
     fileExplorer.arquivosCarregados = true;
+    fileExplorer.scrollOffset = 0.0f;
     TextInputInit(&fileExplorer.inputBusca);
     fileExplorer.inputBusca.active = true;
     pathFeedbackInvalid = false;
@@ -179,6 +940,8 @@ void InitFileExplorer(void)
     fileExplorer.itemHoverFile = -1;
     fileExplorer.itemHoverImport = -1;
     fileExplorer.menuFileAbertoEsteFrame = false;
+    fileExplorer.viewMode = FILE_EXPLORER_VIEW_THUMBNAILS;
+    fileExplorer.scrollOffset = 0.0f;
     fileExplorer.pickPurpose = FILE_EXPLORER_PICK_NONE;
     fileExplorer.selectedPurpose = FILE_EXPLORER_PICK_NONE;
     fileExplorer.modoProjetoAbrir = false;
@@ -190,6 +953,7 @@ void InitFileExplorer(void)
     TextCopy(fileExplorer.bufferTexto, "");
     pathFeedbackInvalid = false;
     pathFeedbackUntil = 0.0;
+    ClearFileExplorerPreviewCache();
     TextInputInit(&fileExplorer.inputNomeProjeto);
     TextInputInit(&fileExplorer.inputCaminho);
     TextInputInit(&fileExplorer.inputBusca);
@@ -206,6 +970,9 @@ void OpenFileExplorer(int filtro)
     TextCopy(fileExplorer.bufferCaminho, fileExplorer.caminhoAtual);
     fileExplorer.modoProjetoAbrir = false;
     fileExplorer.modoProjetoSalvar = false;
+    fileExplorer.viewMode = FILE_EXPLORER_VIEW_THUMBNAILS;
+    fileExplorer.scrollOffset = 0.0f;
+    ClearFileExplorerPreviewCache();
     TextInputInit(&fileExplorer.inputCaminho);
     TextInputInit(&fileExplorer.inputBusca);
     fileExplorer.inputBusca.active = true;
@@ -227,8 +994,10 @@ void CloseFileExplorer(void)
     fileExplorer.pickPurpose = FILE_EXPLORER_PICK_NONE;
     TextCopy(fileExplorer.bufferTexto, "");
     TextCopy(fileExplorer.bufferCaminho, fileExplorer.caminhoAtual);
+    fileExplorer.scrollOffset = 0.0f;
     pathFeedbackInvalid = false;
     pathFeedbackUntil = 0.0;
+    ClearFileExplorerPreviewCache();
     TextInputInit(&fileExplorer.inputNomeProjeto);
     TextInputInit(&fileExplorer.inputCaminho);
     TextInputInit(&fileExplorer.inputBusca);
@@ -244,6 +1013,9 @@ void OpenProjectExplorer(void)
     TextCopy(fileExplorer.bufferTexto, "");
     fileExplorer.modoProjetoAbrir = true;
     fileExplorer.modoProjetoSalvar = false;
+    fileExplorer.viewMode = FILE_EXPLORER_VIEW_THUMBNAILS;
+    fileExplorer.scrollOffset = 0.0f;
+    ClearFileExplorerPreviewCache();
     TextInputInit(&fileExplorer.inputCaminho);
     TextInputInit(&fileExplorer.inputBusca);
     fileExplorer.inputBusca.active = true;
@@ -271,6 +1043,7 @@ void OpenProjectSaveAs(void)
     fileExplorer.modoProjetoSalvar = true;
     fileExplorer.pickPurpose = FILE_EXPLORER_PICK_NONE;
     TextCopy(fileExplorer.bufferNomeProjeto, "");
+    fileExplorer.scrollOffset = 0.0f;
     TextInputInit(&fileExplorer.inputNomeProjeto);
     fileExplorer.inputNomeProjeto.active = true;
 }
@@ -285,6 +1058,9 @@ void OpenExportIconExplorer(void)
     TextCopy(fileExplorer.bufferTexto, "");
     fileExplorer.modoProjetoAbrir = false;
     fileExplorer.modoProjetoSalvar = false;
+    fileExplorer.viewMode = FILE_EXPLORER_VIEW_THUMBNAILS;
+    fileExplorer.scrollOffset = 0.0f;
+    ClearFileExplorerPreviewCache();
     TextInputInit(&fileExplorer.inputCaminho);
     TextInputInit(&fileExplorer.inputBusca);
     fileExplorer.inputBusca.active = true;
@@ -345,50 +1121,17 @@ void UpdateFileExplorer(void)
         return;
     }
 
+    FileExplorerLayout layout = GetFileExplorerLayout();
     Vector2 mouse = GetMousePosition();
-    int larguraTela = GetScreenWidth();
-    int alturaTela = GetScreenHeight();
-
-    // Dimensões do painel (deve ser igual ao DrawFileExplorer)
-    int painelLargura = 700;
-    int painelAltura = 500;
-    int painelX = (larguraTela - painelLargura) / 2;
-    int painelY = (alturaTela - painelAltura) / 2;
-
-    // Área do painel completo
-    Rectangle areaPainel = {
-        (float)painelX,
-        (float)painelY,
-        (float)painelLargura,
-        (float)painelAltura};
-
-    // Área do campo de caminho (na barra superior)
-    Rectangle campoCaminho = {
-        (float)(painelX + 74),
-        (float)(painelY + 20),
-        (float)(painelLargura - 128),
-        24.0f};
-
-    // Área do campo de texto de busca
-    Rectangle campoTexto = {
-        (float)(painelX + 16),
-        (float)(painelY + BARRA_SUPERIOR + 8),
-        (float)(painelLargura - 56),
-        24.0f};
 
     // Fechar ao clicar fora do painel
-    if (!CheckCollisionPointRec(mouse, areaPainel) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    if (!CheckCollisionPointRec(mouse, layout.panel) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
         CloseFileExplorer();
         return;
     }
 
-    (void)campoCaminho;
-    (void)campoTexto;
-
-    // Botão voltar - DENTRO DO PAINEL
-    Rectangle btnVoltar = {(float)(painelX + painelLargura - 44), (float)(painelY + 20), 24.0f, 24.0f};
-    UIButtonState backState = UIButtonGetState(btnVoltar);
+    UIButtonState backState = UIButtonGetState(layout.backButton);
     if (backState.clicked)
     {
         char caminhoAnterior[MAX_FILEPATH_SIZE] = {0};
@@ -397,80 +1140,57 @@ void UpdateFileExplorer(void)
         return;
     }
 
-    // Navegação de arquivos
-    int inicioY = painelY + BARRA_SUPERIOR + 40;
-    int contadorItems = 0;
-
-    for (int i = 0; i < (int)fileExplorer.arquivos.count; i++)
+    UIButtonState listState = UIButtonGetState(layout.listButton);
+    UIButtonState thumbState = UIButtonGetState(layout.thumbButton);
+    if (listState.clicked)
     {
-        if (!MatchFiltroExtensao(fileExplorer.arquivos.paths[i], fileExplorer.extensaoFiltro))
+        fileExplorer.viewMode = FILE_EXPLORER_VIEW_LIST;
+        fileExplorer.scrollOffset = 0.0f;
+    }
+    else if (thumbState.clicked)
+    {
+        fileExplorer.viewMode = FILE_EXPLORER_VIEW_THUMBNAILS;
+        fileExplorer.scrollOffset = 0.0f;
+    }
+
+    Rectangle contentInnerArea = GetExplorerContentInnerArea(layout.contentArea);
+    int *visibleIndices = NULL;
+    int visibleCount = BuildVisibleEntryIndexList(&visibleIndices);
+    float maxScroll = GetExplorerMaxScroll(visibleCount, contentInnerArea);
+    fileExplorer.scrollOffset = ClampFloat(fileExplorer.scrollOffset, 0.0f, maxScroll);
+
+    if (CheckCollisionPointRec(mouse, layout.contentArea))
+    {
+        float wheel = GetMouseWheelMove();
+        if (wheel != 0.0f)
+        {
+            float scrollStep = (fileExplorer.viewMode == FILE_EXPLORER_VIEW_THUMBNAILS) ? 84.0f : (float)ITEM_ALTURA;
+            fileExplorer.scrollOffset -= wheel * scrollStep;
+            fileExplorer.scrollOffset = ClampFloat(fileExplorer.scrollOffset, 0.0f, maxScroll);
+        }
+    }
+
+    for (int i = 0; i < visibleCount; i++)
+    {
+        Rectangle areaItem = GetExplorerInteractiveItemRect(contentInnerArea, i, maxScroll);
+        if (areaItem.y + areaItem.height < contentInnerArea.y)
             continue;
-
-        if (!MatchBuscaTexto(fileExplorer.arquivos.paths[i], fileExplorer.bufferTexto))
-            continue;
-
-        Rectangle areaItem = {
-            (float)(painelX + 8),
-            (float)(inicioY + ITEM_ALTURA * contadorItems),
-            (float)(painelLargura - 16),
-            (float)(ITEM_ALTURA - 4)};
-
-        // Não processar se está fora da área do painel
-        if (areaItem.y + areaItem.height > painelY + painelAltura)
+        if (areaItem.y > contentInnerArea.y + contentInnerArea.height)
             break;
 
         bool hover = CheckCollisionPointRec(mouse, areaItem);
-
-        // Verificar se é diretório
-        bool ehDiretorio = !IsPathFile(fileExplorer.arquivos.paths[i]);
-        bool diretorioExiste = DirectoryExists(fileExplorer.arquivos.paths[i]);
-
-        if (ehDiretorio && diretorioExiste)
+        if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
         {
-            if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-            {
-                if (fileExplorer.modoProjetoAbrir)
-                {
-                    char projectJson[MAX_FILEPATH_SIZE];
-                    snprintf(projectJson, sizeof(projectJson), "%s/project.json", fileExplorer.arquivos.paths[i]);
-                    if (FileExists(projectJson))
-                    {
-                        OpenProject(projectJson);
-                        CloseFileExplorer();
-                        return;
-                    }
-                }
-
-                TrySetCurrentPath(fileExplorer.arquivos.paths[i]);
+            const char *path = fileExplorer.arquivos.paths[visibleIndices[i]];
+            bool handled = HandleFileExplorerItemClick(path);
+            MemFree(visibleIndices);
+            if (handled)
                 return;
-            }
         }
-        else if (!ehDiretorio)
-        {
-            if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-            {
-                TextCopy(fileExplorer.caminhoSelecionado, fileExplorer.arquivos.paths[i]);
-                if (fileExplorer.modoProjetoAbrir)
-                {
-                    const char *nome = GetFileName(fileExplorer.caminhoSelecionado);
-                    if (nome && strcmp(nome, "project.json") == 0)
-                    {
-                        OpenProject(fileExplorer.caminhoSelecionado);
-                        CloseFileExplorer();
-                        return;
-                    }
-                }
-                else
-                {
-                    fileExplorer.selectedPurpose = fileExplorer.pickPurpose;
-                    CloseFileExplorer();
-                    return;
-                }
-            }
-        }
-
-        contadorItems++;
     }
+
+    if (visibleIndices)
+        MemFree(visibleIndices);
 }
 
 void DrawFileExplorer(void)
@@ -539,42 +1259,35 @@ void DrawFileExplorer(void)
         return;
     }
 
-    int larguraTela = GetScreenWidth();
-    int alturaTela = GetScreenHeight();
+    FileExplorerLayout layout = GetFileExplorerLayout();
+    const UIStyle *style = GetUIStyle();
+    Vector2 mouse = GetMousePosition();
 
     // Overlay escuro
-    DrawRectangle(0, 0, larguraTela, alturaTela, GetUIStyle()->panelOverlay);
-
-    // Painel do explorador
-    int painelLargura = 700;
-    int painelAltura = 500;
-    int painelX = (larguraTela - painelLargura) / 2;
-    int painelY = (alturaTela - painelAltura) / 2;
-
-    DrawRectangle(painelX, painelY, painelLargura, painelAltura, COR_PAINEL);
-    DrawRectangle(painelX + 1, painelY + 1, 4, painelAltura - 2, GetUIStyle()->accent);
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), style->panelOverlay);
 
     // Barra superior do explorador
-    DrawRectangle(painelX, painelY, painelLargura, BARRA_SUPERIOR, GetUIStyle()->panelBgAlt);
+    DrawRectangleRec(layout.panel, COR_PAINEL);
+    DrawRectangle((int)layout.panel.x + 1, (int)layout.panel.y + 1, 4, (int)layout.panel.height - 2, style->accent);
+    DrawRectangle((int)layout.panel.x, (int)layout.panel.y, (int)layout.panel.width, BARRA_SUPERIOR, style->panelBgAlt);
     const char *title = fileExplorer.modoProjetoAbrir ? "Open Project" : "Import Model";
     if (fileExplorer.pickPurpose == FILE_EXPLORER_PICK_EXPORT_ICON)
         title = "Escolher Icone do Executavel";
-    DrawText(title, painelX + 16, painelY + 5, 13, GetUIStyle()->accent);
-    DrawText("PATH", painelX + 16, painelY + 24, 10, COR_TEXTO_SUAVE);
+    DrawText(title, (int)layout.panel.x + 16, (int)layout.panel.y + 5, 13, style->accent);
+    DrawText("PATH", (int)layout.panel.x + 16, (int)layout.panel.y + 24, 10, COR_TEXTO_SUAVE);
 
     TextInputConfig cfg = {0};
     cfg.fontSize = 12;
     cfg.padding = 6;
     cfg.textColor = COR_TEXTO;
-    cfg.bgColor = GetUIStyle()->inputBg;
+    cfg.bgColor = style->inputBg;
     cfg.borderColor = (pathFeedbackInvalid && GetTime() < pathFeedbackUntil) ? (Color){150, 46, 42, 255} : COR_BORDA;
-    cfg.selectionColor = GetUIStyle()->inputSelection;
-    cfg.caretColor = GetUIStyle()->caret;
+    cfg.selectionColor = style->inputSelection;
+    cfg.caretColor = style->caret;
     cfg.filter = TEXT_INPUT_FILTER_NONE;
     cfg.allowInput = true;
 
-    Rectangle caminhoBox = {(float)(painelX + 74), (float)(painelY + 20), (float)(painelLargura - 128), 24.0f};
-    int pathFlags = TextInputDraw(caminhoBox, fileExplorer.bufferCaminho,
+    int pathFlags = TextInputDraw(layout.pathBox, fileExplorer.bufferCaminho,
                                   MAX_FILEPATH_SIZE, &fileExplorer.inputCaminho, &cfg);
     if (pathFlags & TEXT_INPUT_SUBMITTED)
     {
@@ -592,12 +1305,7 @@ void DrawFileExplorer(void)
     if (pathFeedbackInvalid && GetTime() >= pathFeedbackUntil)
         pathFeedbackInvalid = false;
 
-    // Botão voltar
-    Vector2 mouse = GetMousePosition();
-    Rectangle btnVoltar = {(float)(painelX + painelLargura - 44), (float)(painelY + 20), 24.0f, 24.0f};
-    bool hoverVoltar = CheckCollisionPointRec(mouse, btnVoltar);
-
-    const UIStyle *style = GetUIStyle();
+    bool hoverVoltar = CheckCollisionPointRec(mouse, layout.backButton);
     UIButtonConfig backCfg = {0};
     backCfg.centerText = true;
     backCfg.fontSize = 12;
@@ -609,63 +1317,148 @@ void DrawFileExplorer(void)
     backCfg.borderColor = style->buttonBorder;
     backCfg.borderHoverColor = style->buttonBorder;
     backCfg.borderThickness = 1.0f;
-    UIButtonDraw(btnVoltar, "<", nullptr, &backCfg, hoverVoltar);
+    UIButtonDraw(layout.backButton, "<", nullptr, &backCfg, hoverVoltar);
 
     if (pathFeedbackInvalid)
-        DrawText("PATH invalido ou inexistente", painelX + 74, painelY + 48, 10, (Color){186, 56, 52, 255});
+        DrawText("PATH invalido ou inexistente", (int)layout.pathBox.x, (int)layout.panel.y + 48, 10, (Color){186, 56, 52, 255});
 
-    // Campo de texto de busca
-    Rectangle buscaBox = {(float)(painelX + 16), (float)(painelY + BARRA_SUPERIOR + 8), (float)(painelLargura - 56), 24.0f};
-    TextInputDraw(buscaBox, fileExplorer.bufferTexto,
+    TextInputDraw(layout.searchBox, fileExplorer.bufferTexto,
                   MAX_BUFFER_TEXTO, &fileExplorer.inputBusca, &cfg);
 
-    // Label para o campo de busca
-    DrawText("BUSCAR", painelX + 16, painelY + BARRA_SUPERIOR - 8, 10, COR_TEXTO_SUAVE);
+    DrawText("BUSCAR", (int)layout.panel.x + 16, (int)layout.panel.y + BARRA_SUPERIOR - 8, 10, COR_TEXTO_SUAVE);
 
-    // Lista de arquivos dentro do painel
-    int inicioY = painelY + BARRA_SUPERIOR + 40;
-    int contadorItems = 0;
+    UIButtonConfig toggleCfg = {0};
+    toggleCfg.centerText = true;
+    toggleCfg.fontSize = 11;
+    toggleCfg.padding = 4;
+    toggleCfg.textColor = style->buttonText;
+    toggleCfg.textHoverColor = style->buttonTextHover;
+    toggleCfg.bgColor = style->buttonBg;
+    toggleCfg.bgHoverColor = style->buttonBgHover;
+    toggleCfg.borderColor = style->buttonBorder;
+    toggleCfg.borderHoverColor = style->buttonBorder;
+    toggleCfg.borderThickness = 1.0f;
 
-    for (int i = 0; i < (int)fileExplorer.arquivos.count; i++)
+    bool listActive = fileExplorer.viewMode == FILE_EXPLORER_VIEW_LIST;
+    bool thumbActive = fileExplorer.viewMode == FILE_EXPLORER_VIEW_THUMBNAILS;
+    UIButtonConfig listCfg = toggleCfg;
+    UIButtonConfig thumbCfg = toggleCfg;
+    if (listActive)
     {
-        if (!MatchFiltroExtensao(fileExplorer.arquivos.paths[i], fileExplorer.extensaoFiltro))
+        listCfg.bgColor = style->accentSoft;
+        listCfg.bgHoverColor = style->accentSoft;
+        listCfg.textColor = style->buttonTextHover;
+        listCfg.textHoverColor = style->buttonTextHover;
+        listCfg.borderColor = style->accent;
+        listCfg.borderHoverColor = style->accent;
+    }
+    if (thumbActive)
+    {
+        thumbCfg.bgColor = style->accentSoft;
+        thumbCfg.bgHoverColor = style->accentSoft;
+        thumbCfg.textColor = style->buttonTextHover;
+        thumbCfg.textHoverColor = style->buttonTextHover;
+        thumbCfg.borderColor = style->accent;
+        thumbCfg.borderHoverColor = style->accent;
+    }
+
+    UIButtonDraw(layout.listButton, "Lista", nullptr, &listCfg, CheckCollisionPointRec(mouse, layout.listButton) || listActive);
+    UIButtonDraw(layout.thumbButton, "Cards", nullptr, &thumbCfg, CheckCollisionPointRec(mouse, layout.thumbButton) || thumbActive);
+
+    DrawRectangleRec(layout.contentArea, style->panelBgAlt);
+    DrawRectangleLinesEx(layout.contentArea, 1.0f, style->panelBorderSoft);
+
+    Rectangle contentInnerArea = GetExplorerContentInnerArea(layout.contentArea);
+    int *visibleIndices = NULL;
+    int visibleCount = BuildVisibleEntryIndexList(&visibleIndices);
+    float maxScroll = GetExplorerMaxScroll(visibleCount, contentInnerArea);
+    fileExplorer.scrollOffset = ClampFloat(fileExplorer.scrollOffset, 0.0f, maxScroll);
+
+    for (int i = 0; i < visibleCount; i++)
+    {
+        Rectangle areaItem = GetExplorerInteractiveItemRect(contentInnerArea, i, maxScroll);
+        if (areaItem.y + areaItem.height < contentInnerArea.y)
             continue;
-
-        if (!MatchBuscaTexto(fileExplorer.arquivos.paths[i], fileExplorer.bufferTexto))
-            continue;
-
-        Rectangle areaItem = {
-            (float)(painelX + 8),
-            (float)(inicioY + ITEM_ALTURA * contadorItems),
-            (float)(painelLargura - 16),
-            (float)(ITEM_ALTURA - 4)};
-
-        // Não desenhar se está fora da área do painel
-        if (areaItem.y + areaItem.height > painelY + painelAltura)
+        if (areaItem.y > contentInnerArea.y + contentInnerArea.height)
             break;
 
-        bool hover = CheckCollisionPointRec(mouse, areaItem);
-        const UIStyle *style = GetUIStyle();
-        Color fundoItem = hover ? style->accentSoft : style->itemBg;
-
-        DrawRectangleRec(areaItem, fundoItem);
-        if (!hover)
-            DrawLine((int)areaItem.x + 6, (int)(areaItem.y + areaItem.height), (int)(areaItem.x + areaItem.width - 6), (int)(areaItem.y + areaItem.height), style->panelBorderSoft);
-
-        const char *nome = GetFileName(fileExplorer.arquivos.paths[i]);
-        Color corTexto = hover ? style->buttonTextHover : COR_TEXTO;
-
-        if (!IsPathFile(fileExplorer.arquivos.paths[i]) && DirectoryExists(fileExplorer.arquivos.paths[i]))
-        {
-            if (!hover)
-                corTexto = COR_DESTAQUE;
-            DrawRectangle((int)areaItem.x + 4, (int)areaItem.y + 6, 3, (int)areaItem.height - 12, hover ? style->accent : style->accentSoft);
-        }
-
-        DrawText(nome, (int)(areaItem.x + 12), (int)(areaItem.y + 10), 12, corTexto);
-
-        contadorItems++;
+        const char *path = fileExplorer.arquivos.paths[visibleIndices[i]];
+        FileExplorerEntryType entryType = GetFileExplorerEntryType(path);
+        (void)GetFileExplorerPreview(path, entryType);
     }
+
+    BeginScissorMode((int)contentInnerArea.x, (int)contentInnerArea.y, (int)contentInnerArea.width, (int)contentInnerArea.height);
+    if (visibleCount <= 0)
+    {
+        DrawText("Nenhum item encontrado para esse filtro.", (int)contentInnerArea.x + 8, (int)contentInnerArea.y + 8, 12, style->textSecondary);
+    }
+    else
+    {
+        for (int i = 0; i < visibleCount; i++)
+        {
+            Rectangle areaItem = GetExplorerInteractiveItemRect(contentInnerArea, i, maxScroll);
+            if (!IsItemVisibleInContent(areaItem, contentInnerArea))
+                continue;
+
+            const char *path = fileExplorer.arquivos.paths[visibleIndices[i]];
+            const char *nome = GetFileName(path);
+            FileExplorerEntryType entryType = GetFileExplorerEntryType(path);
+            bool hover = CheckCollisionPointRec(mouse, areaItem);
+            FileExplorerPreviewCacheEntry *preview = GetFileExplorerPreview(path, entryType);
+
+            if (fileExplorer.viewMode == FILE_EXPLORER_VIEW_LIST)
+            {
+                Color fundoItem = hover ? style->accentSoft : style->itemBg;
+                DrawRectangleRec(areaItem, fundoItem);
+                if (!hover)
+                    DrawLine((int)areaItem.x + 6, (int)(areaItem.y + areaItem.height), (int)(areaItem.x + areaItem.width - 6), (int)(areaItem.y + areaItem.height), style->panelBorderSoft);
+
+                Color corTexto = hover ? style->buttonTextHover : COR_TEXTO;
+                if (entryType == FILE_EXPLORER_ENTRY_FOLDER || entryType == FILE_EXPLORER_ENTRY_PROJECT)
+                {
+                    DrawRectangle((int)areaItem.x + 4, (int)areaItem.y + 6, 3, (int)areaItem.height - 12, hover ? style->accent : style->accentSoft);
+                    if (!hover)
+                        corTexto = COR_DESTAQUE;
+                }
+
+                char fittedName[256] = {0};
+                FitTextToWidth(nome, fittedName, sizeof(fittedName), 12, areaItem.width - 26.0f);
+                DrawText(fittedName, (int)(areaItem.x + 14.0f), (int)(areaItem.y + 10.0f), 12, corTexto);
+            }
+            else
+            {
+                Color cardBg = hover ? LerpColor(style->itemBg, style->itemHover, 0.9f) : style->itemBg;
+                Color border = hover ? LerpColor(style->panelBorderSoft, style->buttonBorder, 0.7f) : style->panelBorderSoft;
+                Rectangle previewBounds = {areaItem.x + 10.0f, areaItem.y + 10.0f, areaItem.width - 20.0f, areaItem.height - 58.0f};
+
+                DrawRectangleRec(areaItem, cardBg);
+                DrawRectangleLinesEx(areaItem, 1.0f, border);
+
+                if (preview && preview->valid)
+                {
+                    DrawRectangleRec(previewBounds, style->panelBg);
+                    DrawPreviewTextureFit(preview, previewBounds, WHITE);
+                }
+                else
+                {
+                    DrawFileExplorerPlaceholder(previewBounds, entryType, hover);
+                }
+
+                char fittedName[128] = {0};
+                char fittedType[64] = {0};
+                FitTextToWidth(nome, fittedName, sizeof(fittedName), 12, areaItem.width - 16.0f);
+                FitTextToWidth(GetFileExplorerEntryTypeLabel(entryType), fittedType, sizeof(fittedType), 10, areaItem.width - 16.0f);
+                DrawText(fittedName, (int)(areaItem.x + 8.0f), (int)(areaItem.y + areaItem.height - 34.0f), 12, hover ? style->buttonTextHover : style->textPrimary);
+                DrawText(fittedType, (int)(areaItem.x + 8.0f), (int)(areaItem.y + areaItem.height - 18.0f), 10, hover ? style->textSecondary : style->textMuted);
+            }
+        }
+    }
+    EndScissorMode();
+
+    DrawExplorerScrollBar(contentInnerArea, visibleCount);
+
+    if (visibleIndices)
+        MemFree(visibleIndices);
 }
 
 bool FileExplorerArquivoSelecionado(char *saida)
@@ -705,6 +1498,7 @@ void UnloadFileExplorer(void)
         UnloadDirectoryFiles(fileExplorer.arquivos);
         fileExplorer.arquivosCarregados = false;
     }
+    ClearFileExplorerPreviewCache();
 }
 
 void ToggleFileMenu(void)
