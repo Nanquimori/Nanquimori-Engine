@@ -1327,6 +1327,24 @@ static void SincronizarNomeSelecionadoProp(int id, const char *nomeAtual)
     }
 }
 
+static bool DrawOutlinerCheckboxRow(const char *label, bool checked, int x, int *y, float width, Vector2 mouse)
+{
+    const Color activeCheckText = (Color){0, 255, 102, 255};
+    const float rowHeight = 18.0f;
+    const float toggleSize = 14.0f;
+    Rectangle row = {(float)(x + 14), (float)(*y), width, rowHeight};
+    Rectangle toggle = {row.x, row.y + (row.height - toggleSize) * 0.5f, toggleSize, toggleSize};
+    int textY = (int)(row.y + (row.height - 14.0f) * 0.5f);
+
+    DrawRectangleLinesEx(toggle, 1, COR_BORDA);
+    if (checked)
+        DrawRectangle((int)toggle.x + 3, (int)toggle.y + 3, 8, 8, COR_ITEM_SEL);
+    DrawText(label, x + 34, textY, 14, checked ? activeCheckText : COR_TEXTO);
+
+    *y += (int)rowHeight;
+    return CheckCollisionPointRec(mouse, row) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+}
+
 static void DrawObjectSettings(float startY, float height)
 {
     const UIStyle *style = GetUIStyle();
@@ -1416,17 +1434,10 @@ static void DrawObjectSettings(float startY, float height)
             DrawText(TextFormat("ID: %d", objetos[idx].id), x + 14, y, 14, secondaryWhite);
             y += 24;
 
-            const Color activeCheckText = (Color){0, 255, 102, 255}; // #00FF66
-            DrawText("Ativo", x + 14, y, 14, objetos[idx].ativo ? activeCheckText : COR_TEXTO);
-            Rectangle toggle = {(float)(x + 70), (float)(y - 2), 16.0f, 16.0f};
-            DrawRectangleLinesEx(toggle, 1, COR_BORDA);
-            if (objetos[idx].ativo)
-                DrawRectangle((int)toggle.x + 3, (int)toggle.y + 3, 10, 10, COR_ITEM_SEL);
-
-            if (CheckCollisionPointRec(mouse, toggle) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+            if (DrawOutlinerCheckboxRow("Ativo", objetos[idx].ativo, x, &y, (float)(PAINEL_LARGURA - 28), mouse))
                 objetos[idx].ativo = !objetos[idx].ativo;
 
-            y += 24;
+            y += 6;
             DrawText("Hierarquia", x + 14, y, 14, COR_TEXTO);
             y += 18;
 

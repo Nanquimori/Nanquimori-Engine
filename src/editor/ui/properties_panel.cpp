@@ -98,6 +98,18 @@ enum
 static DragFloatInputState transformInputs[TRANSFORM_FIELD_COUNT] = {0};
 static char transformBuffer[TRANSFORM_FIELD_COUNT][32] = {0};
 static int transformObjectId = -1;
+enum
+{
+    PROPERTY_FLOAT_CAMERA_ORTHO_SIZE = 0,
+    PROPERTY_FLOAT_CAMERA_FOV,
+    PROPERTY_FLOAT_CAMERA_NEAR,
+    PROPERTY_FLOAT_CAMERA_FAR,
+    PROPERTY_FLOAT_PHYS_MASS,
+    PROPERTY_FLOAT_FIELD_COUNT
+};
+static DragFloatInputState propertyFloatInputs[PROPERTY_FLOAT_FIELD_COUNT] = {0};
+static char propertyFloatBuffer[PROPERTY_FLOAT_FIELD_COUNT][32] = {0};
+static int propertyFloatObjectId = -1;
 typedef struct
 {
     int id;
@@ -216,6 +228,12 @@ static void ResetTransformInputs(void)
 {
     for (int i = 0; i < TRANSFORM_FIELD_COUNT; i++)
         DragFloatInputInit(&transformInputs[i]);
+}
+
+static void ResetPropertyFloatInputs(void)
+{
+    for (int i = 0; i < PROPERTY_FLOAT_FIELD_COUNT; i++)
+        DragFloatInputInit(&propertyFloatInputs[i]);
 }
 
 static bool AnyTransformInputActive(void)
@@ -531,35 +549,61 @@ static void CleanupPhysEntries(void)
     }
 }
 
-static void DrawFloatSlider(const char *label, float *value, float minValue, float maxValue, int x, int *y, float width, bool allowInput)
+static void DrawFloatPropertyInput(const char *label, float *value, int fieldIndex, int x, int *y, float width, bool allowInput,
+                                   float dragSpeed, float fineDragSpeed, float minValue, float maxValue, bool clampValue)
 {
-    DrawText(TextFormat("%s: %.2f", label, *value), x + 14, *y, 12, COR_TEXTO);
-    Rectangle bar = {(float)(x + 14), (float)(*y + 14), width, 8.0f};
-    DrawRectangleRec(bar, COR_EDIT_BG);
-    DrawRectangleLinesEx(bar, 1, COR_BORDA);
+    if (!value || fieldIndex < 0 || fieldIndex >= PROPERTY_FLOAT_FIELD_COUNT)
+        return;
 
-    float t = (*value - minValue) / (maxValue - minValue);
-    t = Clamp(t, 0.0f, 1.0f);
+    DrawText(label, x + 14, *y, 12, COR_TEXTO);
+    *y += 16;
 
-    Rectangle fill = {bar.x, bar.y, bar.width * t, bar.height};
-    DrawRectangleRec(fill, COR_ITEM_SEL);
+    Rectangle box = {(float)(x + 14), (float)(*y), width, 20.0f};
+    bool fieldActive = DragFloatInputIsActive(&propertyFloatInputs[fieldIndex]);
+    if (!fieldActive)
+        DragFloatInputFormat(propertyFloatBuffer[fieldIndex], (int)sizeof(propertyFloatBuffer[fieldIndex]), *value);
 
-    float knobX = bar.x + bar.width * t;
-    DrawCircle((int)knobX, (int)(bar.y + bar.height / 2), 5, COR_ITEM_SEL);
+    DragFloatInputConfig cfg = {0};
+    cfg.fontSize = 12;
+    cfg.padding = 4;
+    cfg.textColor = fieldActive ? GetUIStyle()->accent : COR_TEXTO;
+    cfg.bgColor = COR_EDIT_BG;
+    cfg.borderColor = fieldActive ? GetUIStyle()->accent : COR_BORDA;
+    cfg.selectionColor = GetUIStyle()->inputSelection;
+    cfg.caretColor = GetUIStyle()->caret;
+    cfg.dragSpeed = dragSpeed;
+    cfg.fineDragSpeed = fineDragSpeed;
+    cfg.minValue = minValue;
+    cfg.maxValue = maxValue;
+    cfg.clamp = clampValue;
+    cfg.allowInput = allowInput;
 
-    if (allowInput)
-    {
-        Vector2 mouse = GetMousePosition();
-        Rectangle hit = {bar.x - 6, bar.y - 6, bar.width + 12, bar.height + 12};
-        if (CheckCollisionPointRec(mouse, hit) && IsMouseButtonDown(MOUSE_LEFT_BUTTON))
-        {
-            float u = (mouse.x - bar.x) / bar.width;
-            u = Clamp(u, 0.0f, 1.0f);
-            *value = minValue + (maxValue - minValue) * u;
-        }
-    }
+    DragFloatInputDraw(box,
+                       propertyFloatBuffer[fieldIndex],
+                       (int)sizeof(propertyFloatBuffer[fieldIndex]),
+                       &propertyFloatInputs[fieldIndex],
+                       value,
+                       &cfg);
 
-    *y += 28;
+    *y = (int)(box.y + box.height + 10.0f);
+}
+
+static bool DrawCheckboxRow(const char *label, bool checked, int x, int *y, float width, bool allowInput, Vector2 mouse)
+{
+    const Color activeCheckText = (Color){0, 255, 102, 255};
+    const float rowHeight = 18.0f;
+    const float toggleSize = 14.0f;
+    Rectangle row = {(float)(x + 14), (float)(*y), width, rowHeight};
+    Rectangle toggle = {row.x, row.y + (row.height - toggleSize) * 0.5f, toggleSize, toggleSize};
+    int textY = (int)(row.y + (row.height - 12.0f) * 0.5f);
+
+    DrawRectangleLinesEx(toggle, 1, COR_BORDA);
+    if (checked)
+        DrawRectangle((int)toggle.x + 3, (int)toggle.y + 3, 8, 8, COR_ITEM_SEL);
+    DrawText(label, x + 34, textY, 12, checked ? activeCheckText : COR_TEXTO);
+
+    *y += (int)rowHeight;
+    return allowInput && CheckCollisionPointRec(mouse, row) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
 
 static bool DrawOptionButton(Rectangle rect, const char *label, bool active, bool allowInput, Vector2 mouse)
@@ -640,7 +684,9 @@ void InitPropertiesPanel(void)
     }
     TextInputInit(&protoNameInput);
     ResetTransformInputs();
+    ResetPropertyFloatInputs();
     transformObjectId = -1;
+    propertyFloatObjectId = -1;
     transformUndoTop = 0;
     transformRedoTop = 0;
     transformEditSession = false;
@@ -719,6 +765,11 @@ void DrawPropertiesPanel(void)
     if (propertiesObjectExpanded && selIdx >= 0)
     {
         ObjetoCena *obj = &objetos[selIdx];
+        if (propertyFloatObjectId != selId)
+        {
+            ResetPropertyFloatInputs();
+            propertyFloatObjectId = selId;
+        }
         bool isCamera = ObjetoEhCamera(obj);
         bool transformClicked = DrawSectionHeader("Transform", x, &y, &propertiesTransformExpanded, allowInput, mouse);
         if (transformClicked && CtrlHeld() && propertiesTransformExpanded)
@@ -759,19 +810,14 @@ void DrawPropertiesPanel(void)
                 FocusPropertiesSection(&propertiesCameraExpanded);
             if (propertiesCameraExpanded)
             {
-                DrawText("Ativar Camera", x + 14, y, 12, COR_TEXTO);
-                Rectangle mainToggle = {(float)(contentRight - 16), (float)(y - 2), 16.0f, 16.0f};
-                DrawRectangleLinesEx(mainToggle, 1, COR_BORDA);
-                if (obj->cameraPrincipal)
-                    DrawRectangle((int)mainToggle.x + 3, (int)mainToggle.y + 3, 10, 10, COR_ITEM_SEL);
-                if (allowInput && CheckCollisionPointRec(mouse, mainToggle) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+                if (DrawCheckboxRow("Ativar Camera", obj->cameraPrincipal, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
                 {
                     if (obj->cameraPrincipal)
                         obj->cameraPrincipal = false;
                     else
                         SetSceneRenderCameraObjectId(selId);
                 }
-                y += 22;
+                y += 4;
 
                 DrawText("Projection", x + 14, y, 12, COR_TEXTO);
                 y += 18;
@@ -786,15 +832,15 @@ void DrawPropertiesPanel(void)
                 y += 28;
 
                 if (obj->cameraProjection == CAMERA_ORTHOGRAPHIC)
-                    DrawFloatSlider("Size", &obj->cameraOrthoSize, 0.1f, 50.0f, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput);
+                    DrawFloatPropertyInput("Size", &obj->cameraOrthoSize, PROPERTY_FLOAT_CAMERA_ORTHO_SIZE, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, 0.02f, 0.002f, 0.1f, 50.0f, true);
                 else
-                    DrawFloatSlider("Field of View", &obj->cameraPerspectiveFov, 10.0f, 140.0f, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput);
+                    DrawFloatPropertyInput("Field of View", &obj->cameraPerspectiveFov, PROPERTY_FLOAT_CAMERA_FOV, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, 0.15f, 0.02f, 10.0f, 140.0f, true);
 
-                DrawFloatSlider("Near Clip", &obj->cameraNearClip, 0.01f, 50.0f, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput);
+                DrawFloatPropertyInput("Near Clip", &obj->cameraNearClip, PROPERTY_FLOAT_CAMERA_NEAR, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, 0.01f, 0.001f, 0.01f, 50.0f, true);
                 float minFarClip = obj->cameraNearClip + 0.1f;
                 if (minFarClip < 1.0f)
                     minFarClip = 1.0f;
-                DrawFloatSlider("Far Clip", &obj->cameraFarClip, minFarClip, 5000.0f, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput);
+                DrawFloatPropertyInput("Far Clip", &obj->cameraFarClip, PROPERTY_FLOAT_CAMERA_FAR, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, 0.5f, 0.05f, minFarClip, 5000.0f, true);
                 if (obj->cameraNearClip < 0.01f)
                     obj->cameraNearClip = 0.01f;
                 if (obj->cameraFarClip < obj->cameraNearClip + 0.1f)
@@ -832,75 +878,39 @@ void DrawPropertiesPanel(void)
 
         DrawText("Tipo", x + 14, y, 12, style->accent);
         y += 18;
-        const Color activeCheckText = (Color){0, 255, 102, 255}; // #00FF66
-
-        Rectangle staticToggle = {(float)(x + 14), (float)y, 14.0f, 14.0f};
-        Rectangle staticRow = {(float)(x + 14), (float)y - 2.0f, (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f};
         bool staticOn = (phys && phys->isStatic);
-        DrawRectangleLinesEx(staticToggle, 1, COR_BORDA);
-        if (staticOn)
-            DrawRectangle((int)staticToggle.x + 3, (int)staticToggle.y + 3, 8, 8, COR_ITEM_SEL);
-        DrawText("Static", x + 34, y - 2, 12, staticOn ? activeCheckText : COR_TEXTO);
-        if (allowInput && CheckCollisionPointRec(mouse, staticRow) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && phys)
+        if (phys && DrawCheckboxRow("Static", staticOn, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
         {
             phys->isStatic = true;
             phys->rigidbody = false;
         }
-        y += 18;
 
-        Rectangle rbToggle = {(float)(x + 14), (float)y, 14.0f, 14.0f};
-        Rectangle rbRow = {(float)(x + 14), (float)y - 2.0f, (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f};
         bool rbOn = (phys && phys->rigidbody);
-        DrawRectangleLinesEx(rbToggle, 1, COR_BORDA);
-        if (rbOn)
-            DrawRectangle((int)rbToggle.x + 3, (int)rbToggle.y + 3, 8, 8, COR_ITEM_SEL);
-        DrawText("Rigidbody", x + 34, y - 2, 12, rbOn ? activeCheckText : COR_TEXTO);
-        if (allowInput && CheckCollisionPointRec(mouse, rbRow) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && phys)
+        if (phys && DrawCheckboxRow("Rigidbody", rbOn, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
         {
             phys->rigidbody = true;
             phys->isStatic = false;
         }
-        y += 18;
 
-        Rectangle colliderToggle = {(float)(x + 14), (float)y, 14.0f, 14.0f};
-        Rectangle colliderRow = {(float)(x + 14), (float)y - 2.0f, (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f};
         bool colliderOn = (phys && (phys->collider || phys->terrain));
-        DrawRectangleLinesEx(colliderToggle, 1, COR_BORDA);
-        if (colliderOn)
-            DrawRectangle((int)colliderToggle.x + 3, (int)colliderToggle.y + 3, 8, 8, COR_ITEM_SEL);
-        DrawText("Collider", x + 34, y - 2, 12, colliderOn ? activeCheckText : COR_TEXTO_SECUNDARIO);
-        if (allowInput && CheckCollisionPointRec(mouse, colliderRow) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && phys)
+        if (phys && DrawCheckboxRow("Collider", colliderOn, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
         {
             phys->collider = !colliderOn;
             if (!phys->collider)
                 phys->terrain = false;
         }
-        y += 18;
 
-        Rectangle gravityToggle = {(float)(x + 14), (float)y, 14.0f, 14.0f};
-        Rectangle gravityRow = {(float)(x + 14), (float)y - 2.0f, (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f};
         bool gravityOn = (phys && phys->gravity);
-        DrawRectangleLinesEx(gravityToggle, 1, COR_BORDA);
-        if (gravityOn)
-            DrawRectangle((int)gravityToggle.x + 3, (int)gravityToggle.y + 3, 8, 8, COR_ITEM_SEL);
-        DrawText("Gravity", x + 34, y - 2, 12, gravityOn ? activeCheckText : COR_TEXTO_SECUNDARIO);
-        if (allowInput && CheckCollisionPointRec(mouse, gravityRow) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && phys)
+        if (phys && DrawCheckboxRow("Gravity", gravityOn, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
             phys->gravity = !phys->gravity;
-        y += 18;
 
         if (phys && (phys->collider || phys->terrain))
         {
             DrawText("Collision", x + 14, y, 12, COR_TEXTO);
             y += 18;
 
-            Rectangle collDebugToggle = {(float)(x + 14), (float)y, 14.0f, 14.0f};
-            DrawRectangleLinesEx(collDebugToggle, 1, COR_BORDA);
-            if (showCollisionDebug)
-                DrawRectangle((int)collDebugToggle.x + 3, (int)collDebugToggle.y + 3, 8, 8, COR_ITEM_SEL);
-            DrawText("Show Collisions", x + 34, y - 2, 12, COR_TEXTO);
-            if (allowInput && CheckCollisionPointRec(mouse, collDebugToggle) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+            if (DrawCheckboxRow("Show Collisions", showCollisionDebug, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
                 showCollisionDebug = !showCollisionDebug;
-            y += 18;
 
             DrawText("Collision Mode", x + 14, y, 12, COR_TEXTO);
             y += 18;
@@ -951,7 +961,7 @@ void DrawPropertiesPanel(void)
 
         if (phys)
         {
-            DrawFloatSlider("Mass", &phys->mass, 0.1f, 100.0f, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput);
+            DrawFloatPropertyInput("Mass", &phys->mass, PROPERTY_FLOAT_PHYS_MASS, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, 0.05f, 0.005f, 0.1f, 100.0f, true);
         }
         else
         {
@@ -965,19 +975,8 @@ void DrawPropertiesPanel(void)
             FocusPropertiesSection(&propertiesPrototypeExpanded);
         if (propertiesPrototypeExpanded)
         {
-
-        DrawText("Enabled", contentLeft, y, 12, COR_TEXTO);
-        Rectangle protoToggle = {(float)(contentRight - 16), (float)(y - 2), 16.0f, 16.0f};
-        DrawRectangleLinesEx(protoToggle, 1, COR_BORDA);
-        if (obj->protoEnabled)
-            DrawRectangle((int)protoToggle.x + 3, (int)protoToggle.y + 3, 10, 10, COR_ITEM_SEL);
-
-        if (allowInput && CheckCollisionPointRec(mouse, protoToggle) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-        {
+        if (DrawCheckboxRow("Enabled", obj->protoEnabled, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
             obj->protoEnabled = !obj->protoEnabled;
-        }
-
-        y += 18;
 
         if (obj->protoEnabled)
         {
@@ -1208,6 +1207,11 @@ void DrawPropertiesPanel(void)
         {
             ResetTransformInputs();
             transformObjectId = -1;
+        }
+        if (propertyFloatObjectId != -1)
+        {
+            ResetPropertyFloatInputs();
+            propertyFloatObjectId = -1;
         }
         DrawText("Selecione um objeto", x + 14, y, 12, COR_TEXTO_SECUNDARIO);
         y += 18;
