@@ -1356,6 +1356,43 @@ bool SaveProject(void)
     return true;
 }
 
+bool SaveProjectSnapshotToPath(const char *path)
+{
+    if (!path || path[0] == '\0')
+        return false;
+
+    char snapshotDir[256] = {0};
+    GetDirectoryFromPath(path, snapshotDir, sizeof(snapshotDir));
+    if (snapshotDir[0] == '\0')
+        return false;
+
+    char previousProjectPath[256] = {0};
+    char previousProjectDir[256] = {0};
+    char previousPendingIconPath[512] = {0};
+    strncpy(previousProjectPath, projectPath, sizeof(previousProjectPath) - 1);
+    previousProjectPath[sizeof(previousProjectPath) - 1] = '\0';
+    strncpy(previousProjectDir, projectDir, sizeof(previousProjectDir) - 1);
+    previousProjectDir[sizeof(previousProjectDir) - 1] = '\0';
+    strncpy(previousPendingIconPath, pendingProjectIconPath, sizeof(previousPendingIconPath) - 1);
+    previousPendingIconPath[sizeof(previousPendingIconPath) - 1] = '\0';
+
+    strncpy(projectPath, path, sizeof(projectPath) - 1);
+    projectPath[sizeof(projectPath) - 1] = '\0';
+    strncpy(projectDir, snapshotDir, sizeof(projectDir) - 1);
+    projectDir[sizeof(projectDir) - 1] = '\0';
+
+    bool saved = SaveProject();
+
+    strncpy(projectPath, previousProjectPath, sizeof(projectPath) - 1);
+    projectPath[sizeof(projectPath) - 1] = '\0';
+    strncpy(projectDir, previousProjectDir, sizeof(projectDir) - 1);
+    projectDir[sizeof(projectDir) - 1] = '\0';
+    strncpy(pendingProjectIconPath, previousPendingIconPath, sizeof(pendingProjectIconPath) - 1);
+    pendingProjectIconPath[sizeof(pendingProjectIconPath) - 1] = '\0';
+
+    return saved;
+}
+
 bool SaveProjectAs(const char *name)
 {
     if (!name || name[0] == '\0')

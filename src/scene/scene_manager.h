@@ -46,6 +46,7 @@ const char *GetProjectPath(void);
 const char *GetProjectDir(void);
 void SetProjectPath(const char *path);
 bool SaveProject(void);
+bool SaveProjectSnapshotToPath(const char *path);
 bool LoadProject(const char *path);
 bool SaveProjectAs(const char *name);
 bool OpenProject(const char *path);

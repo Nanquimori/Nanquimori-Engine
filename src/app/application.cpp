@@ -19,6 +19,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstring>
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <unistd.h>
+#endif
 
 static Camera appCamera = {0};
 static Vector3 appRayEndPos = {0};
@@ -388,6 +393,76 @@ static bool ResolveRuntimePlayerExecutablePath(char *out, size_t outSize)
     return false;
 }
 
+static bool ResolveTemporaryRuntimeProjectPaths(char *outProjectDir, size_t outProjectDirSize, char *outProjectPath, size_t outProjectPathSize)
+{
+    if (!outProjectDir || outProjectDirSize == 0 || !outProjectPath || outProjectPathSize == 0)
+        return false;
+
+    outProjectDir[0] = '\0';
+    outProjectPath[0] = '\0';
+
+    const char *cwd = GetWorkingDirectory();
+    if (!cwd || cwd[0] == '\0')
+        return false;
+
+    snprintf(outProjectDir, outProjectDirSize, "%s/tmp_runtime_player", cwd);
+    outProjectDir[outProjectDirSize - 1] = '\0';
+    snprintf(outProjectPath, outProjectPathSize, "%s/project.json", outProjectDir);
+    outProjectPath[outProjectPathSize - 1] = '\0';
+    return true;
+}
+
+static bool DeleteDirectoryRecursive(const char *dirPath)
+{
+    if (!dirPath || dirPath[0] == '\0')
+        return false;
+    if (!DirectoryExists(dirPath))
+        return true;
+
+    FilePathList items = LoadDirectoryFiles(dirPath);
+    bool ok = true;
+
+    for (unsigned int i = 0; i < items.count; i++)
+    {
+        const char *itemPath = items.paths[i];
+        if (!itemPath || itemPath[0] == '\0')
+            continue;
+
+        if (DirectoryExists(itemPath))
+        {
+            if (!DeleteDirectoryRecursive(itemPath))
+                ok = false;
+        }
+        else
+        {
+            if (remove(itemPath) != 0 && FileExists(itemPath))
+                ok = false;
+        }
+    }
+
+    UnloadDirectoryFiles(items);
+
+#ifdef _WIN32
+    if (_rmdir(dirPath) != 0 && DirectoryExists(dirPath))
+        ok = false;
+#else
+    if (rmdir(dirPath) != 0 && DirectoryExists(dirPath))
+        ok = false;
+#endif
+
+    return ok;
+}
+
+static void CleanupTemporaryRuntimeProjectDir(void)
+{
+    char temporaryProjectDir[1024] = {0};
+    char temporaryProjectPath[1024] = {0};
+    if (!ResolveTemporaryRuntimeProjectPaths(temporaryProjectDir, sizeof(temporaryProjectDir), temporaryProjectPath, sizeof(temporaryProjectPath)))
+        return;
+
+    DeleteDirectoryRecursive(temporaryProjectDir);
+}
+
 static void NormalizeWindowsCommandPath(char *path)
 {
     if (!path)
@@ -549,6 +624,13 @@ static void HandleViewportActiveCameraShortcut(void)
 
 void InitializeApplication()
 {
+    CleanupTemporaryRuntimeProjectDir();
+
+#ifdef _WIN32
+    SetWin32ConsoleCloseCallback(CleanupTemporaryRuntimeProjectDir);
+    EnableWin32ConsoleCloseHandler(true);
+#endif
+
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_MAXIMIZED);
     InitWindow(1280, 720, "Nanquimori Engine");
     ApplyRuntimeWindowIcon();
@@ -575,6 +657,13 @@ void InitializeApplication()
 
 void ShutdownApplication()
 {
+    CleanupTemporaryRuntimeProjectDir();
+
+#ifdef _WIN32
+    EnableWin32ConsoleCloseHandler(false);
+    SetWin32ConsoleCloseCallback(nullptr);
+#endif
+
     UnloadTopBar();
     UnloadSplashScreen();
 
@@ -1019,15 +1108,42 @@ bool LaunchProjectPlayer(char *status, int statusSize)
     if (status && statusSize > 0)
         status[0] = '\0';
 
-    if (!SaveProject())
+    const char *savedProjectPath = GetProjectPath();
+    const char *savedProjectDir = GetProjectDir();
+    bool hasSavedProject = savedProjectPath && savedProjectPath[0] != '\0' && savedProjectDir && savedProjectDir[0] != '\0';
+    bool usingTemporaryProject = false;
+    char temporaryProjectDir[1024] = {0};
+    char temporaryProjectPath[1024] = {0};
+    const char *projectDirToLaunch = savedProjectDir;
+
+    if (hasSavedProject)
     {
-        if (status && statusSize > 0)
-            snprintf(status, (size_t)statusSize, "Salve o projeto antes de iniciar o player.");
-        return false;
+        CleanupTemporaryRuntimeProjectDir();
+
+        if (!SaveProject())
+        {
+            if (status && statusSize > 0)
+                snprintf(status, (size_t)statusSize, "Nao foi possivel salvar o projeto antes de iniciar o player.");
+            return false;
+        }
+    }
+    else
+    {
+        CleanupTemporaryRuntimeProjectDir();
+
+        if (!ResolveTemporaryRuntimeProjectPaths(temporaryProjectDir, sizeof(temporaryProjectDir), temporaryProjectPath, sizeof(temporaryProjectPath)) ||
+            !SaveProjectSnapshotToPath(temporaryProjectPath))
+        {
+            if (status && statusSize > 0)
+                snprintf(status, (size_t)statusSize, "Nao foi possivel preparar a copia temporaria do player.");
+            return false;
+        }
+
+        projectDirToLaunch = temporaryProjectDir;
+        usingTemporaryProject = true;
     }
 
-    const char *projectDir = GetProjectDir();
-    if (!projectDir || projectDir[0] == '\0')
+    if (!projectDirToLaunch || projectDirToLaunch[0] == '\0')
     {
         if (status && statusSize > 0)
             snprintf(status, (size_t)statusSize, "Pasta do projeto nao encontrada.");
@@ -1045,7 +1161,7 @@ bool LaunchProjectPlayer(char *status, int statusSize)
 #ifdef _WIN32
     char normalizedProjectDir[1024] = {0};
     char normalizedPlayerPath[1024] = {0};
-    strncpy(normalizedProjectDir, projectDir, sizeof(normalizedProjectDir) - 1);
+    strncpy(normalizedProjectDir, projectDirToLaunch, sizeof(normalizedProjectDir) - 1);
     normalizedProjectDir[sizeof(normalizedProjectDir) - 1] = '\0';
     strncpy(normalizedPlayerPath, playerPath, sizeof(normalizedPlayerPath) - 1);
     normalizedPlayerPath[sizeof(normalizedPlayerPath) - 1] = '\0';
@@ -1067,7 +1183,7 @@ bool LaunchProjectPlayer(char *status, int statusSize)
         return false;
     }
 #else
-    (void)projectDir;
+    (void)projectDirToLaunch;
     (void)playerPath;
     if (status && statusSize > 0)
         snprintf(status, (size_t)statusSize, "Inicializacao do player so foi configurada no Windows.");
@@ -1075,6 +1191,8 @@ bool LaunchProjectPlayer(char *status, int statusSize)
 #endif
 
     if (status && statusSize > 0)
-        snprintf(status, (size_t)statusSize, "Janela do jogo iniciada.");
+        snprintf(status,
+                 (size_t)statusSize,
+                 usingTemporaryProject ? "Janela do jogo iniciada com copia temporaria." : "Janela do jogo iniciada.");
     return true;
 }

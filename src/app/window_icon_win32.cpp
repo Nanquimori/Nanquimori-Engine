@@ -8,6 +8,24 @@
 static HICON gWindowIconSmall = NULL;
 static HICON gWindowIconBig = NULL;
 static bool gConsoleStreamsReady = false;
+static Win32ConsoleCloseCallback gConsoleCloseCallback = NULL;
+
+static BOOL WINAPI EngineConsoleCloseHandler(DWORD ctrlType)
+{
+    switch (ctrlType)
+    {
+    case CTRL_C_EVENT:
+    case CTRL_BREAK_EVENT:
+    case CTRL_CLOSE_EVENT:
+    case CTRL_LOGOFF_EVENT:
+    case CTRL_SHUTDOWN_EVENT:
+        if (gConsoleCloseCallback)
+            gConsoleCloseCallback();
+        return FALSE;
+    default:
+        return FALSE;
+    }
+}
 
 void ApplyWin32WindowIcon(void *windowHandle, const char *iconPath)
 {
@@ -125,6 +143,16 @@ void SetWin32WindowMaximized(void *windowHandle, bool maximized)
     SetForegroundWindow(hwnd);
 }
 
+void SetWin32ConsoleCloseCallback(Win32ConsoleCloseCallback callback)
+{
+    gConsoleCloseCallback = callback;
+}
+
+void EnableWin32ConsoleCloseHandler(bool enabled)
+{
+    SetConsoleCtrlHandler(EngineConsoleCloseHandler, enabled ? TRUE : FALSE);
+}
+
 #else
 
 void ApplyWin32WindowIcon(void *windowHandle, const char *iconPath)
@@ -163,6 +191,16 @@ void SetWin32WindowMaximized(void *windowHandle, bool maximized)
 {
     (void)windowHandle;
     (void)maximized;
+}
+
+void SetWin32ConsoleCloseCallback(Win32ConsoleCloseCallback callback)
+{
+    (void)callback;
+}
+
+void EnableWin32ConsoleCloseHandler(bool enabled)
+{
+    (void)enabled;
 }
 
 #endif

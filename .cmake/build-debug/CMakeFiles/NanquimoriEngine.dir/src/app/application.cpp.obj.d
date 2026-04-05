@@ -59,4 +59,6 @@ CMakeFiles/NanquimoriEngine.dir/src/app/application.cpp.obj: \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/cstdlib \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/cstring \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/string.h \
- C:/raylib/w64devkit/x86_64-w64-mingw32/include/sec_api/string_s.h
+ C:/raylib/w64devkit/x86_64-w64-mingw32/include/sec_api/string_s.h \
+ C:/raylib/w64devkit/x86_64-w64-mingw32/include/direct.h \
+ C:/raylib/w64devkit/x86_64-w64-mingw32/include/io.h

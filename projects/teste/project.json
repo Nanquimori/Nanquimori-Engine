@@ -1,6 +1,6 @@
 {
 "active":0,
-"camera":{"pos":[41.6485,14.5629,7.1377],"target":[2.8638,4.1478,11.4765]},
+"camera":{"pos":[9.7091,35.4528,83.0203],"target":[2.8638,4.1478,11.4765]},
 "editor":{"showCollisions":0,"ray2D":1,"ray3D":0},
 "export":{"gameName":"jogo verde","exeName":"teste","icon":"C:\\Users\\Andrey Acelerion\\Documents\\Documentos Salvos\\Raylib\\Nanquimori Engine\\projects\\teste\\icon.png","output":"export\\teste"},
 "exportRuntime":{"width":1280,"height":720,"console":0,"fullscreen":0,"fullscreenMode":0,"maximized":1,"resizable":0,"hud":0},

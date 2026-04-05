@@ -743,6 +743,27 @@ static bool DrawOptionButton(Rectangle rect, const char *label, bool active, boo
     return allowInput && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
 
+static bool DrawPrimaryActionButton(Rectangle rect, const char *label, bool allowInput, Vector2 mouse)
+{
+    const UIStyle *style = GetUIStyle();
+    bool hover = CheckCollisionPointRec(mouse, rect);
+    Color base = hover ? ColorLerp(style->accent, RAYWHITE, 0.08f) : style->accent;
+    Color top = ColorLerp(base, RAYWHITE, hover ? 0.18f : 0.10f);
+    Color bottom = ColorLerp(base, BLACK, hover ? 0.10f : 0.18f);
+    Color border = hover ? ColorLerp(base, RAYWHITE, 0.24f) : ColorLerp(base, BLACK, 0.20f);
+    Color textColor = UiTextForBackground(base);
+    int fontSize = 11;
+    int textW = MeasureText(label, fontSize);
+    int textX = (int)(rect.x + (rect.width - (float)textW) * 0.5f);
+    int textY = (int)(rect.y + (rect.height - (float)fontSize) * 0.5f);
+
+    DrawRectangleGradientV((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height, top, bottom);
+    DrawRectangleLinesEx(rect, 1, border);
+    DrawText(label, textX, textY, fontSize, textColor);
+
+    return allowInput && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+}
+
 static void DrawPlayerSettingsSection(int x, int *y, bool allowInput, Vector2 mouse)
 {
     bool playerClicked = DrawSectionHeader("Player", x, y, &propertiesPlayerExpanded, allowInput, mouse);
@@ -788,12 +809,16 @@ static void DrawPlayerSettingsSection(int x, int *y, bool allowInput, Vector2 mo
     }
     *y += 24;
 
-    Rectangle startButton = {(float)(x + 14), (float)(*y), (float)(PROPERTIES_PAINEL_LARGURA - 28), 22.0f};
-    if (DrawOptionButton(startButton, "Start", false, allowInput, mouse))
+    const float startButtonWidth = 62.0f;
+    Rectangle startButton = {(float)(x + 14) + (((float)(PROPERTIES_PAINEL_LARGURA - 28) - startButtonWidth) * 0.5f),
+                             (float)(*y),
+                             startButtonWidth,
+                             18.0f};
+    if (DrawPrimaryActionButton(startButton, "Start", allowInput, mouse))
     {
         playerLaunchStatusSuccess = LaunchProjectPlayer(playerLaunchStatus, (int)sizeof(playerLaunchStatus));
     }
-    *y += 32;
+    *y += 28;
 
     DrawText("Abre o player externo com as configuracoes salvas do projeto.", x + 14, *y, 10, COR_TEXTO_SECUNDARIO);
     *y += 16;
