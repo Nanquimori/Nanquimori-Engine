@@ -35,6 +35,23 @@ static RenderTexture2D editorViewportSceneCameraTexture = {0};
 static int editorViewportSceneCameraTextureWidth = 0;
 static int editorViewportSceneCameraTextureHeight = 0;
 
+static bool CamerasApproximatelyEqual(const Camera *a, const Camera *b)
+{
+    if (!a || !b)
+        return false;
+
+    const float eps = 0.0005f;
+    if (fabsf(a->position.x - b->position.x) > eps || fabsf(a->position.y - b->position.y) > eps || fabsf(a->position.z - b->position.z) > eps)
+        return false;
+    if (fabsf(a->target.x - b->target.x) > eps || fabsf(a->target.y - b->target.y) > eps || fabsf(a->target.z - b->target.z) > eps)
+        return false;
+    if (fabsf(a->up.x - b->up.x) > eps || fabsf(a->up.y - b->up.y) > eps || fabsf(a->up.z - b->up.z) > eps)
+        return false;
+    if (fabsf(a->fovy - b->fovy) > eps)
+        return false;
+    return a->projection == b->projection;
+}
+
 static Rectangle GetEditorViewportBounds(void)
 {
     Rectangle bounds = {
@@ -592,7 +609,24 @@ void UpdateApplication()
     }
     else if (navigateMode)
     {
+        Camera cameraBeforeNavigateUpdate = appCamera;
+        Camera sceneCamera = {0};
+        int sceneCameraObjectId = -1;
+        bool hasSceneCamera = GetSceneRenderCamera(&sceneCamera, &sceneCameraObjectId);
+
         UpdateEditorViewportCamera(&appCamera, true);
+
+        bool viewportCameraChanged = !CamerasApproximatelyEqual(&cameraBeforeNavigateUpdate, &appCamera);
+        if (viewportCameraChanged)
+        {
+            int sceneCameraIndex = BuscarIndicePorId(sceneCameraObjectId);
+            if (hasSceneCamera && sceneCameraIndex != -1)
+                CopySceneObjectFromCameraView(&objetos[sceneCameraIndex], &appCamera);
+        }
+        else if (hasSceneCamera && !CamerasApproximatelyEqual(&sceneCamera, &appCamera))
+        {
+            ApplyEditorViewportCamera(&sceneCamera);
+        }
     }
 
     if (stopRequested)
@@ -746,8 +780,19 @@ void RenderApplication()
         if (navigateMode)
         {
             renderCamera = appCamera;
-            renderCameraObject = nullptr;
-            showCameraFrameOverlay = false;
+            Camera sceneCamera = {0};
+            int renderCameraObjectId = -1;
+            if (GetSceneRenderCamera(&sceneCamera, &renderCameraObjectId))
+            {
+                int idx = BuscarIndicePorId(renderCameraObjectId);
+                renderCameraObject = (idx != -1) ? &objetos[idx] : nullptr;
+                showCameraFrameOverlay = (renderCameraObject != nullptr);
+            }
+            else
+            {
+                renderCameraObject = nullptr;
+                showCameraFrameOverlay = false;
+            }
         }
         else
         {
