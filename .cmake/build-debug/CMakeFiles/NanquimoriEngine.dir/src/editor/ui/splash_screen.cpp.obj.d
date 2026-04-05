@@ -14,6 +14,7 @@ CMakeFiles/NanquimoriEngine.dir/src/editor/ui/splash_screen.cpp.obj: \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\ui_style.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/scene_manager.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/outliner.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/editor_layout.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/string.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/crtdefs.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/corecrt.h \

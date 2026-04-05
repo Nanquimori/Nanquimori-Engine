@@ -93,6 +93,12 @@ static float objectSettingsScroll = 0.0f;
 static float objectSettingsMaxScroll = 0.0f;
 static bool objectSettingsScrollDragging = false;
 static float objectSettingsScrollDragOffset = 0.0f;
+static int outlinerObjectPanelHeight = 170;
+static bool outlinerObjectPanelDividerHovered = false;
+static bool outlinerObjectPanelDividerDragging = false;
+static float outlinerObjectPanelDividerDragOffset = 0.0f;
+static bool outlinerObjectPanelDividerChangedWhileDragging = false;
+static bool outlinerObjectPanelPersistRequested = false;
 static int objetoSelecionadoPrincipalId = -1;
 
 static int ObterPaiId(int id);
@@ -122,6 +128,20 @@ static bool CtrlHeld(void)
 
 static bool outlinerScenesExpanded = true;
 static bool outlinerObjectExpanded = true;
+
+static int ClampOutlinerObjectPanelHeight(int height)
+{
+    const int minHeight = 84;
+    const int minOutlinerListHeight = 120;
+    int maxHeight = GetScreenHeight() - 34 - minOutlinerListHeight;
+    if (maxHeight < minHeight)
+        maxHeight = minHeight;
+    if (height < minHeight)
+        return minHeight;
+    if (height > maxHeight)
+        return maxHeight;
+    return height;
+}
 
 static bool DrawOutlinerSectionHeader(Rectangle header, const char *title, int textSize, bool *expanded, bool allowInput, Vector2 mouse)
 {
@@ -807,11 +827,92 @@ void InitOutliner(void)
     objectSettingsMaxScroll = 0.0f;
     objectSettingsScrollDragging = false;
     objectSettingsScrollDragOffset = 0.0f;
+    outlinerObjectPanelHeight = 170;
+    outlinerObjectPanelDividerHovered = false;
+    outlinerObjectPanelDividerDragging = false;
+    outlinerObjectPanelDividerDragOffset = 0.0f;
+    outlinerObjectPanelDividerChangedWhileDragging = false;
+    outlinerObjectPanelPersistRequested = false;
     TextInputInit(&renameInput);
     TextInputInit(&propNameInput);
     TextInputInit(&sceneNameInput);
     LimparSelecaoCenas();
     objetoSelecionadoPrincipalId = -1;
+}
+
+void UpdateOutlinerLayout(bool allowInput)
+{
+    const int collapsedHeight = 32;
+    outlinerObjectPanelHeight = ClampOutlinerObjectPanelHeight(outlinerObjectPanelHeight);
+
+    int settingsHeight = outlinerObjectExpanded ? outlinerObjectPanelHeight : collapsedHeight;
+    float settingsStartY = (float)(GetScreenHeight() - settingsHeight);
+    Rectangle divider = {0.0f, settingsStartY - 6.0f, (float)PAINEL_LARGURA, 12.0f};
+    Vector2 mouse = GetMousePosition();
+
+    if (outlinerObjectPanelDividerDragging)
+    {
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && outlinerObjectExpanded)
+        {
+            int previousHeight = outlinerObjectPanelHeight;
+            float newStartY = mouse.y - outlinerObjectPanelDividerDragOffset;
+            int newHeight = (int)((float)GetScreenHeight() - newStartY + 0.5f);
+            outlinerObjectPanelHeight = ClampOutlinerObjectPanelHeight(newHeight);
+            if (outlinerObjectPanelHeight != previousHeight)
+                outlinerObjectPanelDividerChangedWhileDragging = true;
+        }
+        else
+        {
+            if (outlinerObjectPanelDividerChangedWhileDragging)
+                outlinerObjectPanelPersistRequested = true;
+            outlinerObjectPanelDividerDragging = false;
+            outlinerObjectPanelDividerChangedWhileDragging = false;
+        }
+    }
+
+    bool canHoverDivider = allowInput &&
+                           outlinerObjectExpanded &&
+                           !menuAtivo &&
+                           !menuCenaContextoAtivo &&
+                           !objectSettingsScrollDragging &&
+                           !outlinerScrollDragging;
+    outlinerObjectPanelDividerHovered = canHoverDivider && CheckCollisionPointRec(mouse, divider);
+
+    if (outlinerObjectPanelDividerHovered && !outlinerObjectPanelDividerDragging && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        outlinerObjectPanelDividerDragging = true;
+        outlinerObjectPanelDividerDragOffset = mouse.y - settingsStartY;
+        outlinerObjectPanelDividerChangedWhileDragging = false;
+    }
+
+}
+
+int GetOutlinerObjectPanelHeight(void)
+{
+    return ClampOutlinerObjectPanelHeight(outlinerObjectPanelHeight);
+}
+
+void SetOutlinerObjectPanelHeight(int height)
+{
+    if (height > 0)
+        outlinerObjectPanelHeight = ClampOutlinerObjectPanelHeight(height);
+}
+
+bool ConsumeOutlinerLayoutPersistRequested(void)
+{
+    bool requested = outlinerObjectPanelPersistRequested;
+    outlinerObjectPanelPersistRequested = false;
+    return requested;
+}
+
+bool IsOutlinerObjectPanelDragging(void)
+{
+    return outlinerObjectPanelDividerDragging;
+}
+
+bool IsOutlinerObjectPanelHandleActive(void)
+{
+    return outlinerObjectPanelDividerDragging || outlinerObjectPanelDividerHovered;
 }
 
 int BuscarIndicePorId(int id)
@@ -1357,7 +1458,11 @@ static void DrawObjectSettings(float startY, float height)
 
     Rectangle area = {0, startY, (float)PAINEL_LARGURA, height};
     DrawRectangleRec(area, COR_PAINEL);
-    DrawLine(0, (int)startY, PAINEL_LARGURA, (int)startY, COR_BORDA);
+    bool dividerActive = outlinerObjectPanelDividerDragging || outlinerObjectPanelDividerHovered;
+    Color dividerColor = dividerActive ? style->accent : Fade(style->panelBorderSoft, 0.9f);
+    int dividerThickness = dividerActive ? 4 : 2;
+    int dividerY = (int)(startY - dividerThickness * 0.5f + 0.5f);
+    DrawRectangle(0, dividerY, PAINEL_LARGURA, dividerThickness, dividerColor);
 
     float contentTop = startY + 4.0f;
     float viewH = height - 8.0f;
@@ -1538,7 +1643,6 @@ void DrawOutliner(void)
 {
     const UIStyle *style = GetUIStyle();
     DrawRectangle(0, 0, PAINEL_LARGURA, GetScreenHeight(), COR_PAINEL);
-    DrawLine(PAINEL_LARGURA, 0, PAINEL_LARGURA, GetScreenHeight(), COR_BORDA);
     Rectangle outlinerHeader = {6.0f, 6.0f, (float)(PAINEL_LARGURA - 12), 22.0f};
     DrawEditorHeader(outlinerHeader, "Outliner", 14);
     Vector2 mouse = GetMousePosition();
@@ -1560,7 +1664,7 @@ void DrawOutliner(void)
         sceneSelected[activeScene] = true;
     dropSceneIndex = -1;
     int screenH = GetScreenHeight();
-    const int settingsHeight = outlinerObjectExpanded ? 170 : 32;
+    const int settingsHeight = outlinerObjectExpanded ? GetOutlinerObjectPanelHeight() : 32;
     float settingsStartY = (float)(screenH - settingsHeight);
     const float outlinerTop = 34.0f;
     float outlinerViewH = settingsStartY - outlinerTop - 2.0f;
@@ -1580,6 +1684,8 @@ void DrawOutliner(void)
         outlinerScroll -= wheel * 24.0f;
 
     if (mouseEmSettings || menuAtivo || menuCenaContextoAtivo)
+        bloquearCliqueOutliner = true;
+    if (outlinerObjectPanelDividerDragging || outlinerObjectPanelDividerHovered)
         bloquearCliqueOutliner = true;
     bool mouseSobreCena = false;
 

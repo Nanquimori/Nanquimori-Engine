@@ -488,6 +488,33 @@ src/editor/ui/drag_float_input.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/drag_float_input.cpp.s
 .PHONY : src/editor/ui/drag_float_input.cpp.s
 
+src/editor/ui/editor_layout.obj: src/editor/ui/editor_layout.cpp.obj
+.PHONY : src/editor/ui/editor_layout.obj
+
+# target to build an object file
+src/editor/ui/editor_layout.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/editor_layout.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/editor_layout.cpp.obj
+.PHONY : src/editor/ui/editor_layout.cpp.obj
+
+src/editor/ui/editor_layout.i: src/editor/ui/editor_layout.cpp.i
+.PHONY : src/editor/ui/editor_layout.i
+
+# target to preprocess a source file
+src/editor/ui/editor_layout.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/editor_layout.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/editor_layout.cpp.i
+.PHONY : src/editor/ui/editor_layout.cpp.i
+
+src/editor/ui/editor_layout.s: src/editor/ui/editor_layout.cpp.s
+.PHONY : src/editor/ui/editor_layout.s
+
+# target to generate assembly for a file
+src/editor/ui/editor_layout.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/editor_layout.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/editor_layout.cpp.s
+.PHONY : src/editor/ui/editor_layout.cpp.s
+
 src/editor/ui/export_dialog.obj: src/editor/ui/export_dialog.cpp.obj
 .PHONY : src/editor/ui/export_dialog.obj
 
@@ -1017,6 +1044,9 @@ help:
 	@echo ... src/editor/ui/drag_float_input.obj
 	@echo ... src/editor/ui/drag_float_input.i
 	@echo ... src/editor/ui/drag_float_input.s
+	@echo ... src/editor/ui/editor_layout.obj
+	@echo ... src/editor/ui/editor_layout.i
+	@echo ... src/editor/ui/editor_layout.s
 	@echo ... src/editor/ui/export_dialog.obj
 	@echo ... src/editor/ui/export_dialog.i
 	@echo ... src/editor/ui/export_dialog.s

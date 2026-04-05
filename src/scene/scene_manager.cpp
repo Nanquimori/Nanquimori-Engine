@@ -1198,10 +1198,13 @@ bool SaveProject(void)
     fprintf(f, "\"camera\":{\"pos\":[%.4f,%.4f,%.4f],\"target\":[%.4f,%.4f,%.4f]},\n",
             projectCameraPos.x, projectCameraPos.y, projectCameraPos.z,
             projectCameraTarget.x, projectCameraTarget.y, projectCameraTarget.z);
-    fprintf(f, "\"editor\":{\"showCollisions\":%d,\"ray2D\":%d,\"ray3D\":%d},\n",
+    fprintf(f, "\"editor\":{\"showCollisions\":%d,\"ray2D\":%d,\"ray3D\":%d,\"leftPanelWidth\":%d,\"rightPanelWidth\":%d,\"outlinerPanelHeight\":%d},\n",
             PropertiesShowCollisions() ? 1 : 0,
             IsRaycast2DVisible() ? 1 : 0,
-            IsRaycast3DVisible() ? 1 : 0);
+            IsRaycast3DVisible() ? 1 : 0,
+            GetEditorLeftPanelWidth(),
+            GetEditorRightPanelWidth(),
+            GetOutlinerObjectPanelHeight());
     char exportGameNameEsc[128] = {0};
     char exportExeNameEsc[128] = {0};
     char exportIconEsc[640] = {0};
@@ -1631,10 +1634,16 @@ bool LoadProject(const char *path)
         int showCollisions = PropertiesShowCollisions() ? 1 : 0;
         int ray2D = IsRaycast2DVisible() ? 1 : 0;
         int ray3D = IsRaycast3DVisible() ? 1 : 0;
+        int leftPanelWidth = GetEditorLeftPanelWidth();
+        int rightPanelWidth = GetEditorRightPanelWidth();
+        int outlinerPanelHeight = GetOutlinerObjectPanelHeight();
 
         const char *showPtr = strstr(editorPtr, "\"showCollisions\":");
         const char *ray2DPtr = strstr(editorPtr, "\"ray2D\":");
         const char *ray3DPtr = strstr(editorPtr, "\"ray3D\":");
+        ExtractJsonIntField(editorPtr, "leftPanelWidth", &leftPanelWidth);
+        ExtractJsonIntField(editorPtr, "rightPanelWidth", &rightPanelWidth);
+        ExtractJsonIntField(editorPtr, "outlinerPanelHeight", &outlinerPanelHeight);
 
         if (showPtr)
             sscanf(showPtr, "\"showCollisions\":%d", &showCollisions);
@@ -1646,6 +1655,8 @@ bool LoadProject(const char *path)
         SetPropertiesShowCollisions(showCollisions != 0);
         SetRaycast2DVisible(ray2D != 0);
         SetRaycast3DVisible(ray3D != 0);
+        SetEditorPanelWidths(leftPanelWidth, rightPanelWidth);
+        SetOutlinerObjectPanelHeight(outlinerPanelHeight);
     }
 
     // Ler configuracoes de exportacao (compativel: pode nao existir em projetos antigos)

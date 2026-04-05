@@ -10,6 +10,7 @@ CMakeFiles/NanquimoriEngine.dir/src/editor/ui/properties_panel.cpp.obj: \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/_mingw_mac.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/_mingw_secapi.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/sdks/_mingw_ddk.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/editor_layout.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/outliner.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/app/application.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/scene_manager.h \

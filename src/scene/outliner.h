@@ -2,8 +2,9 @@
 #define OUTLINER_H
 
 #include "raylib.h"
+#include "editor/ui/editor_layout.h"
 
-#define PAINEL_LARGURA 280
+#define PAINEL_LARGURA (GetEditorLeftPanelWidth())
 #define MAX_OBJETOS 512
 #define MAX_UNDO 128
 #define MAX_NOME 31
@@ -78,6 +79,12 @@ Vector3 ObterDeslocamentoPadraoDuplicacao(void);
 bool DuplicarObjetosSelecionados(Vector3 deslocamento);
 int ObterProximoId(void);
 void DefinirProximoId(int id);
+void UpdateOutlinerLayout(bool allowInput);
+int GetOutlinerObjectPanelHeight(void);
+void SetOutlinerObjectPanelHeight(int height);
+bool ConsumeOutlinerLayoutPersistRequested(void);
+bool IsOutlinerObjectPanelDragging(void);
+bool IsOutlinerObjectPanelHandleActive(void);
 
 // Acesso aos objetos
 extern ObjetoCena objetos[MAX_OBJETOS];

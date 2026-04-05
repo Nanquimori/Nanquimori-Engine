@@ -401,7 +401,6 @@ void DrawTopBar()
 
     const UIStyle *style = GetUIStyle();
     DrawRectangle((int)left, 0, (int)availableW, 24, style->topBarBg);
-    DrawLine((int)left, 24, (int)(left + availableW), 24, style->topBarBorder);
 
     float barY = 4.0f;
     float iconSize = 16.0f;

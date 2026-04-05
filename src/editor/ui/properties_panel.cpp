@@ -926,7 +926,6 @@ void DrawPropertiesPanel(void)
     const int contentRight = x + PROPERTIES_PAINEL_LARGURA - 14;
 
     DrawRectangle(x, 0, PROPERTIES_PAINEL_LARGURA, screenH, COR_PAINEL);
-    DrawLine(x, 0, x, screenH, COR_BORDA);
     const UIStyle *style = GetUIStyle();
     Rectangle propertiesHeader = {(float)(x + 6), 6.0f, (float)(PROPERTIES_PAINEL_LARGURA - 12), 22.0f};
     DrawEditorHeader(propertiesHeader, "Properties", 14);

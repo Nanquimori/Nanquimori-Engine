@@ -14,6 +14,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/color_picker.cpp.obj.d"
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/drag_float_input.cpp.obj"
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/drag_float_input.cpp.obj.d"
+  "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/editor_layout.cpp.obj"
+  "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/editor_layout.cpp.obj.d"
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/export_dialog.cpp.obj"
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/export_dialog.cpp.obj.d"
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/file_explorer.cpp.obj"

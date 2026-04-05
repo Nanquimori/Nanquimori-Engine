@@ -2,10 +2,11 @@
 #define PROPERTIES_PANEL_H
 
 #include "raylib.h"
+#include "editor/ui/editor_layout.h"
 #include "scene/outliner.h"
 
 // Largura do painel (igual ao outliner)
-#define PROPERTIES_PAINEL_LARGURA 280
+#define PROPERTIES_PAINEL_LARGURA (GetEditorRightPanelWidth())
 
 typedef enum
 {

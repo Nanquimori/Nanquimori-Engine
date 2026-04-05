@@ -7,9 +7,11 @@
 #include "editor/ui/help_panel.h"
 #include "editor/ui/splash_screen.h"
 #include "editor/ui/info_panel.h"
+#include "editor/ui/editor_layout.h"
 #include "editor/ui/top_bar.h"
 #include "editor/ui/export_dialog.h"
 #include "editor/ui/properties_panel.h"
+#include "editor/ui/ui_style.h"
 #include "physics/nanquimori_physics.h"
 #include "scene/scene_camera.h"
 #include "scene/scene_manager.h"
@@ -62,15 +64,30 @@ static Rectangle GetEditorViewportBounds(void)
 {
     Rectangle bounds = {
         (float)PAINEL_LARGURA,
-        24.0f,
+        (float)EDITOR_TOP_BAR_HEIGHT,
         (float)(GetScreenWidth() - PAINEL_LARGURA - PROPERTIES_PAINEL_LARGURA),
-        (float)(GetScreenHeight() - 24)};
+        (float)(GetScreenHeight() - EDITOR_TOP_BAR_HEIGHT)};
 
     if (bounds.width < 1.0f)
         bounds.width = 1.0f;
     if (bounds.height < 1.0f)
         bounds.height = 1.0f;
     return bounds;
+}
+
+static void DrawEditorLayoutSeams(void)
+{
+    const UIStyle *style = GetUIStyle();
+    int screenW = GetScreenWidth();
+    int screenH = GetScreenHeight();
+    int leftDividerX = PAINEL_LARGURA;
+    int rightDividerX = screenW - PROPERTIES_PAINEL_LARGURA;
+    const int topDividerY = EDITOR_TOP_BAR_HEIGHT;
+
+    // Keep the main editor seams continuous without slicing through side panel headers.
+    DrawLine(leftDividerX, topDividerY, rightDividerX, topDividerY, style->panelBorder);
+    DrawLine(leftDividerX, 0, leftDividerX, screenH - 1, style->panelBorder);
+    DrawLine(rightDividerX, 0, rightDividerX, screenH - 1, style->panelBorder);
 }
 
 static void GetProjectViewportFrameSettings(float *aspectOut, int *widthOut, int *heightOut)
@@ -526,11 +543,13 @@ static bool IsMouseOverUIRoot(void)
         return true;
     if (PropertiesIsBlockingViewport())
         return true;
+    if (IsMouseOverEditorLayoutHandle(mouse))
+        return true;
     if (mouse.x < (float)PAINEL_LARGURA)
         return true;
     if (mouse.x > (float)(screenW - PROPERTIES_PAINEL_LARGURA))
         return true;
-    if (mouse.y < 24.0f)
+    if (mouse.y < (float)EDITOR_TOP_BAR_HEIGHT)
         return true;
     if (IsMouseOverInfoPanel(mouse))
         return true;
@@ -641,6 +660,7 @@ void InitializeApplication()
     appCamera = InitCamera();
     EnableCursor();
 
+    InitEditorLayout();
     InitTopBar();
     InitOutliner();
     InitInfoPanel();
@@ -706,6 +726,26 @@ void UpdateApplication()
     }
 
     UpdateTopBar();
+    bool layoutInputAllowed = !HelpPanelShouldShow() &&
+                              !SplashScreenShouldShow() &&
+                              !SplashScreenIsInputBlocked() &&
+                              !fileExplorer.aberto &&
+                              !IsFileMenuOpen() &&
+                              !IsTopBarMenuOpen() &&
+                              !IsExportDialogOpen() &&
+                              !PropertiesIsBlockingViewport();
+    UpdateEditorLayout(layoutInputAllowed);
+    UpdateOutlinerLayout(layoutInputAllowed);
+    int desiredCursor = MOUSE_CURSOR_DEFAULT;
+    if (IsOutlinerObjectPanelHandleActive())
+        desiredCursor = MOUSE_CURSOR_RESIZE_NS;
+    else if (IsEditorLayoutHandleActive())
+        desiredCursor = MOUSE_CURSOR_RESIZE_EW;
+    SetMouseCursor(desiredCursor);
+    if (ConsumeEditorLayoutPersistRequested() && GetProjectPath()[0] != '\0')
+        SaveProject();
+    if (ConsumeOutlinerLayoutPersistRequested() && GetProjectPath()[0] != '\0')
+        SaveProject();
     bool playSession = IsPlayModeActive();
     bool playPaused = IsPlayPaused();
     bool playMode = playSession && !playPaused;
@@ -816,7 +856,8 @@ void UpdateApplication()
 
     if (!playSession)
     {
-        ProcessarOutliner();
+        if (!IsEditorLayoutDragging() && !IsOutlinerObjectPanelDragging())
+            ProcessarOutliner();
 
         UpdateFileExplorer();
         UpdateExportDialog();
@@ -1057,6 +1098,8 @@ void RenderApplication()
     DrawOutliner();
     DrawPropertiesPanel();
     DrawTopBar();
+    DrawEditorLayoutSeams();
+    DrawEditorLayoutAffordances();
     DrawFileMenu();
     DrawExportDialog();
     DrawFileExplorer();

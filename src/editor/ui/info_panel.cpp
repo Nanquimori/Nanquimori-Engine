@@ -24,7 +24,6 @@ static bool raycast3DVisible = false;
 #define COR_TEXTO_SECUNDARIO (Color){150, 150, 150, 255}
 
 // Constantes
-#define PAINEL_LARGURA 280
 #define PAINEL_X (10.0f + PAINEL_LARGURA)
 #define PAINEL_Y 32.0f
 #define PAINEL_W 150.0f
