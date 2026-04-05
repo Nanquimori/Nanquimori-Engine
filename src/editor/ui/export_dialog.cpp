@@ -43,6 +43,8 @@ static char exportWidthBuffer[16] = {0};
 static char exportHeightBuffer[16] = {0};
 static char exportDialogStatus[256] = {0};
 static bool exportDialogSuccess = false;
+static int exportDialogInputWarmupFrames = 0;
+static bool exportDialogDirty = false;
 
 static int GetExportFullscreenMode(void)
 {
@@ -221,6 +223,20 @@ static void SyncUiBuffersToSettings(void)
         exportDialogSettings.windowHeight = ClampInt(atoi(exportHeightBuffer), 240, 4320);
 }
 
+static void SyncExportDialogSettingsToProject(bool saveProjectFile)
+{
+    SyncUiBuffersToSettings();
+    exportDialogSettings.showStartupHud = false;
+    SetProjectExportSettings(&exportDialogSettings);
+
+    if (!saveProjectFile)
+        return;
+
+    const char *projectPath = GetProjectPath();
+    if (projectPath && projectPath[0] != '\0')
+        SaveProject();
+}
+
 static void ToggleExportOption(bool *value)
 {
     if (!value)
@@ -277,6 +293,8 @@ void InitExportDialog(void)
     TextInputInit(&exportInputHeight);
     exportDialogStatus[0] = '\0';
     exportDialogSuccess = false;
+    exportDialogInputWarmupFrames = 0;
+    exportDialogDirty = false;
     SyncSettingsToUiBuffers();
 }
 
@@ -295,11 +313,17 @@ void OpenExportDialog(void)
     exportDialogStatus[0] = '\0';
     exportDialogSuccess = false;
     exportDialogOpen = true;
+    exportDialogInputWarmupFrames = 1;
+    exportDialogDirty = false;
 }
 
 void CloseExportDialog(void)
 {
+    if (exportDialogDirty)
+        SyncExportDialogSettingsToProject(true);
     exportDialogOpen = false;
+    exportDialogInputWarmupFrames = 0;
+    exportDialogDirty = false;
 }
 
 bool IsExportDialogOpen(void)
@@ -309,11 +333,8 @@ bool IsExportDialogOpen(void)
 
 static bool CommitExport(void)
 {
-    SyncUiBuffersToSettings();
-    exportDialogSettings.showStartupHud = false;
-
+    SyncExportDialogSettingsToProject(false);
     ProjectExportSettings settings = exportDialogSettings;
-    SetProjectExportSettings(&settings);
 
     bool saved = SaveProject();
     if (!saved)
@@ -336,6 +357,7 @@ static bool CommitExport(void)
 
     bool ok = ExportGameBuild(&settings, exportDialogStatus, sizeof(exportDialogStatus));
     exportDialogSuccess = ok;
+    exportDialogDirty = false;
     GetProjectExportSettings(&exportDialogSettings);
     SyncSettingsToUiBuffers();
     return ok;
@@ -348,10 +370,20 @@ void UpdateExportDialog(void)
 
     char selectedIconPath[512] = {0};
     if (FileExplorerConsumeSelectedExportIconPath(selectedIconPath))
+    {
         CopyStringSafe(exportDialogSettings.iconPath, sizeof(exportDialogSettings.iconPath), selectedIconPath);
+        exportDialogDirty = true;
+        SyncExportDialogSettingsToProject(false);
+    }
 
     if (fileExplorer.aberto)
         return;
+
+    if (exportDialogInputWarmupFrames > 0)
+    {
+        exportDialogInputWarmupFrames--;
+        return;
+    }
 
     ExportDialogLayout layout = GetExportDialogLayout();
     Vector2 mouse = GetMousePosition();
@@ -371,6 +403,8 @@ void UpdateExportDialog(void)
     if (UIButtonGetState(layout.buttonUseProjectIcon).clicked)
     {
         exportDialogSettings.iconPath[0] = '\0';
+        exportDialogDirty = true;
+        SyncExportDialogSettingsToProject(false);
         return;
     }
 
@@ -387,11 +421,23 @@ void UpdateExportDialog(void)
     }
 
     if (CheckCollisionPointRec(mouse, layout.toggleConsole) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
         ToggleExportOption(&exportDialogSettings.showConsole);
+        exportDialogDirty = true;
+        SyncExportDialogSettingsToProject(false);
+    }
     else if (CheckCollisionPointRec(mouse, layout.toggleBorderless) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
         ToggleExportFullscreenMode(EXPORT_FULLSCREEN_BORDERLESS);
+        exportDialogDirty = true;
+        SyncExportDialogSettingsToProject(false);
+    }
     else if (CheckCollisionPointRec(mouse, layout.toggleExclusive) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
         ToggleExportFullscreenMode(EXPORT_FULLSCREEN_EXCLUSIVE);
+        exportDialogDirty = true;
+        SyncExportDialogSettingsToProject(false);
+    }
     else if (CheckCollisionPointRec(mouse, layout.toggleMaximized) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
         ToggleExportOption(&exportDialogSettings.startMaximized);
@@ -401,9 +447,15 @@ void UpdateExportDialog(void)
             exportInputWidth.active = false;
             exportInputHeight.active = false;
         }
+        exportDialogDirty = true;
+        SyncExportDialogSettingsToProject(false);
     }
     else if (CheckCollisionPointRec(mouse, layout.toggleResizable) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
         ToggleExportOption(&exportDialogSettings.resizableWindow);
+        exportDialogDirty = true;
+        SyncExportDialogSettingsToProject(false);
+    }
 }
 
 void DrawExportDialog(void)
@@ -435,20 +487,20 @@ void DrawExportDialog(void)
     textCfg.allowInput = true;
 
     DrawFieldLabel(layout.inputGameName, "Titulo da janela");
-    TextInputDraw(layout.inputGameName, exportDialogSettings.gameName,
-                  (int)sizeof(exportDialogSettings.gameName), &exportInputGameName, &textCfg);
+    int gameNameFlags = TextInputDraw(layout.inputGameName, exportDialogSettings.gameName,
+                                      (int)sizeof(exportDialogSettings.gameName), &exportInputGameName, &textCfg);
 
     DrawFieldLabel(layout.inputExeName, "Arquivo principal (.exe)");
-    TextInputDraw(layout.inputExeName, exportDialogSettings.exeName,
-                  (int)sizeof(exportDialogSettings.exeName), &exportInputExeName, &textCfg);
+    int exeNameFlags = TextInputDraw(layout.inputExeName, exportDialogSettings.exeName,
+                                     (int)sizeof(exportDialogSettings.exeName), &exportInputExeName, &textCfg);
 
     DrawFieldLabel(layout.inputOutputDir, "Pasta do build");
-    TextInputDraw(layout.inputOutputDir, exportDialogSettings.outputDir,
-                  (int)sizeof(exportDialogSettings.outputDir), &exportInputOutputDir, &textCfg);
+    int outputDirFlags = TextInputDraw(layout.inputOutputDir, exportDialogSettings.outputDir,
+                                       (int)sizeof(exportDialogSettings.outputDir), &exportInputOutputDir, &textCfg);
 
     DrawFieldLabel(layout.inputIconPath, "Icone do executavel");
-    TextInputDraw(layout.inputIconPath, exportDialogSettings.iconPath,
-                  (int)sizeof(exportDialogSettings.iconPath), &exportInputIconPath, &textCfg);
+    int iconPathFlags = TextInputDraw(layout.inputIconPath, exportDialogSettings.iconPath,
+                                      (int)sizeof(exportDialogSettings.iconPath), &exportInputIconPath, &textCfg);
 
     UIButtonConfig neutralButton = {0};
     neutralButton.centerText = true;
@@ -489,9 +541,15 @@ void DrawExportDialog(void)
     }
 
     DrawFieldLabel(layout.inputWidth, "Largura da janela");
-    TextInputDraw(layout.inputWidth, exportWidthBuffer, (int)sizeof(exportWidthBuffer), &exportInputWidth, &intCfg);
+    int widthFlags = TextInputDraw(layout.inputWidth, exportWidthBuffer, (int)sizeof(exportWidthBuffer), &exportInputWidth, &intCfg);
     DrawFieldLabel(layout.inputHeight, "Altura da janela");
-    TextInputDraw(layout.inputHeight, exportHeightBuffer, (int)sizeof(exportHeightBuffer), &exportInputHeight, &intCfg);
+    int heightFlags = TextInputDraw(layout.inputHeight, exportHeightBuffer, (int)sizeof(exportHeightBuffer), &exportInputHeight, &intCfg);
+    int textFlags = gameNameFlags | exeNameFlags | outputDirFlags | iconPathFlags | widthFlags | heightFlags;
+    if (textFlags & (TEXT_INPUT_CHANGED | TEXT_INPUT_SUBMITTED | TEXT_INPUT_DEACTIVATED))
+    {
+        exportDialogDirty = true;
+        SyncExportDialogSettingsToProject(false);
+    }
     if (resolutionLocked)
     {
         Rectangle resolutionHintBounds = {layout.inputWidth.x, layout.inputHeight.y + layout.inputHeight.height + 6.0f, layout.inputHeight.x + layout.inputHeight.width - layout.inputWidth.x, 12.0f};

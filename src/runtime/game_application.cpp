@@ -97,10 +97,74 @@ static bool ResolveRuntimeFile(const char *relativePath, char *out, size_t outSi
     return false;
 }
 
-static void ApplyRuntimeWindowIcon(void)
+static bool StringsEqualIgnoreCaseLocal(const char *a, const char *b)
 {
+    if (!a || !b)
+        return false;
+
+    while (*a != '\0' && *b != '\0')
+    {
+        char ca = *a;
+        char cb = *b;
+        if (ca >= 'A' && ca <= 'Z')
+            ca = (char)(ca - 'A' + 'a');
+        if (cb >= 'A' && cb <= 'Z')
+            cb = (char)(cb - 'A' + 'a');
+        if (ca != cb)
+            return false;
+        a++;
+        b++;
+    }
+
+    return *a == '\0' && *b == '\0';
+}
+
+static bool ApplyRuntimeWindowIconFromPath(const char *iconPath)
+{
+    if (!iconPath || iconPath[0] == '\0')
+        return false;
+
+    const char *ext = GetFileExtension(iconPath);
 #ifdef _WIN32
+    if (ext && StringsEqualIgnoreCaseLocal(ext, ".ico"))
+    {
+        ApplyWin32WindowIcon(GetWindowHandle(), iconPath);
+        return true;
+    }
+#endif
+
+    Image icon = LoadImage(iconPath);
+    if (!icon.data || icon.width <= 0 || icon.height <= 0)
+        return false;
+
+    SetWindowIcon(icon);
+    UnloadImage(icon);
+    return true;
+}
+
+static bool ResolveRuntimeConfiguredIconPath(const ProjectExportSettings *settings, char *out, size_t outSize)
+{
+    if (!out || outSize == 0)
+        return false;
+    out[0] = '\0';
+
+    if (settings && settings->iconPath[0] != '\0' && ResolveRuntimeFile(settings->iconPath, out, outSize))
+        return true;
+
+    if (ResolveRuntimeFile("icon.png", out, outSize))
+        return true;
+
+    return false;
+}
+
+static void ApplyRuntimeWindowIcon(const ProjectExportSettings *settings)
+{
     char iconPath[512] = {0};
+    if (ResolveRuntimeConfiguredIconPath(settings, iconPath, sizeof(iconPath)) &&
+        ApplyRuntimeWindowIconFromPath(iconPath))
+        return;
+
+#ifdef _WIN32
     if (ResolveRuntimeFile("game.ico", iconPath, sizeof(iconPath)))
         ApplyWin32WindowIcon(GetWindowHandle(), iconPath);
 #endif
@@ -364,6 +428,7 @@ static bool ReloadRuntimeProject(void)
     if (exportSettings.gameName[0] != '\0')
         SetWindowTitle(exportSettings.gameName);
     SetWin32ConsoleVisible(exportSettings.showConsole);
+    ApplyRuntimeWindowIcon(&exportSettings);
 
     ResetNanquimoriPhysicsWorld();
     if (!GetSceneRenderCamera(&runtimeCamera, nullptr))
@@ -402,7 +467,7 @@ void InitializeGameApplication(void)
                bootHeight,
                runtimeBootSettings.gameName[0] != '\0' ? runtimeBootSettings.gameName : "Nanquimori Game");
 
-    ApplyRuntimeWindowIcon();
+    ApplyRuntimeWindowIcon(&runtimeBootSettings);
     SetWin32ConsoleVisible(runtimeBootSettings.showConsole);
     SetTargetFPS(60);
 

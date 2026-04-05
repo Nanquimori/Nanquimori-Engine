@@ -21,6 +21,7 @@
 #define COR_TEXTO_SECUNDARIO (GetUIStyle()->textSecondary)
 
 static bool propertiesObjectExpanded = true;
+static bool propertiesPlayerExpanded = true;
 static bool propertiesTransformExpanded = true;
 static bool propertiesCameraExpanded = true;
 static bool propertiesPhysicsExpanded = true;
@@ -45,6 +46,7 @@ static bool DrawSectionHeader(const char *title, int x, int *y, bool *expanded, 
 
 static void FocusPropertiesSection(bool *expandedSection)
 {
+    propertiesPlayerExpanded = (expandedSection == &propertiesPlayerExpanded);
     propertiesTransformExpanded = (expandedSection == &propertiesTransformExpanded);
     propertiesCameraExpanded = (expandedSection == &propertiesCameraExpanded);
     propertiesPhysicsExpanded = (expandedSection == &propertiesPhysicsExpanded);
@@ -84,6 +86,8 @@ static DragFloatInputState cameraResolutionWidthInput = {0};
 static DragFloatInputState cameraResolutionHeightInput = {0};
 static char cameraResolutionWidthBuffer[16] = {0};
 static char cameraResolutionHeightBuffer[16] = {0};
+static char playerLaunchStatus[128] = {0};
+static bool playerLaunchStatusSuccess = false;
 static ProtoCustomEntry protoCustomPacks[MAX_PROTO_CUSTOM] = {0};
 static int protoCustomPackCount = 0;
 static bool protoCustomLoaded = false;
@@ -714,6 +718,21 @@ static bool DrawCheckboxRow(const char *label, bool checked, int x, int *y, floa
     return allowInput && CheckCollisionPointRec(mouse, row) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
 
+static bool DrawCheckboxField(const char *label, bool checked, Rectangle row, bool allowInput, Vector2 mouse)
+{
+    const Color activeCheckText = (Color){0, 255, 102, 255};
+    const float toggleSize = 14.0f;
+    Rectangle toggle = {row.x, row.y + (row.height - toggleSize) * 0.5f, toggleSize, toggleSize};
+    int textY = (int)(row.y + (row.height - 12.0f) * 0.5f);
+
+    DrawRectangleLinesEx(toggle, 1, COR_BORDA);
+    if (checked)
+        DrawRectangle((int)toggle.x + 3, (int)toggle.y + 3, 8, 8, COR_ITEM_SEL);
+    DrawText(label, (int)row.x + 20, textY, 12, checked ? activeCheckText : COR_TEXTO);
+
+    return allowInput && CheckCollisionPointRec(mouse, row) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+}
+
 static bool DrawOptionButton(Rectangle rect, const char *label, bool active, bool allowInput, Vector2 mouse)
 {
     bool hover = CheckCollisionPointRec(mouse, rect);
@@ -722,6 +741,68 @@ static bool DrawOptionButton(Rectangle rect, const char *label, bool active, boo
     DrawRectangleLinesEx(rect, 1, COR_BORDA);
     DrawText(label, (int)rect.x + 6, (int)rect.y + 3, 11, active ? GetUIStyle()->buttonTextHover : COR_TEXTO);
     return allowInput && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+}
+
+static void DrawPlayerSettingsSection(int x, int *y, bool allowInput, Vector2 mouse)
+{
+    bool playerClicked = DrawSectionHeader("Player", x, y, &propertiesPlayerExpanded, allowInput, mouse);
+    if (playerClicked && CtrlHeld() && propertiesPlayerExpanded)
+        FocusPropertiesSection(&propertiesPlayerExpanded);
+    if (!propertiesPlayerExpanded)
+        return;
+
+    ProjectExportSettings settings = {0};
+    GetProjectExportSettings(&settings);
+
+    int mode = settings.fullscreenMode;
+    if (mode < EXPORT_FULLSCREEN_DISABLED || mode > EXPORT_FULLSCREEN_BORDERLESS)
+        mode = settings.startFullscreen ? EXPORT_FULLSCREEN_BORDERLESS : EXPORT_FULLSCREEN_DISABLED;
+    bool fullscreen = (mode != EXPORT_FULLSCREEN_DISABLED);
+    bool maximized = settings.startMaximized;
+
+    const float optionGap = 10.0f;
+    const float optionWidth = ((float)(PROPERTIES_PAINEL_LARGURA - 28) - optionGap) * 0.5f;
+    Rectangle maximizedRow = {(float)(x + 14), (float)(*y), optionWidth, 18.0f};
+    Rectangle fullscreenRow = {(float)(x + 14) + optionWidth + optionGap, (float)(*y), optionWidth, 18.0f};
+
+    if (DrawCheckboxField("Janela Maximizada", maximized, maximizedRow, allowInput, mouse))
+    {
+        maximized = !maximized;
+        settings.startMaximized = maximized;
+        if (maximized)
+        {
+            settings.fullscreenMode = EXPORT_FULLSCREEN_DISABLED;
+            settings.startFullscreen = false;
+        }
+        SetProjectExportSettings(&settings);
+    }
+
+    if (DrawCheckboxField("Fullscreen", fullscreen, fullscreenRow, allowInput, mouse))
+    {
+        fullscreen = !fullscreen;
+        settings.fullscreenMode = fullscreen ? EXPORT_FULLSCREEN_BORDERLESS : EXPORT_FULLSCREEN_DISABLED;
+        settings.startFullscreen = fullscreen;
+        if (fullscreen)
+            settings.startMaximized = false;
+        SetProjectExportSettings(&settings);
+    }
+    *y += 24;
+
+    Rectangle startButton = {(float)(x + 14), (float)(*y), (float)(PROPERTIES_PAINEL_LARGURA - 28), 22.0f};
+    if (DrawOptionButton(startButton, "Start", false, allowInput, mouse))
+    {
+        playerLaunchStatusSuccess = LaunchProjectPlayer(playerLaunchStatus, (int)sizeof(playerLaunchStatus));
+    }
+    *y += 32;
+
+    DrawText("Abre o player externo com as configuracoes salvas do projeto.", x + 14, *y, 10, COR_TEXTO_SECUNDARIO);
+    *y += 16;
+    if (playerLaunchStatus[0] != '\0')
+    {
+        Color statusColor = playerLaunchStatusSuccess ? (Color){78, 182, 112, 255} : (Color){200, 88, 78, 255};
+        DrawText(playerLaunchStatus, x + 14, *y, 10, statusColor);
+        *y += 16;
+    }
 }
 
 static void DrawVec3Inputs(const char *label, Vector3 *value, int baseIndex, int x, int *y, bool allowInput, bool useDegrees,
@@ -855,6 +936,8 @@ void DrawPropertiesPanel(void)
     BeginScissorMode((int)contentRect.x, (int)contentRect.y, (int)contentRect.width, (int)contentRect.height);
 
     int y = (int)(contentTop + 4 - propertiesScroll);
+
+    DrawPlayerSettingsSection(x, &y, allowInput, mouse);
 
     bool objectClicked = DrawSectionHeader("Objeto", x, &y, &propertiesObjectExpanded, allowInput, mouse);
     if (objectClicked && CtrlHeld() && propertiesObjectExpanded)

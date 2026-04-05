@@ -17,6 +17,7 @@
 #include "raymath.h"
 #include <cmath>
 #include <stdio.h>
+#include <stdlib.h>
 #include <cstring>
 
 static Camera appCamera = {0};
@@ -342,6 +343,61 @@ static bool ResolveWindowIconPath(char *out, size_t outSize)
         return true;
 
     return false;
+}
+
+static bool ResolveRuntimePlayerExecutablePath(char *out, size_t outSize)
+{
+    if (!out || outSize == 0)
+        return false;
+    out[0] = '\0';
+
+    const char *candidates[] = {
+#ifdef _WIN32
+        "NanquimoriPlayer.exe",
+        ".cmake/build-debug/NanquimoriPlayer.exe",
+        ".cmake/build-release/NanquimoriPlayer.exe",
+        "build/NanquimoriPlayer.exe"
+#else
+        "NanquimoriPlayer",
+        ".cmake/build-debug/NanquimoriPlayer",
+        ".cmake/build-release/NanquimoriPlayer",
+        "build/NanquimoriPlayer"
+#endif
+    };
+
+    for (int i = 0; i < (int)(sizeof(candidates) / sizeof(candidates[0])); i++)
+    {
+        if (FileExists(candidates[i]))
+        {
+            strncpy(out, candidates[i], outSize - 1);
+            out[outSize - 1] = '\0';
+            return true;
+        }
+    }
+
+    const char *cwd = GetWorkingDirectory();
+    const char *appDir = GetApplicationDirectory();
+    for (int i = 0; i < (int)(sizeof(candidates) / sizeof(candidates[0])); i++)
+    {
+        if (TryResolvePathFromBaseChain(cwd, candidates[i], out, outSize))
+            return true;
+        if (TryResolvePathFromBaseChain(appDir, candidates[i], out, outSize))
+            return true;
+    }
+
+    return false;
+}
+
+static void NormalizeWindowsCommandPath(char *path)
+{
+    if (!path)
+        return;
+
+    for (size_t i = 0; path[i] != '\0'; i++)
+    {
+        if (path[i] == '/')
+            path[i] = '\\';
+    }
 }
 
 static void ApplyRuntimeWindowIcon(void)
@@ -955,5 +1011,70 @@ bool LookThroughSceneCameraObject(int objectId)
 
     editorViewportSceneCameraLookObjectId = objectId;
     ApplyEditorViewportCamera(&objectCamera);
+    return true;
+}
+
+bool LaunchProjectPlayer(char *status, int statusSize)
+{
+    if (status && statusSize > 0)
+        status[0] = '\0';
+
+    if (!SaveProject())
+    {
+        if (status && statusSize > 0)
+            snprintf(status, (size_t)statusSize, "Salve o projeto antes de iniciar o player.");
+        return false;
+    }
+
+    const char *projectDir = GetProjectDir();
+    if (!projectDir || projectDir[0] == '\0')
+    {
+        if (status && statusSize > 0)
+            snprintf(status, (size_t)statusSize, "Pasta do projeto nao encontrada.");
+        return false;
+    }
+
+    char playerPath[1024] = {0};
+    if (!ResolveRuntimePlayerExecutablePath(playerPath, sizeof(playerPath)))
+    {
+        if (status && statusSize > 0)
+            snprintf(status, (size_t)statusSize, "Nao encontrei o executavel do player.");
+        return false;
+    }
+
+#ifdef _WIN32
+    char normalizedProjectDir[1024] = {0};
+    char normalizedPlayerPath[1024] = {0};
+    strncpy(normalizedProjectDir, projectDir, sizeof(normalizedProjectDir) - 1);
+    normalizedProjectDir[sizeof(normalizedProjectDir) - 1] = '\0';
+    strncpy(normalizedPlayerPath, playerPath, sizeof(normalizedPlayerPath) - 1);
+    normalizedPlayerPath[sizeof(normalizedPlayerPath) - 1] = '\0';
+    NormalizeWindowsCommandPath(normalizedProjectDir);
+    NormalizeWindowsCommandPath(normalizedPlayerPath);
+
+    char commandLine[2600] = {0};
+    snprintf(commandLine,
+             sizeof(commandLine),
+             "cmd /c start \"\" /D \"%s\" \"%s\"",
+             normalizedProjectDir,
+             normalizedPlayerPath);
+
+    int launchResult = system(commandLine);
+    if (launchResult != 0)
+    {
+        if (status && statusSize > 0)
+            snprintf(status, (size_t)statusSize, "Falha ao abrir a janela do jogo.");
+        return false;
+    }
+#else
+    (void)projectDir;
+    (void)playerPath;
+    if (status && statusSize > 0)
+        snprintf(status, (size_t)statusSize, "Inicializacao do player so foi configurada no Windows.");
+    return false;
+#endif
+
+    if (status && statusSize > 0)
+        snprintf(status, (size_t)statusSize, "Janela do jogo iniciada.");
     return true;
 }

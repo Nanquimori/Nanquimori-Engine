@@ -1524,13 +1524,12 @@ void UpdateFileMenu(void)
     // Menu principal File
     const float menuX = (float)PAINEL_LARGURA + 8.0f;
     const float menuY = 24.0f;
-    Rectangle menuFileRect = {menuX, menuY, 200.0f, 96.0f};
+    Rectangle menuFileRect = {menuX, menuY, 200.0f, 72.0f};
 
     // Itens do menu
     Rectangle itemImport = {menuFileRect.x, menuFileRect.y, menuFileRect.width, 24.0f};
     Rectangle itemOpen = {menuFileRect.x, menuFileRect.y + 24.0f, menuFileRect.width, 24.0f};
     Rectangle itemSave = {menuFileRect.x, menuFileRect.y + 48.0f, menuFileRect.width, 24.0f};
-    Rectangle itemExport = {menuFileRect.x, menuFileRect.y + 72.0f, menuFileRect.width, 24.0f};
 
     // Área do submenu
     const float submenuItemH = 24.0f;
@@ -1567,11 +1566,6 @@ void UpdateFileMenu(void)
     else if (CheckCollisionPointRec(mouse, itemSave))
     {
         fileExplorer.itemHoverFile = 2;
-        fileExplorer.mostrarSubmenuImport = false;
-    }
-    else if (CheckCollisionPointRec(mouse, itemExport))
-    {
-        fileExplorer.itemHoverFile = 3;
         fileExplorer.mostrarSubmenuImport = false;
     }
     else if (!CheckCollisionPointRec(mouse, menuFileRect))
@@ -1623,11 +1617,6 @@ void UpdateFileMenu(void)
                 OpenProjectSaveAs();
             fileExplorer.mostrarMenuFile = false;
         }
-        else if (fileExplorer.itemHoverFile == 3)
-        {
-            OpenExportDialog();
-            fileExplorer.mostrarMenuFile = false;
-        }
         else if (!CheckCollisionPointRec(mouse, menuFileRect))
         {
             fileExplorer.mostrarMenuFile = false;
@@ -1648,14 +1637,13 @@ void DrawFileMenu(void)
     const UIStyle *style = GetUIStyle();
 
     // Menu principal File
-    Rectangle menuFileRect = {menuX, menuY, 200.0f, 96.0f};
+    Rectangle menuFileRect = {menuX, menuY, 200.0f, 72.0f};
     DrawRectangleRec(menuFileRect, style->panelBg);
 
     // Itens do menu
     Rectangle itemImport = {menuFileRect.x, menuFileRect.y, menuFileRect.width, 24.0f};
     Rectangle itemOpen = {menuFileRect.x, menuFileRect.y + 24.0f, menuFileRect.width, 24.0f};
     Rectangle itemSave = {menuFileRect.x, menuFileRect.y + 48.0f, menuFileRect.width, 24.0f};
-    Rectangle itemExport = {menuFileRect.x, menuFileRect.y + 72.0f, menuFileRect.width, 24.0f};
 
     // Área do submenu
     const float submenuItemH = 24.0f;
@@ -1666,25 +1654,20 @@ void DrawFileMenu(void)
     bool hoverImport = fileExplorer.itemHoverFile == 0;
     bool hoverOpen = fileExplorer.itemHoverFile == 1;
     bool hoverSave = fileExplorer.itemHoverFile == 2;
-    bool hoverExport = fileExplorer.itemHoverFile == 3;
 
     DrawRectangleRec(itemImport, hoverImport ? FileMenuOptionHoverColor() : style->buttonBg);
     DrawRectangleRec(itemOpen, hoverOpen ? FileMenuOptionHoverColor() : style->buttonBg);
     DrawRectangleRec(itemSave, hoverSave ? FileMenuOptionHoverColor() : style->buttonBg);
-    DrawRectangleRec(itemExport, hoverExport ? FileMenuOptionHoverColor() : style->buttonBg);
     if (hoverImport)
         DrawRectangleLinesEx(itemImport, 1.0f, FileMenuOptionBorderColor());
     if (hoverOpen)
         DrawRectangleLinesEx(itemOpen, 1.0f, FileMenuOptionBorderColor());
     if (hoverSave)
         DrawRectangleLinesEx(itemSave, 1.0f, FileMenuOptionBorderColor());
-    if (hoverExport)
-        DrawRectangleLinesEx(itemExport, 1.0f, FileMenuOptionBorderColor());
 
     DrawText("Import Model", (int)(itemImport.x + 10), (int)(itemImport.y + 6), 12, hoverImport ? style->buttonTextHover : style->buttonText);
     DrawText("Open Project", (int)(itemOpen.x + 10), (int)(itemOpen.y + 6), 12, hoverOpen ? style->buttonTextHover : style->buttonText);
     DrawText("Save Project", (int)(itemSave.x + 10), (int)(itemSave.y + 6), 12, hoverSave ? style->buttonTextHover : style->buttonText);
-    DrawText("Configurar Build", (int)(itemExport.x + 10), (int)(itemExport.y + 6), 12, hoverExport ? style->buttonTextHover : style->buttonText);
 
     // Seta para indicar submenu
     DrawText(">", (int)(itemImport.x + menuFileRect.width - 20), (int)(itemImport.y + 6), 12, hoverImport ? style->buttonTextHover : style->buttonText);

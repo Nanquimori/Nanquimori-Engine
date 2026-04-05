@@ -10,6 +10,7 @@ CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/top_bar.cpp.obj: \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/_mingw_mac.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/_mingw_secapi.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/sdks/_mingw_ddk.h \
+ C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\export_dialog.h \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\file_explorer.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/text_input.h \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\help_panel.h \

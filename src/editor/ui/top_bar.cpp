@@ -1,4 +1,5 @@
 #include "top_bar.h"
+#include "export_dialog.h"
 #include "file_explorer.h"
 #include "help_panel.h"
 #include "splash_screen.h"
@@ -25,6 +26,7 @@ static bool playStopRequested = false;
 static bool playRestartRequested = false;
 static bool fileHover = false;
 static bool helpHover = false;
+static bool buildHover = false;
 static bool playHover = false;
 static bool stopHover = false;
 static bool restartHover = false;
@@ -299,8 +301,20 @@ void UpdateTopBar()
         }
     }
 
-    // Help
+    // Build
     barX += 70.0f;
+    Rectangle areaBuild = {barX - 6.0f, 2.0f, 58.0f, 20.0f};
+    UIButtonState buildState = UIButtonGetState(areaBuild);
+    buildHover = buildState.hovered;
+    if (buildState.clicked)
+    {
+        OpenExportDialog();
+        addMenuOpen = false;
+        addShapesSubmenuOpen = false;
+    }
+
+    // Help
+    barX += 62.0f;
     Rectangle areaHelp = {barX - 4.0f, 2.0f, 68.0f, 20.0f};
     UIButtonState helpState = UIButtonGetState(areaHelp);
     helpHover = helpState.hovered;
@@ -413,8 +427,15 @@ void DrawTopBar()
     Color addColor = addActive ? style->accent : style->textPrimary;
     DrawText("Add", (int)barX, 5, 12, addColor);
 
-    // Help
+    // Build
     barX += 70.0f;
+    Rectangle areaBuild = {barX - 6.0f, 2.0f, 58.0f, 20.0f};
+    bool buildActive = buildHover || IsExportDialogOpen();
+    Color buildText = buildActive ? style->accent : style->textPrimary;
+    DrawText("Build", (int)barX, 5, 12, buildText);
+
+    // Help
+    barX += 62.0f;
     Rectangle areaHelp = {barX - 4.0f, 2.0f, 68.0f, 20.0f};
     bool helpActive = helpHover || HelpPanelShouldShow();
     Color helpText = helpActive ? style->accent : style->textPrimary;
