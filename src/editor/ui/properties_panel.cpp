@@ -963,15 +963,7 @@ void DrawPropertiesPanel(void)
 
     DrawPlayerSettingsSection(x, &y, allowInput, mouse);
 
-    bool objectClicked = DrawSectionHeader("Objeto", x, &y, &propertiesObjectExpanded, allowInput, mouse);
-    if (objectClicked && CtrlHeld() && propertiesObjectExpanded)
-    {
-        propertiesTransformExpanded = true;
-        propertiesCameraExpanded = true;
-        propertiesPhysicsExpanded = true;
-        propertiesPrototypeExpanded = true;
-    }
-    if (!propertiesObjectExpanded)
+    if (selIdx < 0)
     {
         if (transformEditSession)
             FinalizeTransformSession();
@@ -980,49 +972,78 @@ void DrawPropertiesPanel(void)
             ResetTransformInputs();
             transformObjectId = -1;
         }
-    }
-
-    if (propertiesObjectExpanded && selIdx >= 0)
-    {
-        ObjetoCena *obj = &objetos[selIdx];
-        if (propertyFloatObjectId != selId)
+        if (propertyFloatObjectId != -1)
         {
             ResetPropertyFloatInputs();
-            propertyFloatObjectId = selId;
+            propertyFloatObjectId = -1;
         }
-        bool isCamera = ObjetoEhCamera(obj);
-        bool transformClicked = DrawSectionHeader("Transform", x, &y, &propertiesTransformExpanded, allowInput, mouse);
-        if (transformClicked && CtrlHeld() && propertiesTransformExpanded)
-            FocusPropertiesSection(&propertiesTransformExpanded);
-        if (propertiesTransformExpanded)
+        y += 8;
+    }
+    else
+    {
+        bool objectClicked = DrawSectionHeader("Objeto", x, &y, &propertiesObjectExpanded, allowInput, mouse);
+        if (objectClicked && CtrlHeld() && propertiesObjectExpanded)
         {
-            bool transformWasActive = AnyTransformInputActive();
-            Vector3 transformBeforePos = obj->posicao;
-            Vector3 transformBeforeRot = obj->rotacao;
-            Vector3 transformBeforeScale = obj->escala;
-
-            if (transformObjectId != selId)
+            propertiesTransformExpanded = true;
+            propertiesCameraExpanded = true;
+            propertiesPhysicsExpanded = true;
+            propertiesPrototypeExpanded = true;
+        }
+        if (!propertiesObjectExpanded)
+        {
+            if (transformEditSession)
+                FinalizeTransformSession();
+            if (transformObjectId != -1)
             {
-                if (transformEditSession)
-                    FinalizeTransformSession();
                 ResetTransformInputs();
-                SyncTransformBuffers(obj);
-                transformObjectId = selId;
+                transformObjectId = -1;
             }
-            else if (!AnyTransformInputActive())
-            {
-                SyncTransformBuffers(obj);
-            }
+        }
 
-            DrawVec3Inputs("Location", &obj->posicao, TRANSFORM_POS_X, x, &y, allowInput, false, false, 0.0f, 0.0f);
-            DrawVec3Inputs("Rotation", &obj->rotacao, TRANSFORM_ROT_X, x, &y, allowInput, true, false, 0.0f, 0.0f);
-            DrawVec3Inputs("Scale", &obj->escala, TRANSFORM_SCALE_X, x, &y, allowInput, false, true, 0.01f, 1000.0f);
-            bool transformNowActive = AnyTransformInputActive();
-            if (!transformWasActive && transformNowActive)
-                BeginTransformSession(selId, transformBeforePos, transformBeforeRot, transformBeforeScale);
+        ObjetoCena *obj = NULL;
+        bool isCamera = false;
+        bool transformNowActive = false;
+        if (propertiesObjectExpanded)
+        {
+            obj = &objetos[selIdx];
+            if (propertyFloatObjectId != selId)
+            {
+                ResetPropertyFloatInputs();
+                propertyFloatObjectId = selId;
+            }
+            isCamera = ObjetoEhCamera(obj);
+            bool transformClicked = DrawSectionHeader("Transform", x, &y, &propertiesTransformExpanded, allowInput, mouse);
+            if (transformClicked && CtrlHeld() && propertiesTransformExpanded)
+                FocusPropertiesSection(&propertiesTransformExpanded);
+            if (propertiesTransformExpanded)
+            {
+                bool transformWasActive = AnyTransformInputActive();
+                Vector3 transformBeforePos = obj->posicao;
+                Vector3 transformBeforeRot = obj->rotacao;
+                Vector3 transformBeforeScale = obj->escala;
+
+                if (transformObjectId != selId)
+                {
+                    if (transformEditSession)
+                        FinalizeTransformSession();
+                    ResetTransformInputs();
+                    SyncTransformBuffers(obj);
+                    transformObjectId = selId;
+                }
+                else if (!AnyTransformInputActive())
+                {
+                    SyncTransformBuffers(obj);
+                }
+
+                DrawVec3Inputs("Location", &obj->posicao, TRANSFORM_POS_X, x, &y, allowInput, false, false, 0.0f, 0.0f);
+                DrawVec3Inputs("Rotation", &obj->rotacao, TRANSFORM_ROT_X, x, &y, allowInput, true, false, 0.0f, 0.0f);
+                DrawVec3Inputs("Scale", &obj->escala, TRANSFORM_SCALE_X, x, &y, allowInput, false, true, 0.01f, 1000.0f);
+                transformNowActive = AnyTransformInputActive();
+                if (!transformWasActive && transformNowActive)
+                    BeginTransformSession(selId, transformBeforePos, transformBeforeRot, transformBeforeScale);
+            }
             if (transformEditSession && (!transformNowActive || transformEditId != selId))
                 FinalizeTransformSession();
-        }
 
         y += 6;
         if (isCamera)
@@ -1421,22 +1442,6 @@ void DrawPropertiesPanel(void)
     }
         }
     }
-    else if (propertiesObjectExpanded)
-    {
-        if (transformEditSession)
-            FinalizeTransformSession();
-        if (transformObjectId != -1)
-        {
-            ResetTransformInputs();
-            transformObjectId = -1;
-        }
-        if (propertyFloatObjectId != -1)
-        {
-            ResetPropertyFloatInputs();
-            propertyFloatObjectId = -1;
-        }
-        DrawText("Selecione um objeto", x + 14, y, 12, COR_TEXTO_SECUNDARIO);
-        y += 18;
     }
     EndScissorMode();
 

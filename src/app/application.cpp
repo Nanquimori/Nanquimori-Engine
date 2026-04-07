@@ -12,6 +12,7 @@
 #include "editor/ui/export_dialog.h"
 #include "editor/ui/properties_panel.h"
 #include "editor/ui/ui_style.h"
+#include "tools/svg_asset_loader.h"
 #include "physics/nanquimori_physics.h"
 #include "scene/scene_camera.h"
 #include "scene/scene_manager.h"
@@ -343,30 +344,6 @@ static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativ
     return false;
 }
 
-static bool ResolveWindowIconPath(char *out, size_t outSize)
-{
-    if (!out || outSize == 0)
-        return false;
-    out[0] = '\0';
-
-    const char *relativePath = "icons/N.ico";
-    if (FileExists(relativePath))
-    {
-        strncpy(out, relativePath, outSize - 1);
-        out[outSize - 1] = '\0';
-        return true;
-    }
-
-    const char *cwd = GetWorkingDirectory();
-    const char *appDir = GetApplicationDirectory();
-    if (TryResolvePathFromBaseChain(cwd, relativePath, out, outSize))
-        return true;
-    if (TryResolvePathFromBaseChain(appDir, relativePath, out, outSize))
-        return true;
-
-    return false;
-}
-
 static bool ResolveRuntimePlayerExecutablePath(char *out, size_t outSize)
 {
     if (!out || outSize == 0)
@@ -406,6 +383,30 @@ static bool ResolveRuntimePlayerExecutablePath(char *out, size_t outSize)
         if (TryResolvePathFromBaseChain(appDir, candidates[i], out, outSize))
             return true;
     }
+
+    return false;
+}
+
+static bool ResolveWindowIconPath(char *out, size_t outSize)
+{
+    if (!out || outSize == 0)
+        return false;
+    out[0] = '\0';
+
+    const char *relativePath = "icons/N.ico";
+    if (FileExists(relativePath))
+    {
+        strncpy(out, relativePath, outSize - 1);
+        out[outSize - 1] = '\0';
+        return true;
+    }
+
+    const char *cwd = GetWorkingDirectory();
+    const char *appDir = GetApplicationDirectory();
+    if (TryResolvePathFromBaseChain(cwd, relativePath, out, outSize))
+        return true;
+    if (TryResolvePathFromBaseChain(appDir, relativePath, out, outSize))
+        return true;
 
     return false;
 }
@@ -496,9 +497,18 @@ static void ApplyRuntimeWindowIcon(void)
 {
 #ifdef _WIN32
     char iconPath[512] = {0};
-    if (!ResolveWindowIconPath(iconPath, sizeof(iconPath)))
+    if (ResolveWindowIconPath(iconPath, sizeof(iconPath)))
+    {
+        ApplyWin32WindowIcon(GetWindowHandle(), iconPath);
         return;
-    ApplyWin32WindowIcon(GetWindowHandle(), iconPath);
+    }
+
+    Image icon = LoadSvgImageAsset("icons/n.svg", 256);
+    if (icon.data && icon.width > 0 && icon.height > 0)
+    {
+        SetWindowIcon(icon);
+        UnloadImage(icon);
+    }
 #endif
 }
 

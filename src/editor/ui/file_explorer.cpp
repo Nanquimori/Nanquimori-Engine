@@ -1,6 +1,7 @@
 ﻿#include "file_explorer.h"
 #include "scene/scene_manager.h"
 #include "scene/outliner.h"
+#include "assets/model_manager.h"
 #include "export_dialog.h"
 #include "ui_button.h"
 #include "ui_style.h"
@@ -425,7 +426,7 @@ static bool RenderModelPreviewToTexture(const char *filepath, RenderTexture2D *t
     BeginMode3D(camera);
     DrawGrid(10, maxExtent * 0.25f);
     DrawModel(model, drawPosition, 1.0f, WHITE);
-    DrawModelWires(model, drawPosition, 1.0f, Fade(BLACK, 0.35f));
+    DrawModelCleanWireframe(model, drawPosition, 1.0f, Fade(BLACK, 0.35f));
     EndMode3D();
     EndTextureMode();
 

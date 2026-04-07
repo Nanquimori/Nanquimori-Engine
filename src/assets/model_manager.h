@@ -21,6 +21,7 @@ typedef struct
     char filepath[256];
     int refCount;
     bool loaded;
+    void *wireframeCache;
 } CachedModel;
 
 typedef struct
@@ -58,6 +59,7 @@ bool RaycastModelsEx(Ray ray, Vector3 *hitPos, float *hitDist, int *hitObjectId)
 void SetSelectedModelByObjetoId(int idObjeto);
 void CarregarModeloParaObjeto(const char *filepath, const char *nome, int idObjeto);
 void RenderPrototypePreview(const ObjetoCena *obj, RenderTexture2D *target);
+void DrawModelCleanWireframe(Model model, Vector3 position, float scale, Color wireColor);
 int AddPrimitiveObject(PrimitiveModelType type);
 bool IsPrimitiveModelPath(const char *path);
 

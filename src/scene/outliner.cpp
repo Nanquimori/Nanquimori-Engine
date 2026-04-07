@@ -844,15 +844,23 @@ void UpdateOutlinerLayout(bool allowInput)
 {
     const int collapsedHeight = 32;
     outlinerObjectPanelHeight = ClampOutlinerObjectPanelHeight(outlinerObjectPanelHeight);
+    bool hasSelectedObject = (ObterObjetoSelecionadoId() > 0);
 
     int settingsHeight = outlinerObjectExpanded ? outlinerObjectPanelHeight : collapsedHeight;
     float settingsStartY = (float)(GetScreenHeight() - settingsHeight);
     Rectangle divider = {0.0f, settingsStartY - 6.0f, (float)PAINEL_LARGURA, 12.0f};
     Vector2 mouse = GetMousePosition();
 
+    if (!hasSelectedObject)
+    {
+        outlinerObjectPanelDividerDragging = false;
+        outlinerObjectPanelDividerHovered = false;
+        outlinerObjectPanelDividerChangedWhileDragging = false;
+    }
+
     if (outlinerObjectPanelDividerDragging)
     {
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && outlinerObjectExpanded)
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && outlinerObjectExpanded && hasSelectedObject)
         {
             int previousHeight = outlinerObjectPanelHeight;
             float newStartY = mouse.y - outlinerObjectPanelDividerDragOffset;
@@ -871,6 +879,7 @@ void UpdateOutlinerLayout(bool allowInput)
     }
 
     bool canHoverDivider = allowInput &&
+                           hasSelectedObject &&
                            outlinerObjectExpanded &&
                            !menuAtivo &&
                            !menuCenaContextoAtivo &&
@@ -1458,11 +1467,15 @@ static void DrawObjectSettings(float startY, float height)
 
     Rectangle area = {0, startY, (float)PAINEL_LARGURA, height};
     DrawRectangleRec(area, COR_PAINEL);
-    bool dividerActive = outlinerObjectPanelDividerDragging || outlinerObjectPanelDividerHovered;
-    Color dividerColor = dividerActive ? style->accent : Fade(style->panelBorderSoft, 0.9f);
-    int dividerThickness = dividerActive ? 4 : 2;
-    int dividerY = (int)(startY - dividerThickness * 0.5f + 0.5f);
-    DrawRectangle(0, dividerY, PAINEL_LARGURA, dividerThickness, dividerColor);
+    bool hasSelectedObject = (ObterObjetoSelecionadoId() > 0);
+    if (hasSelectedObject)
+    {
+        bool dividerActive = outlinerObjectPanelDividerDragging || outlinerObjectPanelDividerHovered;
+        Color dividerColor = dividerActive ? style->accent : Fade(style->panelBorderSoft, 0.9f);
+        int dividerThickness = dividerActive ? 4 : 2;
+        int dividerY = (int)(startY - dividerThickness * 0.5f + 0.5f);
+        DrawRectangle(0, dividerY, PAINEL_LARGURA, dividerThickness, dividerColor);
+    }
 
     float contentTop = startY + 4.0f;
     float viewH = height - 8.0f;
@@ -1477,26 +1490,25 @@ static void DrawObjectSettings(float startY, float height)
 
     int x = 0;
     int y = (int)(startY + 8.0f - objectSettingsScroll);
-    Rectangle objectHeader = {(float)(x + 6), (float)y, (float)(PAINEL_LARGURA - 16), 22.0f};
-    DrawOutlinerSectionHeader(objectHeader, "Objeto", 13, &outlinerObjectExpanded, true, mouse);
-    y += 24;
-    if (!outlinerObjectExpanded)
-    {
-        EndScissorMode();
-        objectSettingsMaxScroll = 0.0f;
-        objectSettingsScroll = 0.0f;
-        objectSettingsScrollDragging = false;
-        return;
-    }
-
     int selecionadoId = ObterObjetoSelecionadoId();
     if (selecionadoId <= 0)
     {
-        DrawText("Nenhum objeto selecionado", x + 14, y, 14, secondaryWhite);
-        y += 20;
+        y += 8;
     }
     else
     {
+        Rectangle objectHeader = {(float)(x + 6), (float)y, (float)(PAINEL_LARGURA - 16), 22.0f};
+        DrawOutlinerSectionHeader(objectHeader, "Objeto", 13, &outlinerObjectExpanded, true, mouse);
+        y += 24;
+        if (!outlinerObjectExpanded)
+        {
+            EndScissorMode();
+            objectSettingsMaxScroll = 0.0f;
+            objectSettingsScroll = 0.0f;
+            objectSettingsScrollDragging = false;
+            return;
+        }
+
         int idx = BuscarIndicePorId(selecionadoId);
         if (idx == -1)
         {

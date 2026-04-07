@@ -15,9 +15,12 @@ CMakeFiles/NanquimoriEngine.dir/src/editor/ui/splash_screen.cpp.obj: \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/scene_manager.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/scene/outliner.h \
  C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/editor/ui/editor_layout.h \
- C:/raylib/w64devkit/x86_64-w64-mingw32/include/string.h \
+ C:/Users/ANDREY~1/DOCUME~1/DOCUME~1/Raylib/NANQUI~1/src/tools/svg_asset_loader.h \
+ C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stddef.h \
+ C:/raylib/w64devkit/x86_64-w64-mingw32/include/stddef.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/crtdefs.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/corecrt.h \
+ C:/raylib/w64devkit/x86_64-w64-mingw32/include/string.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/sec_api/string_s.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/stdio.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/corecrt_stdio_config.h \

@@ -2,6 +2,7 @@
 #include "ui_button.h"
 #include "ui_style.h"
 #include "scene/scene_manager.h"
+#include "tools/svg_asset_loader.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -298,8 +299,7 @@ void InitSplashScreen(void)
     char path[512] = {0};
     if (ResolveAssetPath("images/splash.png", path, sizeof(path)))
         splashScreen.splash = LoadTexture(path);
-    if (ResolveAssetPath("icons/youtube.png", path, sizeof(path)))
-        splashScreen.iconYT = LoadTexture(path);
+    splashScreen.iconYT = LoadSvgTextureAsset("icons/youtube.svg", 256);
     splashScreen.mostrar = true;
     splashScreen.bloquearFechar = true;
     splashScreen.texturaOk = (splashScreen.splash.id > 0);

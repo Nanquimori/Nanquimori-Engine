@@ -48,7 +48,42 @@ static int protoShaderLocContrast = -1;
 
 static const float PROTO_DEFAULT_SCALE = 1.0f;
 static const float PROTO_DEFAULT_CONTRAST = 1.2f;
+static const float WIREFRAME_POSITION_EPSILON_MIN = 0.00001f;
+static const float WIREFRAME_POSITION_EPSILON_FACTOR = 0.000001f;
+static const float WIREFRAME_COPLANAR_DISTANCE_EPSILON = 0.0001f;
 static void EnsureModelTexcoords(Model *model);
+
+typedef struct
+{
+    Vector3 start;
+    Vector3 end;
+} WireframeSegment;
+
+typedef struct
+{
+    WireframeSegment *segments;
+    int segmentCount;
+} MeshWireframeCache;
+
+typedef struct
+{
+    MeshWireframeCache *meshes;
+    int meshCount;
+} ModelWireframeCache;
+
+typedef struct
+{
+    long long ax;
+    long long ay;
+    long long az;
+    long long bx;
+    long long by;
+    long long bz;
+    Vector3 start;
+    Vector3 end;
+    Vector3 normal;
+    Vector3 opposite;
+} TempWireEdge;
 
 bool IsPrimitiveModelPath(const char *path)
 {
@@ -181,6 +216,329 @@ static int EncontrarCachePorFilepath(const char *filepath)
     return -1;
 }
 
+static void FreeModelWireframeCache(ModelWireframeCache *cache)
+{
+    if (!cache)
+        return;
+
+    for (int i = 0; i < cache->meshCount; i++)
+        MemFree(cache->meshes[i].segments);
+    MemFree(cache->meshes);
+    MemFree(cache);
+}
+
+static void ResetModelWireframeCacheContents(ModelWireframeCache *cache)
+{
+    if (!cache)
+        return;
+
+    for (int i = 0; i < cache->meshCount; i++)
+        MemFree(cache->meshes[i].segments);
+    MemFree(cache->meshes);
+    *cache = (ModelWireframeCache){0};
+}
+
+static void ClearCachedModelWireframe(CachedModel *cachedModel)
+{
+    if (!cachedModel || !cachedModel->wireframeCache)
+        return;
+
+    FreeModelWireframeCache((ModelWireframeCache *)cachedModel->wireframeCache);
+    cachedModel->wireframeCache = NULL;
+}
+
+static float GetMeshWireframePositionEpsilon(const Mesh *mesh)
+{
+    if (!mesh || !mesh->vertices || mesh->vertexCount <= 0)
+        return WIREFRAME_POSITION_EPSILON_MIN;
+
+    float minX = mesh->vertices[0];
+    float maxX = mesh->vertices[0];
+    float minY = mesh->vertices[1];
+    float maxY = mesh->vertices[1];
+    float minZ = mesh->vertices[2];
+    float maxZ = mesh->vertices[2];
+
+    for (int i = 1; i < mesh->vertexCount; i++)
+    {
+        float x = mesh->vertices[i * 3 + 0];
+        float y = mesh->vertices[i * 3 + 1];
+        float z = mesh->vertices[i * 3 + 2];
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+        if (z < minZ) minZ = z;
+        if (z > maxZ) maxZ = z;
+    }
+
+    float maxExtent = fmaxf(maxX - minX, fmaxf(maxY - minY, maxZ - minZ));
+    return fmaxf(WIREFRAME_POSITION_EPSILON_MIN, maxExtent * WIREFRAME_POSITION_EPSILON_FACTOR);
+}
+
+static long long QuantizeWireframeCoord(float value, float epsilon)
+{
+    if (epsilon <= 0.0f)
+        epsilon = WIREFRAME_POSITION_EPSILON_MIN;
+    return (long long)llround((double)value / (double)epsilon);
+}
+
+static int CompareQuantizedEdgeKey(long long ax, long long ay, long long az,
+                                   long long bx, long long by, long long bz)
+{
+    if (ax != bx)
+        return (ax < bx) ? -1 : 1;
+    if (ay != by)
+        return (ay < by) ? -1 : 1;
+    if (az != bz)
+        return (az < bz) ? -1 : 1;
+    return 0;
+}
+
+static void FillTempWireEdge(TempWireEdge *edge, Vector3 start, Vector3 end, Vector3 opposite, Vector3 normal, float positionEpsilon)
+{
+    if (!edge)
+        return;
+
+    long long sx = QuantizeWireframeCoord(start.x, positionEpsilon);
+    long long sy = QuantizeWireframeCoord(start.y, positionEpsilon);
+    long long sz = QuantizeWireframeCoord(start.z, positionEpsilon);
+    long long ex = QuantizeWireframeCoord(end.x, positionEpsilon);
+    long long ey = QuantizeWireframeCoord(end.y, positionEpsilon);
+    long long ez = QuantizeWireframeCoord(end.z, positionEpsilon);
+
+    if (CompareQuantizedEdgeKey(sx, sy, sz, ex, ey, ez) <= 0)
+    {
+        edge->ax = sx;
+        edge->ay = sy;
+        edge->az = sz;
+        edge->bx = ex;
+        edge->by = ey;
+        edge->bz = ez;
+        edge->start = start;
+        edge->end = end;
+    }
+    else
+    {
+        edge->ax = ex;
+        edge->ay = ey;
+        edge->az = ez;
+        edge->bx = sx;
+        edge->by = sy;
+        edge->bz = sz;
+        edge->start = end;
+        edge->end = start;
+    }
+
+    edge->normal = normal;
+    edge->opposite = opposite;
+}
+
+static int CompareTempWireEdges(const void *lhs, const void *rhs)
+{
+    const TempWireEdge *a = (const TempWireEdge *)lhs;
+    const TempWireEdge *b = (const TempWireEdge *)rhs;
+
+    int cmp = CompareQuantizedEdgeKey(a->ax, a->ay, a->az, b->ax, b->ay, b->az);
+    if (cmp != 0)
+        return cmp;
+    return CompareQuantizedEdgeKey(a->bx, a->by, a->bz, b->bx, b->by, b->bz);
+}
+
+static Vector3 MeshVertexPosition(const Mesh *mesh, int index)
+{
+    return (Vector3){
+        mesh->vertices[index * 3 + 0],
+        mesh->vertices[index * 3 + 1],
+        mesh->vertices[index * 3 + 2]};
+}
+
+static bool AreWireframeTrianglesCoplanar(const TempWireEdge *a, const TempWireEdge *b, float positionEpsilon)
+{
+    if (!a || !b)
+        return false;
+
+    float normalDot = Vector3DotProduct(a->normal, b->normal);
+    if (normalDot < 0.9999f)
+        return false;
+
+    float edgeLength = Vector3Distance(a->start, a->end);
+    float tolerance = fmaxf(WIREFRAME_COPLANAR_DISTANCE_EPSILON, fmaxf(positionEpsilon * 4.0f, edgeLength * 0.0001f));
+    float distanceA = fabsf(Vector3DotProduct(a->normal, Vector3Subtract(b->opposite, a->start)));
+    float distanceB = fabsf(Vector3DotProduct(b->normal, Vector3Subtract(a->opposite, b->start)));
+    return distanceA <= tolerance && distanceB <= tolerance;
+}
+
+static bool BuildMeshWireframeCache(const Mesh *mesh, MeshWireframeCache *outCache)
+{
+    if (!outCache)
+        return false;
+    *outCache = (MeshWireframeCache){0};
+
+    if (!mesh || !mesh->vertices || mesh->vertexCount <= 0)
+        return false;
+
+    int triangleCount = (mesh->indices && mesh->triangleCount > 0) ? mesh->triangleCount : (mesh->vertexCount / 3);
+    if (triangleCount <= 0)
+        return false;
+    float positionEpsilon = GetMeshWireframePositionEpsilon(mesh);
+
+    const int edgeCount = triangleCount * 3;
+    TempWireEdge *edges = (TempWireEdge *)MemAlloc(sizeof(TempWireEdge) * (size_t)edgeCount);
+    if (!edges)
+        return false;
+
+    int validEdgeCount = 0;
+    for (int triangleIndex = 0; triangleIndex < triangleCount; triangleIndex++)
+    {
+        int i0 = mesh->indices ? mesh->indices[triangleIndex * 3 + 0] : triangleIndex * 3 + 0;
+        int i1 = mesh->indices ? mesh->indices[triangleIndex * 3 + 1] : triangleIndex * 3 + 1;
+        int i2 = mesh->indices ? mesh->indices[triangleIndex * 3 + 2] : triangleIndex * 3 + 2;
+
+        if (i0 < 0 || i1 < 0 || i2 < 0 ||
+            i0 >= mesh->vertexCount || i1 >= mesh->vertexCount || i2 >= mesh->vertexCount)
+            continue;
+
+        Vector3 p0 = MeshVertexPosition(mesh, i0);
+        Vector3 p1 = MeshVertexPosition(mesh, i1);
+        Vector3 p2 = MeshVertexPosition(mesh, i2);
+        Vector3 normal = Vector3CrossProduct(Vector3Subtract(p1, p0), Vector3Subtract(p2, p0));
+        float normalLength = Vector3Length(normal);
+        if (normalLength <= 0.000001f)
+            continue;
+        normal = Vector3Scale(normal, 1.0f / normalLength);
+
+        FillTempWireEdge(&edges[validEdgeCount++], p0, p1, p2, normal, positionEpsilon);
+        FillTempWireEdge(&edges[validEdgeCount++], p1, p2, p0, normal, positionEpsilon);
+        FillTempWireEdge(&edges[validEdgeCount++], p2, p0, p1, normal, positionEpsilon);
+    }
+
+    if (validEdgeCount <= 0)
+    {
+        MemFree(edges);
+        return false;
+    }
+
+    qsort(edges, (size_t)validEdgeCount, sizeof(TempWireEdge), CompareTempWireEdges);
+
+    WireframeSegment *segments = (WireframeSegment *)MemAlloc(sizeof(WireframeSegment) * (size_t)validEdgeCount);
+    if (!segments)
+    {
+        MemFree(edges);
+        return false;
+    }
+
+    int segmentCount = 0;
+    for (int edgeIndex = 0; edgeIndex < validEdgeCount;)
+    {
+        int groupEnd = edgeIndex + 1;
+        while (groupEnd < validEdgeCount &&
+               CompareTempWireEdges(&edges[edgeIndex], &edges[groupEnd]) == 0)
+        {
+            groupEnd++;
+        }
+
+        bool shouldDraw = ((groupEnd - edgeIndex) == 1) || ((groupEnd - edgeIndex) > 2);
+        if (!shouldDraw)
+        {
+            for (int a = edgeIndex; a < groupEnd && !shouldDraw; a++)
+            {
+                for (int b = a + 1; b < groupEnd; b++)
+                {
+                    if (!AreWireframeTrianglesCoplanar(&edges[a], &edges[b], positionEpsilon))
+                    {
+                        shouldDraw = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (shouldDraw)
+        {
+            segments[segmentCount].start = edges[edgeIndex].start;
+            segments[segmentCount].end = edges[edgeIndex].end;
+            segmentCount++;
+        }
+
+        edgeIndex = groupEnd;
+    }
+
+    MemFree(edges);
+
+    if (segmentCount <= 0)
+    {
+        MemFree(segments);
+        return false;
+    }
+
+    WireframeSegment *shrunkSegments = (WireframeSegment *)MemRealloc(segments, sizeof(WireframeSegment) * (size_t)segmentCount);
+    outCache->segments = shrunkSegments ? shrunkSegments : segments;
+    outCache->segmentCount = segmentCount;
+    return true;
+}
+
+static void BuildCachedModelWireframe(CachedModel *cachedModel)
+{
+    if (!cachedModel || !cachedModel->loaded || cachedModel->model.meshCount <= 0)
+        return;
+
+    ClearCachedModelWireframe(cachedModel);
+
+    ModelWireframeCache *cache = (ModelWireframeCache *)MemAlloc(sizeof(ModelWireframeCache));
+    if (!cache)
+        return;
+
+    cache->meshes = (MeshWireframeCache *)MemAlloc(sizeof(MeshWireframeCache) * (size_t)cachedModel->model.meshCount);
+    if (!cache->meshes)
+    {
+        MemFree(cache);
+        return;
+    }
+
+    cache->meshCount = cachedModel->model.meshCount;
+    memset(cache->meshes, 0, sizeof(MeshWireframeCache) * (size_t)cache->meshCount);
+
+    for (int meshIndex = 0; meshIndex < cache->meshCount; meshIndex++)
+        BuildMeshWireframeCache(&cachedModel->model.meshes[meshIndex], &cache->meshes[meshIndex]);
+
+    cachedModel->wireframeCache = cache;
+}
+
+static bool BuildTransientModelWireframe(Model *model, ModelWireframeCache *outCache)
+{
+    if (!outCache)
+        return false;
+    *outCache = (ModelWireframeCache){0};
+
+    if (!model || model->meshCount <= 0 || !model->meshes)
+        return false;
+
+    MeshWireframeCache *meshes = (MeshWireframeCache *)MemAlloc(sizeof(MeshWireframeCache) * (size_t)model->meshCount);
+    if (!meshes)
+        return false;
+
+    memset(meshes, 0, sizeof(MeshWireframeCache) * (size_t)model->meshCount);
+    outCache->meshes = meshes;
+    outCache->meshCount = model->meshCount;
+
+    bool hasAnySegments = false;
+    for (int meshIndex = 0; meshIndex < model->meshCount; meshIndex++)
+    {
+        if (BuildMeshWireframeCache(&model->meshes[meshIndex], &outCache->meshes[meshIndex]))
+            hasAnySegments = true;
+    }
+
+    if (!hasAnySegments)
+    {
+        MemFree(meshes);
+        *outCache = (ModelWireframeCache){0};
+        return false;
+    }
+
+    return true;
+}
+
 static int AdquirirModeloCache(const char *filepath)
 {
     if (!filepath)
@@ -206,6 +564,7 @@ static int AdquirirModeloCache(const char *filepath)
         {
             if (modelManager.cache[i].loaded && modelManager.cache[i].refCount == 0)
             {
+                ClearCachedModelWireframe(&modelManager.cache[i]);
                 UnloadModel(modelManager.cache[i].model);
                 modelManager.cache[i].loaded = false;
                 modelManager.cache[i].refCount = 0;
@@ -244,8 +603,10 @@ static int AdquirirModeloCache(const char *filepath)
     cm->model = newModel;
     cm->loaded = true;
     cm->refCount = 1;
+    cm->wireframeCache = NULL;
     strncpy(cm->filepath, filepath, 255);
     cm->filepath[255] = '\0';
+    BuildCachedModelWireframe(cm);
     return slot;
 }
 
@@ -647,7 +1008,7 @@ static void DrawModelPrototype(Model *model, int objectId, Color baseColor, Colo
         else
         {
             DrawModel(*model, (Vector3){0, 0, 0}, 1.0f, baseColor);
-            DrawModelWires(*model, (Vector3){0, 0, 0}, 1.0f, secondaryColor);
+            DrawModelCleanWireframe(*model, (Vector3){0, 0, 0}, 1.0f, secondaryColor);
         }
         return;
     }
@@ -682,7 +1043,7 @@ static void DrawModelPrototype(Model *model, int objectId, Color baseColor, Colo
         else
         {
             DrawModel(*model, (Vector3){0, 0, 0}, 1.0f, baseColor);
-            DrawModelWires(*model, (Vector3){0, 0, 0}, 1.0f, secondaryColor);
+            DrawModelCleanWireframe(*model, (Vector3){0, 0, 0}, 1.0f, secondaryColor);
         }
         return;
     }
@@ -695,7 +1056,7 @@ static void DrawModelPrototype(Model *model, int objectId, Color baseColor, Colo
     if (!useShader)
     {
         DrawModel(*model, (Vector3){0, 0, 0}, 1.0f, baseColor);
-        DrawModelWires(*model, (Vector3){0, 0, 0}, 1.0f, secondaryColor);
+        DrawModelCleanWireframe(*model, (Vector3){0, 0, 0}, 1.0f, secondaryColor);
         return;
     }
     if (useShader)
@@ -737,12 +1098,64 @@ static void DrawModelPrototype(Model *model, int objectId, Color baseColor, Colo
     free(oldShaders);
 }
 
-static void DrawModelViewportWireframe(Model *model, Color wireColor)
+static void DrawMeshWireframeSegments(const MeshWireframeCache *meshCache, Color wireColor)
+{
+    if (!meshCache || !meshCache->segments || meshCache->segmentCount <= 0)
+        return;
+
+    rlBegin(RL_LINES);
+    rlColor4ub(wireColor.r, wireColor.g, wireColor.b, wireColor.a);
+    for (int i = 0; i < meshCache->segmentCount; i++)
+    {
+        const WireframeSegment *segment = &meshCache->segments[i];
+        rlVertex3f(segment->start.x, segment->start.y, segment->start.z);
+        rlVertex3f(segment->end.x, segment->end.y, segment->end.z);
+    }
+    rlEnd();
+}
+
+static void DrawModelWireframeCache(Model *model, const ModelWireframeCache *wireframeCache, Color wireColor)
+{
+    if (!model || !wireframeCache || wireframeCache->meshCount != model->meshCount)
+        return;
+
+    rlPushMatrix();
+    rlMultMatrixf(MatrixToFloat(model->transform));
+    for (int meshIndex = 0; meshIndex < wireframeCache->meshCount; meshIndex++)
+        DrawMeshWireframeSegments(&wireframeCache->meshes[meshIndex], wireColor);
+    rlPopMatrix();
+}
+
+static void DrawModelViewportWireframe(Model *model, const CachedModel *cachedModel, Color wireColor)
 {
     if (!model)
         return;
 
+    const ModelWireframeCache *wireframeCache = cachedModel ? (const ModelWireframeCache *)cachedModel->wireframeCache : NULL;
+    if (wireframeCache && wireframeCache->meshCount == model->meshCount)
+    {
+        DrawModelWireframeCache(model, wireframeCache, wireColor);
+        return;
+    }
+
+    ModelWireframeCache transientCache = {0};
+    if (BuildTransientModelWireframe(model, &transientCache))
+    {
+        DrawModelWireframeCache(model, &transientCache, wireColor);
+        ResetModelWireframeCacheContents(&transientCache);
+        return;
+    }
+
     DrawModelWires(*model, (Vector3){0, 0, 0}, 1.0f, wireColor);
+}
+
+void DrawModelCleanWireframe(Model model, Vector3 position, float scale, Color wireColor)
+{
+    rlPushMatrix();
+    rlTranslatef(position.x, position.y, position.z);
+    rlScalef(scale, scale, scale);
+    DrawModelViewportWireframe(&model, NULL, wireColor);
+    rlPopMatrix();
 }
 
 static BoundingBox TransformBoundingBox(BoundingBox localBox, Matrix transform)
@@ -1002,7 +1415,7 @@ void RenderModels(bool wireframeMode)
             }
             if (wireframeMode)
             {
-                DrawModelViewportWireframe(model, wireColor);
+                DrawModelViewportWireframe(model, cm, wireColor);
             }
             else if (obj && obj->protoEnabled)
             {
@@ -1088,8 +1501,13 @@ void UnloadAllModels(void)
     {
         if (modelManager.cache[i].loaded)
         {
+            ClearCachedModelWireframe(&modelManager.cache[i]);
             UnloadModel(modelManager.cache[i].model);
             modelManager.cache[i].loaded = false;
+        }
+        else
+        {
+            ClearCachedModelWireframe(&modelManager.cache[i]);
         }
         modelManager.cache[i].refCount = 0;
         modelManager.cache[i].filepath[0] = '\0';

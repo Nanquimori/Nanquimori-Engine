@@ -52,6 +52,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_camera.cpp.obj.d"
   "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_manager.cpp.obj"
   "CMakeFiles/NanquimoriEngine.dir/src/scene/scene_manager.cpp.obj.d"
+  "CMakeFiles/NanquimoriEngine.dir/src/tools/svg_asset_loader.cpp.obj"
+  "CMakeFiles/NanquimoriEngine.dir/src/tools/svg_asset_loader.cpp.obj.d"
   "NanquimoriEngine.exe"
   "NanquimoriEngine.exe.manifest"
   "NanquimoriEngine.pdb"

@@ -206,6 +206,7 @@ endif()
 # NANQUIMORI_COMMON_SOURCES at CMakeLists.txt:21 (file)
 file(GLOB_RECURSE NEW_GLOB LIST_DIRECTORIES false "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/tools/*.cpp")
 set(OLD_GLOB
+  "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/tools/svg_asset_loader.cpp"
   )
 if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   message("-- GLOB mismatch!")

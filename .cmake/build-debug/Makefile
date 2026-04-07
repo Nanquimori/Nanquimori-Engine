@@ -998,6 +998,33 @@ src/scene/scene_manager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.s
 .PHONY : src/scene/scene_manager.cpp.s
 
+src/tools/svg_asset_loader.obj: src/tools/svg_asset_loader.cpp.obj
+.PHONY : src/tools/svg_asset_loader.obj
+
+# target to build an object file
+src/tools/svg_asset_loader.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/tools/svg_asset_loader.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.obj
+.PHONY : src/tools/svg_asset_loader.cpp.obj
+
+src/tools/svg_asset_loader.i: src/tools/svg_asset_loader.cpp.i
+.PHONY : src/tools/svg_asset_loader.i
+
+# target to preprocess a source file
+src/tools/svg_asset_loader.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/tools/svg_asset_loader.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.i
+.PHONY : src/tools/svg_asset_loader.cpp.i
+
+src/tools/svg_asset_loader.s: src/tools/svg_asset_loader.cpp.s
+.PHONY : src/tools/svg_asset_loader.s
+
+# target to generate assembly for a file
+src/tools/svg_asset_loader.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/tools/svg_asset_loader.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.s
+.PHONY : src/tools/svg_asset_loader.cpp.s
+
 # Help Target
 help:
 	@echo The following are some of the valid targets for this Makefile:
@@ -1101,6 +1128,9 @@ help:
 	@echo ... src/scene/scene_manager.obj
 	@echo ... src/scene/scene_manager.i
 	@echo ... src/scene/scene_manager.s
+	@echo ... src/tools/svg_asset_loader.obj
+	@echo ... src/tools/svg_asset_loader.i
+	@echo ... src/tools/svg_asset_loader.s
 .PHONY : help
 
 

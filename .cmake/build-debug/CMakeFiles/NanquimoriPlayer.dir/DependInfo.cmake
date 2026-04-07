@@ -53,6 +53,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/scene/outliner.cpp" "CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj" "gcc" "CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj.d"
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/scene/scene_camera.cpp" "CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj" "gcc" "CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj.d"
   "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/scene/scene_manager.cpp" "CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj" "gcc" "CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj.d"
+  "C:/Users/Andrey Acelerion/Documents/Documentos Salvos/Raylib/Nanquimori Engine/src/tools/svg_asset_loader.cpp" "CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.obj" "gcc" "CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.obj.d"
   )
 
 # Targets to which this target links which contain Fortran sources.
