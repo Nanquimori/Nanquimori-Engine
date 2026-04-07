@@ -22,5 +22,8 @@ bool ConsumePlayStopRequested(void);
 bool ConsumePlayRestartRequested(void);
 bool IsTopBarMenuOpen(void);
 bool IsViewportNavigateModeActive(void);
+bool IsViewportWireframeModeActive(void);
+void ToggleViewportWireframeMode(void);
+const char *GetViewportRenderModeLabel(void);
 
 #endif // TOP_BAR_H

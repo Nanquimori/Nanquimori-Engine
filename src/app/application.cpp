@@ -726,6 +726,18 @@ void UpdateApplication()
     }
 
     UpdateTopBar();
+    if (!ShiftHeld() && !CtrlHeld() && !AltHeld() &&
+        !HelpPanelShouldShow() &&
+        !SplashScreenShouldShow() &&
+        !SplashScreenIsInputBlocked() &&
+        !fileExplorer.aberto &&
+        !IsFileMenuOpen() &&
+        !IsTopBarMenuOpen() &&
+        !IsExportDialogOpen() &&
+        IsKeyPressed(KEY_Z))
+    {
+        ToggleViewportWireframeMode();
+    }
     bool layoutInputAllowed = !HelpPanelShouldShow() &&
                               !SplashScreenShouldShow() &&
                               !SplashScreenIsInputBlocked() &&
@@ -958,6 +970,7 @@ void RenderApplication()
     bool playSession = IsPlayModeActive();
     bool playMode = playSession && !IsPlayPaused();
     bool navigateMode = IsViewportNavigateModeActive();
+    bool wireframeMode = IsViewportWireframeModeActive();
     bool showCameraFrameOverlay = false;
     Camera renderCamera = appCamera;
     ObjetoCena *renderCameraObject = nullptr;
@@ -1018,7 +1031,7 @@ void RenderApplication()
             ClearBackground((Color){24, 26, 32, 0});
 
             BeginManagedMode3D(renderCamera, renderCameraObject);
-            RenderModels();
+            RenderModels(wireframeMode);
             if (PropertiesShowCollisions())
                 DrawNanquimoriPhysicsDebug();
             if (!playSession)
@@ -1053,7 +1066,7 @@ void RenderApplication()
     {
         BeginManagedMode3D(renderCamera, renderCameraObject);
 
-        RenderModels();
+        RenderModels(wireframeMode);
         if (PropertiesShowCollisions())
             DrawNanquimoriPhysicsDebug();
 

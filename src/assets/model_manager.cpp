@@ -737,6 +737,14 @@ static void DrawModelPrototype(Model *model, int objectId, Color baseColor, Colo
     free(oldShaders);
 }
 
+static void DrawModelViewportWireframe(Model *model, Color wireColor)
+{
+    if (!model)
+        return;
+
+    DrawModelWires(*model, (Vector3){0, 0, 0}, 1.0f, wireColor);
+}
+
 static BoundingBox TransformBoundingBox(BoundingBox localBox, Matrix transform)
 {
     Vector3 corners[8] = {
@@ -944,8 +952,11 @@ void RemoverModeloPorIdObjeto(int idObjeto)
     }
 }
 
-void RenderModels(void)
+void RenderModels(bool wireframeMode)
 {
+    if (wireframeMode)
+        rlDisableBackfaceCulling();
+
     for (int i = 0; i < modelManager.modelCount; i++)
     {
         LoadedModel *lm = &modelManager.models[i];
@@ -978,6 +989,8 @@ void RenderModels(void)
 
         if (ativo)
         {
+            Color wireColor = (obj && obj->selecionado) ? (Color){255, 219, 84, 255} : (Color){236, 221, 188, 255};
+
             rlPushMatrix();
             rlTranslatef(pos.x, pos.y, pos.z);
             if (obj)
@@ -987,7 +1000,11 @@ void RenderModels(void)
                 rlRotatef(obj->rotacao.z * RAD2DEG, 0, 0, 1);
                 rlScalef(escala.x, escala.y, escala.z);
             }
-            if (obj && obj->protoEnabled)
+            if (wireframeMode)
+            {
+                DrawModelViewportWireframe(model, wireColor);
+            }
+            else if (obj && obj->protoEnabled)
             {
                 DrawModelPrototype(model, obj->id, obj->protoBaseColor, obj->protoSecondaryColor);
             }
@@ -998,6 +1015,9 @@ void RenderModels(void)
             rlPopMatrix();
         }
     }
+
+    if (wireframeMode)
+        rlEnableBackfaceCulling();
 }
 
 void DrawSelectedObjectOrigins(Camera camera)

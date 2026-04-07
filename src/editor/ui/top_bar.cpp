@@ -31,7 +31,10 @@ static bool playHover = false;
 static bool stopHover = false;
 static bool restartHover = false;
 static bool navigateHover = false;
+static bool viewportSolidHover = false;
+static bool viewportWireframeHover = false;
 static bool viewportNavigateMode = false;
+static bool viewportWireframeMode = false;
 static bool addMenuOpen = false;
 static bool addHover = false;
 static int addMainHoverItem = -1;
@@ -57,6 +60,18 @@ static Color TopBarMenuHoverColor(void)
 static Color TopBarMenuBorderColor(void)
 {
     return (Color){104, 56, 52, 255};
+}
+
+static const char *GetViewportModeName(bool wireframe)
+{
+    return wireframe ? "Wireframe" : "Solid";
+}
+
+static float GetTopBarRightViewportModeX(void)
+{
+    const float rightPadding = 10.0f;
+    const float viewportModeWidth = 166.0f;
+    return (float)GetScreenWidth() - (float)PROPERTIES_PAINEL_LARGURA - rightPadding - viewportModeWidth;
 }
 
 static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativePath, char *out, size_t outSize)
@@ -328,8 +343,20 @@ void UpdateTopBar()
     if (!playModeActive && viewportNavigateMode)
         viewportNavigateMode = false;
 
-    // Navegacao / Play / Stop / Restart (depois do Help)
+    // Visualizacao / Navegacao / Play / Stop / Restart (depois do Help)
     float btnY = barY;
+    float viewportModeX = GetTopBarRightViewportModeX();
+    Rectangle areaWireframe = {viewportModeX, btnY, 96.0f, 16.0f};
+    Rectangle areaSolid = {viewportModeX + 106.0f, btnY, 60.0f, 16.0f};
+    UIButtonState wireframeState = UIButtonGetState(areaWireframe);
+    UIButtonState solidState = UIButtonGetState(areaSolid);
+    viewportWireframeHover = wireframeState.hovered;
+    viewportSolidHover = solidState.hovered;
+    if (wireframeState.clicked)
+        viewportWireframeMode = true;
+    else if (solidState.clicked)
+        viewportWireframeMode = false;
+
     float btnX = barX + 80.0f;
     Rectangle areaPlay = {btnX, btnY, 60.0f, 16.0f};
     if (playModeActive)
@@ -488,8 +515,7 @@ void DrawTopBar()
         }
     }
 
-    // Navegacao / Play / Stop / Restart after Help
-    barX += 80.0f;
+    // Visualizacao / Navegacao / Play / Stop / Restart
     UIButtonConfig baseCfg = {0};
     const UIStyle *uiStyle = GetUIStyle();
     baseCfg.fontSize = 12;
@@ -503,6 +529,29 @@ void DrawTopBar()
     baseCfg.borderHoverColor = uiStyle->accent;
     baseCfg.borderThickness = 1.0f;
 
+    float viewportModeX = GetTopBarRightViewportModeX();
+    Rectangle areaWireframe = {viewportModeX, 4.0f, 96.0f, 16.0f};
+    Rectangle areaSolid = {viewportModeX + 106.0f, 4.0f, 60.0f, 16.0f};
+
+    UIButtonConfig wireframeCfg = baseCfg;
+    bool wireframeActive = viewportWireframeMode;
+    Color wireframeColor = wireframeActive ? (Color){244, 170, 90, 255} : style->textSecondary;
+    wireframeCfg.textColor = wireframeColor;
+    wireframeCfg.textHoverColor = wireframeColor;
+    wireframeCfg.borderColor = wireframeColor;
+    wireframeCfg.borderHoverColor = wireframeColor;
+    UIButtonDraw(areaWireframe, GetViewportModeName(true), nullptr, &wireframeCfg, viewportWireframeHover || wireframeActive);
+
+    UIButtonConfig solidCfg = baseCfg;
+    bool solidActive = !viewportWireframeMode;
+    Color solidColor = solidActive ? style->accent : style->textSecondary;
+    solidCfg.textColor = solidColor;
+    solidCfg.textHoverColor = solidColor;
+    solidCfg.borderColor = solidColor;
+    solidCfg.borderHoverColor = solidColor;
+    UIButtonDraw(areaSolid, GetViewportModeName(false), nullptr, &solidCfg, viewportSolidHover || solidActive);
+
+    barX += 80.0f;
     if (playModeActive)
     {
         Rectangle areaNavigate = {barX, 4.0f, 84.0f, 16.0f};
@@ -601,4 +650,19 @@ bool IsTopBarMenuOpen(void)
 bool IsViewportNavigateModeActive(void)
 {
     return viewportNavigateMode && playModeActive;
+}
+
+bool IsViewportWireframeModeActive(void)
+{
+    return viewportWireframeMode;
+}
+
+void ToggleViewportWireframeMode(void)
+{
+    viewportWireframeMode = !viewportWireframeMode;
+}
+
+const char *GetViewportRenderModeLabel(void)
+{
+    return GetViewportModeName(viewportWireframeMode);
 }

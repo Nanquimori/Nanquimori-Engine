@@ -49,7 +49,7 @@ void LoadModelFromFile(const char *filepath);
 void RemoverModeloPorNome(const char *nome);
 void RemoverModeloPorIdObjeto(int idObjeto);
 void RestaurarModeloPorFilepath(const char *filepath, const char *nome);
-void RenderModels(void);
+void RenderModels(bool wireframeMode);
 void DrawSelectedObjectOrigins(Camera camera);
 void UnloadAllModels(void);
 void ClearActiveModels(void);

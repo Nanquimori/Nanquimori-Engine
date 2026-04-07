@@ -532,7 +532,7 @@ void RenderGameApplication(void)
             runtimeCameraObject = &objetos[runtimeCameraIndex];
 
         BeginManagedMode3D(runtimeCamera, runtimeCameraObject);
-        RenderModels();
+        RenderModels(false);
         EndManagedMode3D();
     }
     else
