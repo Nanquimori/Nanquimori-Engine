@@ -1,1 +1,1 @@
- raylib/raylib/libraylib.a -lopengl32 -lglu32 -lwinmm -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 
+ raylib/raylib/libraylib.a -ld2d1 -ld3d11 -ldxgi -lshlwapi -lole32 -lopengl32 -lglu32 -lwinmm -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 

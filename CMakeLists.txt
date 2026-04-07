@@ -84,5 +84,6 @@ if (WIN32)
 
     foreach(target NanquimoriEngine NanquimoriPlayer)
         target_compile_definitions(${target} PRIVATE _CRT_SECURE_NO_WARNINGS)
+        target_link_libraries(${target} PRIVATE d2d1 d3d11 dxgi shlwapi ole32)
     endforeach()
 endif()

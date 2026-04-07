@@ -13,6 +13,35 @@
 #include "ui_style.h"
 #include <cstdio>
 #include <cstring>
+#include <string>
+
+#ifdef _WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0A00
+#endif
+#ifndef NTDDI_VERSION
+#define NTDDI_VERSION 0x0A000003
+#endif
+#define WIN32_LEAN_AND_MEAN
+#define Rectangle Win32Rectangle
+#define CloseWindow Win32CloseWindow
+#define ShowCursor Win32ShowCursor
+#define LoadImage Win32LoadImage
+#define DrawText Win32DrawText
+#include <windows.h>
+#include <objbase.h>
+#include <shlwapi.h>
+#include <d3d11.h>
+#include <dxgi.h>
+#include <d2d1_1.h>
+#include <d2d1_3.h>
+#include <d2d1_3helper.h>
+#undef Rectangle
+#undef CloseWindow
+#undef ShowCursor
+#undef LoadImage
+#undef DrawText
+#endif
 
 // -------------------------------------------------------
 // STATIC TOP BAR STATE
@@ -20,6 +49,7 @@
 static Texture2D iconFolder = {0};
 static Texture2D iconHelp = {0};
 static Texture2D iconN = {0};
+static Texture2D iconWireframe = {0};
 static bool playModeActive = false;
 static bool playPaused = false;
 static bool playStopRequested = false;
@@ -31,7 +61,6 @@ static bool playHover = false;
 static bool stopHover = false;
 static bool restartHover = false;
 static bool navigateHover = false;
-static bool viewportSolidHover = false;
 static bool viewportWireframeHover = false;
 static bool viewportNavigateMode = false;
 static bool viewportWireframeMode = false;
@@ -67,11 +96,21 @@ static const char *GetViewportModeName(bool wireframe)
     return wireframe ? "Wireframe" : "Solid";
 }
 
+static Rectangle GetTopBarWireframeButtonRect(void)
+{
+    const float rightPadding = 8.0f;
+    const float buttonWidth = 30.0f;
+    const float buttonHeight = 24.0f;
+    return (Rectangle){
+        (float)GetScreenWidth() - (float)PROPERTIES_PAINEL_LARGURA - rightPadding - buttonWidth,
+        0.0f,
+        buttonWidth,
+        buttonHeight};
+}
+
 static float GetTopBarRightViewportModeX(void)
 {
-    const float rightPadding = 10.0f;
-    const float viewportModeWidth = 166.0f;
-    return (float)GetScreenWidth() - (float)PROPERTIES_PAINEL_LARGURA - rightPadding - viewportModeWidth;
+    return GetTopBarWireframeButtonRect().x;
 }
 
 static bool TryResolvePathFromBaseChain(const char *baseDir, const char *relativePath, char *out, size_t outSize)
@@ -123,6 +162,316 @@ static bool ResolveAssetPath(const char *relativePath, char *out, size_t outSize
         return true;
 
     return false;
+}
+
+#ifdef _WIN32
+template <typename T>
+static void ReleaseCom(T **value)
+{
+    if (!value || !*value)
+        return;
+    (*value)->Release();
+    *value = nullptr;
+}
+
+static bool ParseSvgViewportSize(const unsigned char *data, int dataSize, float *outWidth, float *outHeight)
+{
+    if (!data || dataSize <= 0 || !outWidth || !outHeight)
+        return false;
+
+    std::string text((const char *)data, (size_t)dataSize);
+
+    size_t viewBoxPos = text.find("viewBox=");
+    if (viewBoxPos != std::string::npos && viewBoxPos + 9 < text.size())
+    {
+        char quote = text[viewBoxPos + 8];
+        size_t start = viewBoxPos + 9;
+        size_t end = text.find(quote, start);
+        if (end != std::string::npos)
+        {
+            float minX = 0.0f;
+            float minY = 0.0f;
+            float width = 0.0f;
+            float height = 0.0f;
+            std::string viewBox = text.substr(start, end - start);
+            if (sscanf(viewBox.c_str(), "%f %f %f %f", &minX, &minY, &width, &height) == 4 &&
+                width > 0.0f && height > 0.0f)
+            {
+                *outWidth = width;
+                *outHeight = height;
+                return true;
+            }
+        }
+    }
+
+    size_t widthPos = text.find("width=");
+    size_t heightPos = text.find("height=");
+    if (widthPos != std::string::npos && heightPos != std::string::npos &&
+        widthPos + 8 < text.size() && heightPos + 9 < text.size())
+    {
+        char widthQuote = text[widthPos + 6];
+        char heightQuote = text[heightPos + 7];
+        size_t widthStart = widthPos + 7;
+        size_t heightStart = heightPos + 8;
+        size_t widthEnd = text.find(widthQuote, widthStart);
+        size_t heightEnd = text.find(heightQuote, heightStart);
+        if (widthEnd != std::string::npos && heightEnd != std::string::npos)
+        {
+            float width = 0.0f;
+            float height = 0.0f;
+            std::string widthText = text.substr(widthStart, widthEnd - widthStart);
+            std::string heightText = text.substr(heightStart, heightEnd - heightStart);
+            if (sscanf(widthText.c_str(), "%f", &width) == 1 &&
+                sscanf(heightText.c_str(), "%f", &height) == 1 &&
+                width > 0.0f && height > 0.0f)
+            {
+                *outWidth = width;
+                *outHeight = height;
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+static Texture2D LoadWin32SvgTextureAsset(const char *relativePath, int rasterSize)
+{
+    char path[512] = {0};
+    if (!ResolveAssetPath(relativePath, path, sizeof(path)))
+        return (Texture2D){0};
+
+    int dataSize = 0;
+    unsigned char *fileData = LoadFileData(path, &dataSize);
+    if (!fileData || dataSize <= 0)
+        return (Texture2D){0};
+
+    float svgWidth = (float)rasterSize;
+    float svgHeight = (float)rasterSize;
+    ParseSvgViewportSize(fileData, dataSize, &svgWidth, &svgHeight);
+
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    bool shouldUninitialize = SUCCEEDED(hr);
+    if (FAILED(hr) && hr != RPC_E_CHANGED_MODE)
+    {
+        UnloadFileData(fileData);
+        return (Texture2D){0};
+    }
+
+    Texture2D result = {0};
+    IStream *stream = SHCreateMemStream((const BYTE *)fileData, (UINT)dataSize);
+    ID3D11Device *d3dDevice = nullptr;
+    ID3D11DeviceContext *d3dContext = nullptr;
+    IDXGIDevice *dxgiDevice = nullptr;
+    ID2D1Factory6 *d2dFactory = nullptr;
+    ID2D1Device5 *d2dDevice = nullptr;
+    ID2D1DeviceContext5 *d2dContext5 = nullptr;
+    ID2D1SvgDocument *svgDocument = nullptr;
+    ID3D11Texture2D *renderTexture = nullptr;
+    ID3D11Texture2D *stagingTexture = nullptr;
+    IDXGISurface *dxgiSurface = nullptr;
+    ID2D1Bitmap1 *targetBitmap = nullptr;
+    UINT deviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+    D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
+    D2D1_FACTORY_OPTIONS factoryOptions = {};
+    D3D11_TEXTURE2D_DESC textureDesc = {};
+    D2D1_BITMAP_PROPERTIES1 bitmapProperties = D2D1::BitmapProperties1(
+        D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
+        D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED),
+        96.0f, 96.0f);
+    D3D11_MAPPED_SUBRESOURCE mapped = {};
+    Image image = {0};
+
+    if (!stream)
+        goto cleanup;
+
+    hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, deviceFlags,
+                           nullptr, 0, D3D11_SDK_VERSION, &d3dDevice, &featureLevel, &d3dContext);
+    if (FAILED(hr))
+    {
+        hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, nullptr, deviceFlags,
+                               nullptr, 0, D3D11_SDK_VERSION, &d3dDevice, &featureLevel, &d3dContext);
+    }
+    if (FAILED(hr) || !d3dDevice || !d3dContext)
+        goto cleanup;
+
+    hr = d3dDevice->QueryInterface(IID_PPV_ARGS(&dxgiDevice));
+    if (FAILED(hr) || !dxgiDevice)
+        goto cleanup;
+
+    hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED,
+                           __uuidof(ID2D1Factory6),
+                           &factoryOptions,
+                           (void **)&d2dFactory);
+    if (FAILED(hr) || !d2dFactory)
+        goto cleanup;
+
+    hr = d2dFactory->CreateDevice(dxgiDevice, &d2dDevice);
+    if (FAILED(hr) || !d2dDevice)
+        goto cleanup;
+
+    hr = d2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &d2dContext5);
+    if (FAILED(hr) || !d2dContext5)
+        goto cleanup;
+
+    hr = d2dContext5->CreateSvgDocument(stream, D2D1::SizeF(svgWidth, svgHeight), &svgDocument);
+    if (FAILED(hr) || !svgDocument)
+        goto cleanup;
+
+    textureDesc.Width = (UINT)rasterSize;
+    textureDesc.Height = (UINT)rasterSize;
+    textureDesc.MipLevels = 1;
+    textureDesc.ArraySize = 1;
+    textureDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.Usage = D3D11_USAGE_DEFAULT;
+    textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+
+    hr = d3dDevice->CreateTexture2D(&textureDesc, nullptr, &renderTexture);
+    if (FAILED(hr) || !renderTexture)
+        goto cleanup;
+
+    hr = renderTexture->QueryInterface(IID_PPV_ARGS(&dxgiSurface));
+    if (FAILED(hr) || !dxgiSurface)
+        goto cleanup;
+
+    hr = d2dContext5->CreateBitmapFromDxgiSurface(dxgiSurface, &bitmapProperties, &targetBitmap);
+    if (FAILED(hr) || !targetBitmap)
+        goto cleanup;
+
+    d2dContext5->SetTarget(targetBitmap);
+    d2dContext5->BeginDraw();
+    d2dContext5->Clear(D2D1::ColorF(0, 0.0f));
+    d2dContext5->SetTransform(D2D1::Matrix3x2F::Scale((float)rasterSize / svgWidth, (float)rasterSize / svgHeight));
+    d2dContext5->DrawSvgDocument(svgDocument);
+    hr = d2dContext5->EndDraw();
+    d2dContext5->SetTarget(nullptr);
+    if (FAILED(hr))
+        goto cleanup;
+
+    textureDesc.Usage = D3D11_USAGE_STAGING;
+    textureDesc.BindFlags = 0;
+    textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    hr = d3dDevice->CreateTexture2D(&textureDesc, nullptr, &stagingTexture);
+    if (FAILED(hr) || !stagingTexture)
+        goto cleanup;
+
+    d3dContext->CopyResource(stagingTexture, renderTexture);
+
+    hr = d3dContext->Map(stagingTexture, 0, D3D11_MAP_READ, 0, &mapped);
+    if (FAILED(hr))
+        goto cleanup;
+
+    image.width = rasterSize;
+    image.height = rasterSize;
+    image.mipmaps = 1;
+    image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+    image.data = MemAlloc((size_t)rasterSize * (size_t)rasterSize * 4u);
+    if (!image.data)
+    {
+        d3dContext->Unmap(stagingTexture, 0);
+        goto cleanup;
+    }
+
+    for (int y = 0; y < rasterSize; y++)
+    {
+        unsigned char *dst = (unsigned char *)image.data + (size_t)y * (size_t)rasterSize * 4u;
+        const unsigned char *src = (const unsigned char *)mapped.pData + (size_t)y * mapped.RowPitch;
+        for (int x = 0; x < rasterSize; x++)
+        {
+            dst[x * 4 + 0] = src[x * 4 + 2];
+            dst[x * 4 + 1] = src[x * 4 + 1];
+            dst[x * 4 + 2] = src[x * 4 + 0];
+            dst[x * 4 + 3] = src[x * 4 + 3];
+        }
+    }
+
+    d3dContext->Unmap(stagingTexture, 0);
+    result = LoadTextureFromImage(image);
+    UnloadImage(image);
+
+cleanup:
+    ReleaseCom(&targetBitmap);
+    ReleaseCom(&dxgiSurface);
+    ReleaseCom(&stagingTexture);
+    ReleaseCom(&renderTexture);
+    ReleaseCom(&svgDocument);
+    ReleaseCom(&d2dContext5);
+    ReleaseCom(&d2dDevice);
+    ReleaseCom(&d2dFactory);
+    ReleaseCom(&dxgiDevice);
+    ReleaseCom(&d3dContext);
+    ReleaseCom(&d3dDevice);
+    if (stream)
+        stream->Release();
+    UnloadFileData(fileData);
+    if (shouldUninitialize)
+        CoUninitialize();
+    return result;
+}
+#endif
+
+static Texture2D LoadTopBarTextureAsset(const char *relativePath, bool trimAlpha = false)
+{
+    char path[512] = {0};
+    if (!ResolveAssetPath(relativePath, path, sizeof(path)))
+        return (Texture2D){0};
+
+    Image image = LoadImage(path);
+    if (!image.data || image.width <= 0 || image.height <= 0)
+        return (Texture2D){0};
+
+    Rectangle alphaBorder = GetImageAlphaBorder(image, 0.01f);
+    if (trimAlpha &&
+        alphaBorder.width > 0.0f && alphaBorder.height > 0.0f &&
+        (alphaBorder.width < image.width || alphaBorder.height < image.height))
+    {
+        int borderX = (int)alphaBorder.x - 2;
+        int borderY = (int)alphaBorder.y - 2;
+        int borderW = (int)alphaBorder.width + 4;
+        int borderH = (int)alphaBorder.height + 4;
+        if (borderX < 0)
+            borderX = 0;
+        if (borderY < 0)
+            borderY = 0;
+        if (borderX + borderW > image.width)
+            borderW = image.width - borderX;
+        if (borderY + borderH > image.height)
+            borderH = image.height - borderY;
+        if (borderW > 0 && borderH > 0)
+            ImageCrop(&image, (Rectangle){(float)borderX, (float)borderY, (float)borderW, (float)borderH});
+    }
+
+    Texture2D texture = LoadTextureFromImage(image);
+    UnloadImage(image);
+    return texture;
+}
+
+static void DrawWireframeToggleIcon(Rectangle area, bool hovered, bool active)
+{
+    const UIStyle *style = GetUIStyle();
+    Color iconColor = active ? (Color){244, 170, 90, 255}
+                             : (hovered ? style->textPrimary : style->textSecondary);
+    float iconSize = 20.0f;
+    Vector2 iconPos = {
+        area.x + area.width * 0.5f - iconSize * 0.5f,
+        area.y + area.height * 0.5f - iconSize * 0.5f};
+
+    if (hovered || active)
+    {
+        Rectangle visualArea = {
+            area.x + 2.0f,
+            area.y + 2.0f,
+            area.width - 4.0f,
+            area.height - 4.0f};
+        Color glow = active ? Fade(iconColor, 0.16f) : Fade(style->textPrimary, 0.07f);
+        DrawRectangleRounded(visualArea, 0.45f, 8, glow);
+    }
+
+    if (iconWireframe.id <= 0 || iconWireframe.width <= 0 || iconWireframe.height <= 0)
+        return;
+
+    DrawTextureEx(iconWireframe, iconPos, 0.0f, iconSize / (float)iconWireframe.width, iconColor);
 }
 
 static void DrawTopBarIcon(Texture2D icon, Vector2 pos, float size, Color tint)
@@ -187,17 +536,17 @@ static void AddEmptyObject(void)
 // -------------------------------------------------------
 void InitTopBar()
 {
-    char path[512] = {0};
+    iconFolder = LoadTopBarTextureAsset("icons/window.png");
+    iconHelp = LoadTopBarTextureAsset("icons/help.png");
+#ifdef _WIN32
+    iconWireframe = LoadWin32SvgTextureAsset("icons/wireframe.svg", 256);
+#else
+    iconWireframe = LoadTopBarTextureAsset("icons/wireframe.svg", false);
+#endif
 
-    if (ResolveAssetPath("icons/window.png", path, sizeof(path)))
-        iconFolder = LoadTexture(path);
-    if (ResolveAssetPath("icons/help.png", path, sizeof(path)))
-        iconHelp = LoadTexture(path);
-
-    if (ResolveAssetPath("icons/N.ico", path, sizeof(path)))
-        iconN = LoadTexture(path);
-    if (iconN.id <= 0 && ResolveAssetPath("icons/n.png", path, sizeof(path)))
-        iconN = LoadTexture(path);
+    iconN = LoadTopBarTextureAsset("icons/N.ico");
+    if (iconN.id <= 0)
+        iconN = LoadTopBarTextureAsset("icons/n.png");
 }
 
 void UnloadTopBar()
@@ -205,6 +554,7 @@ void UnloadTopBar()
     UnloadTopBarIcon(&iconFolder);
     UnloadTopBarIcon(&iconHelp);
     UnloadTopBarIcon(&iconN);
+    UnloadTopBarIcon(&iconWireframe);
 }
 
 // -------------------------------------------------------
@@ -345,17 +695,11 @@ void UpdateTopBar()
 
     // Visualizacao / Navegacao / Play / Stop / Restart (depois do Help)
     float btnY = barY;
-    float viewportModeX = GetTopBarRightViewportModeX();
-    Rectangle areaWireframe = {viewportModeX, btnY, 96.0f, 16.0f};
-    Rectangle areaSolid = {viewportModeX + 106.0f, btnY, 60.0f, 16.0f};
+    Rectangle areaWireframe = GetTopBarWireframeButtonRect();
     UIButtonState wireframeState = UIButtonGetState(areaWireframe);
-    UIButtonState solidState = UIButtonGetState(areaSolid);
     viewportWireframeHover = wireframeState.hovered;
-    viewportSolidHover = solidState.hovered;
     if (wireframeState.clicked)
-        viewportWireframeMode = true;
-    else if (solidState.clicked)
-        viewportWireframeMode = false;
+        viewportWireframeMode = !viewportWireframeMode;
 
     float btnX = barX + 80.0f;
     Rectangle areaPlay = {btnX, btnY, 60.0f, 16.0f};
@@ -518,43 +862,23 @@ void DrawTopBar()
     // Visualizacao / Navegacao / Play / Stop / Restart
     UIButtonConfig baseCfg = {0};
     const UIStyle *uiStyle = GetUIStyle();
-    baseCfg.fontSize = 12;
-    baseCfg.padding = 6;
-    baseCfg.centerText = true;
-    baseCfg.textColor = WHITE;
-    baseCfg.textHoverColor = WHITE;
-    baseCfg.bgColor = uiStyle->buttonBg;
-    baseCfg.bgHoverColor = uiStyle->itemHover;
-    baseCfg.borderColor = uiStyle->buttonBorder;
-    baseCfg.borderHoverColor = uiStyle->accent;
-    baseCfg.borderThickness = 1.0f;
-
-    float viewportModeX = GetTopBarRightViewportModeX();
-    Rectangle areaWireframe = {viewportModeX, 4.0f, 96.0f, 16.0f};
-    Rectangle areaSolid = {viewportModeX + 106.0f, 4.0f, 60.0f, 16.0f};
-
-    UIButtonConfig wireframeCfg = baseCfg;
-    bool wireframeActive = viewportWireframeMode;
-    Color wireframeColor = wireframeActive ? (Color){244, 170, 90, 255} : style->textSecondary;
-    wireframeCfg.textColor = wireframeColor;
-    wireframeCfg.textHoverColor = wireframeColor;
-    wireframeCfg.borderColor = wireframeColor;
-    wireframeCfg.borderHoverColor = wireframeColor;
-    UIButtonDraw(areaWireframe, GetViewportModeName(true), nullptr, &wireframeCfg, viewportWireframeHover || wireframeActive);
-
-    UIButtonConfig solidCfg = baseCfg;
-    bool solidActive = !viewportWireframeMode;
-    Color solidColor = solidActive ? style->accent : style->textSecondary;
-    solidCfg.textColor = solidColor;
-    solidCfg.textHoverColor = solidColor;
-    solidCfg.borderColor = solidColor;
-    solidCfg.borderHoverColor = solidColor;
-    UIButtonDraw(areaSolid, GetViewportModeName(false), nullptr, &solidCfg, viewportSolidHover || solidActive);
+    Rectangle areaWireframe = GetTopBarWireframeButtonRect();
+    DrawWireframeToggleIcon(areaWireframe, viewportWireframeHover, viewportWireframeMode);
 
     barX += 80.0f;
     if (playModeActive)
     {
         Rectangle areaNavigate = {barX, 4.0f, 84.0f, 16.0f};
+        baseCfg.fontSize = 12;
+        baseCfg.padding = 6;
+        baseCfg.centerText = true;
+        baseCfg.textColor = WHITE;
+        baseCfg.textHoverColor = WHITE;
+        baseCfg.bgColor = uiStyle->buttonBg;
+        baseCfg.bgHoverColor = uiStyle->itemHover;
+        baseCfg.borderColor = uiStyle->buttonBorder;
+        baseCfg.borderHoverColor = uiStyle->accent;
+        baseCfg.borderThickness = 1.0f;
         UIButtonConfig navigateCfg = baseCfg;
         Color navigateColor = viewportNavigateMode ? (Color){88, 192, 224, 255} : style->textSecondary;
         navigateCfg.textColor = navigateColor;
@@ -569,6 +893,16 @@ void DrawTopBar()
     Color playColor = playPaused ? (Color){80, 160, 220, 255} : (playModeActive ? (Color){220, 110, 80, 255} : (Color){80, 200, 120, 255});
 
     Rectangle areaPlay = {barX, 4.0f, 60.0f, 16.0f};
+    baseCfg.fontSize = 12;
+    baseCfg.padding = 6;
+    baseCfg.centerText = true;
+    baseCfg.textColor = WHITE;
+    baseCfg.textHoverColor = WHITE;
+    baseCfg.bgColor = uiStyle->buttonBg;
+    baseCfg.bgHoverColor = uiStyle->itemHover;
+    baseCfg.borderColor = uiStyle->buttonBorder;
+    baseCfg.borderHoverColor = uiStyle->accent;
+    baseCfg.borderThickness = 1.0f;
     UIButtonConfig playCfg = baseCfg;
     playCfg.textColor = playColor;
     playCfg.textHoverColor = playColor;
