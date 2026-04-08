@@ -4,6 +4,7 @@
 #include "rlgl.h"
 #include "ui_button.h"
 #include "ui_style.h"
+#include "ui_tooltip.h"
 #include <cmath>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -142,6 +143,21 @@ void DrawInfoPanel(void)
 
     UIButtonDraw(btn2D, "2D", nullptr, &baseCfg, active2D ? true : btn2DState.hovered);
     UIButtonDraw(btn3D, "3D", nullptr, &baseCfg, active3D ? true : btn3DState.hovered);
+
+    if (btn2DState.hovered)
+    {
+        SetUITooltip(btn2D,
+                     "info.raycast_2d",
+                     "Raycast 2D",
+                     "Marca o ponto de colisao do raycast na tela.");
+    }
+    else if (btn3DState.hovered)
+    {
+        SetUITooltip(btn3D,
+                     "info.raycast_3d",
+                     "Raycast 3D",
+                     "Mostra o ponto de colisao diretamente no espaco 3D.");
+    }
 
     if (btn2DState.clicked)
     {

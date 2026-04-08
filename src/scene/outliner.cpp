@@ -3,6 +3,7 @@
 #include "assets/model_manager.h"
 #include "editor/ui/properties_panel.h"
 #include "editor/ui/text_input.h"
+#include "editor/ui/ui_tooltip.h"
 #include "editor/ui/ui_style.h"
 #include <ctype.h>
 #include <stdlib.h>
@@ -129,6 +130,25 @@ static bool CtrlHeld(void)
 static bool outlinerScenesExpanded = true;
 static bool outlinerObjectExpanded = true;
 
+static void SetTooltipOnHover(Rectangle rect, Vector2 mouse, const char *id, const char *title, const char *description)
+{
+    if (CheckCollisionPointRec(mouse, rect))
+        SetUITooltip(rect, id, title, description);
+}
+
+static const char *GetOutlinerHeaderTooltip(const char *title)
+{
+    if (!title)
+        return nullptr;
+    if (strcmp(title, "Outliner") == 0)
+        return "Mostra a hierarquia da cena e a selecao atual.";
+    if (strcmp(title, "Scenes") == 0)
+        return "Mostra as cenas do projeto e a cena ativa.";
+    if (strcmp(title, "Objeto") == 0)
+        return "Mostra os dados rapidos do objeto selecionado.";
+    return nullptr;
+}
+
 static int ClampOutlinerObjectPanelHeight(int height)
 {
     const int minHeight = 84;
@@ -146,6 +166,9 @@ static int ClampOutlinerObjectPanelHeight(int height)
 static bool DrawOutlinerSectionHeader(Rectangle header, const char *title, int textSize, bool *expanded, bool allowInput, Vector2 mouse)
 {
     bool hover = CheckCollisionPointRec(mouse, header);
+    const char *tooltip = GetOutlinerHeaderTooltip(title);
+    if (tooltip)
+        SetTooltipOnHover(header, mouse, title, title, tooltip);
     bool clicked = allowInput && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
     if (clicked)
         *expanded = !(*expanded);
@@ -1656,8 +1679,13 @@ void DrawOutliner(void)
     const UIStyle *style = GetUIStyle();
     DrawRectangle(0, 0, PAINEL_LARGURA, GetScreenHeight(), COR_PAINEL);
     Rectangle outlinerHeader = {6.0f, 6.0f, (float)(PAINEL_LARGURA - 12), 22.0f};
-    DrawEditorHeader(outlinerHeader, "Outliner", 14);
     Vector2 mouse = GetMousePosition();
+    SetTooltipOnHover(outlinerHeader,
+                      mouse,
+                      "Outliner",
+                      "Outliner",
+                      GetOutlinerHeaderTooltip("Outliner"));
+    DrawEditorHeader(outlinerHeader, "Outliner", 14);
 
     int sceneCount = GetSceneCount();
     int activeScene = GetActiveSceneIndex();

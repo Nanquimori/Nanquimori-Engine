@@ -12,6 +12,7 @@
 #include "editor/ui/export_dialog.h"
 #include "editor/ui/properties_panel.h"
 #include "editor/ui/ui_style.h"
+#include "editor/ui/ui_tooltip.h"
 #include "tools/svg_asset_loader.h"
 #include "physics/nanquimori_physics.h"
 #include "scene/scene_camera.h"
@@ -713,6 +714,8 @@ void UpdateApplication()
     static bool playSessionPrev = false;
     static bool navigateModePrev = false;
 
+    BeginUITooltipFrame();
+
     Vector3 loadedCamPos = {0};
     Vector3 loadedCamTarget = {0};
     if (ConsumeLoadedProjectCameraState(&loadedCamPos, &loadedCamTarget))
@@ -968,8 +971,8 @@ void UpdateApplication()
     if (!playMode)
     {
         UpdateFileMenu();
-        UpdateSplashScreen();
     }
+    UpdateSplashScreen();
 
     profLogicMs = (float)((GetTime() - updateStart) * 1000.0);
 }
@@ -1128,6 +1131,7 @@ void RenderApplication()
     DrawFileExplorer();
     DrawHelpPanel();
     DrawSplashScreen();
+    DrawUITooltip();
 
     EndDrawing();
 
@@ -1261,4 +1265,21 @@ bool LaunchProjectPlayer(char *status, int statusSize)
                  (size_t)statusSize,
                  usingTemporaryProject ? "Janela do jogo iniciada com copia temporaria." : "Janela do jogo iniciada.");
     return true;
+}
+
+void PrepareForProjectOpen(void)
+{
+    if (editorCameraBeforePlaySaved)
+    {
+        appCamera = editorCameraBeforePlay;
+        SyncCameraControllerToCamera(&appCamera);
+        editorCameraBeforePlaySaved = false;
+    }
+
+    SetPlayModeActive(false);
+    SetPlayPaused(false);
+    ResetNanquimoriPhysicsWorld();
+    ClearEditorViewportSceneCameraLook(false);
+    EnableMouseForUI();
+    SetSelectedModelByObjetoId(-1);
 }

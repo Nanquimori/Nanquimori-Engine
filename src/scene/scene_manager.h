@@ -37,6 +37,7 @@ const char *GetActiveSceneName(void);
 const char *GetSceneName(int index);
 int GetSceneObjectCount(int index);
 void CreateNewScene(void);
+void CreateNewProject(void);
 void SwitchScene(int index);
 void DuplicateActiveScene(void);
 void RenameActiveScene(const char *nome);

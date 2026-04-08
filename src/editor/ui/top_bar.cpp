@@ -12,6 +12,7 @@
 #include "tools/svg_asset_loader.h"
 #include "ui_button.h"
 #include "ui_style.h"
+#include "ui_tooltip.h"
 #include <cstdio>
 #include <cstring>
 
@@ -86,6 +87,31 @@ static Rectangle MakeTopBarTextButtonRect(float x, const char *label, float hori
         2.0f,
         (float)textWidth + horizontalPadding * 2.0f,
         20.0f};
+}
+
+typedef struct
+{
+    Rectangle navigate;
+    Rectangle play;
+    Rectangle stop;
+    Rectangle restart;
+} TopBarPlaybackLayout;
+
+static TopBarPlaybackLayout GetTopBarPlaybackLayout(float helpTextX, Rectangle helpRect, bool playActive)
+{
+    TopBarPlaybackLayout layout = {0};
+    float btnY = 4.0f;
+    float startX = helpTextX + helpRect.width + 14.0f;
+
+    layout.play = (Rectangle){startX, btnY, 60.0f, 16.0f};
+    if (!playActive)
+        return layout;
+
+    layout.navigate = (Rectangle){startX, btnY, 84.0f, 16.0f};
+    layout.play.x = startX + 94.0f;
+    layout.stop = (Rectangle){startX + 164.0f, btnY, 60.0f, 16.0f};
+    layout.restart = (Rectangle){startX + 234.0f, btnY, 70.0f, 16.0f};
+    return layout;
 }
 
 static void DrawWireframeToggleIcon(Rectangle area, bool hovered, bool active)
@@ -212,6 +238,13 @@ void UpdateTopBar()
     Rectangle areaFile = MakeTopBarTextButtonRect(barX, "File");
     UIButtonState fileState = UIButtonGetState(areaFile);
     fileHover = fileState.hovered;
+    if (fileState.hovered)
+    {
+        SetUITooltip(areaFile,
+                     "topbar.file",
+                     "File",
+                     "Importa modelos, abre projetos e salva o projeto atual.");
+    }
     if (fileState.clicked)
     {
         ToggleFileMenu();
@@ -224,6 +257,13 @@ void UpdateTopBar()
     Rectangle areaAdd = MakeTopBarTextButtonRect(barX, "Add");
     UIButtonState addState = UIButtonGetState(areaAdd);
     addHover = addState.hovered;
+    if (addState.hovered)
+    {
+        SetUITooltip(areaAdd,
+                     "topbar.add",
+                     "Add",
+                     "Cria objetos, cameras e primitivas na cena.");
+    }
     bool addToggledThisFrame = false;
     if (addState.clicked)
     {
@@ -302,6 +342,13 @@ void UpdateTopBar()
     Rectangle areaBuild = MakeTopBarTextButtonRect(barX, "Build");
     UIButtonState buildState = UIButtonGetState(areaBuild);
     buildHover = buildState.hovered;
+    if (buildState.hovered)
+    {
+        SetUITooltip(areaBuild,
+                     "topbar.build",
+                     "Build",
+                     "Abre a configuracao de exportacao e gera o build do jogo.");
+    }
     if (buildState.clicked)
     {
         OpenExportDialog();
@@ -314,6 +361,13 @@ void UpdateTopBar()
     Rectangle areaHelp = MakeTopBarTextButtonRect(barX, "Help");
     UIButtonState helpState = UIButtonGetState(areaHelp);
     helpHover = helpState.hovered;
+    if (helpState.hovered)
+    {
+        SetUITooltip(areaHelp,
+                     "topbar.help",
+                     "Help",
+                     "Mostra o painel de ajuda e os atalhos principais.");
+    }
     if (helpState.clicked)
     {
         SetHelpPanelShow(!HelpPanelShouldShow());
@@ -325,30 +379,50 @@ void UpdateTopBar()
         viewportNavigateMode = false;
 
     // Visualizacao / Navegacao / Play / Stop / Restart (depois do Help)
-    float btnY = barY;
     Rectangle areaWireframe = GetTopBarWireframeButtonRect();
     UIButtonState wireframeState = UIButtonGetState(areaWireframe);
     viewportWireframeHover = wireframeState.hovered;
+    if (wireframeState.hovered)
+    {
+        SetUITooltip(areaWireframe,
+                     viewportWireframeMode ? "topbar.render_mode.wireframe_on" : "topbar.render_mode.wireframe_off",
+                     viewportWireframeMode ? "Modo Wireframe" : "Modo Solid",
+                     "Alterna o render do viewport. Atalho: Z.");
+    }
     if (wireframeState.clicked)
         viewportWireframeMode = !viewportWireframeMode;
 
-    float btnX = barX + areaHelp.width + 14.0f;
-    Rectangle areaPlay = {btnX, btnY, 60.0f, 16.0f};
-    if (playModeActive)
-        areaPlay.x = btnX + 94.0f;
+    TopBarPlaybackLayout playbackLayout = GetTopBarPlaybackLayout(barX, areaHelp, playModeActive);
+    Rectangle areaPlay = playbackLayout.play;
 
     navigateHover = false;
     if (playModeActive)
     {
-        Rectangle areaNavigate = {btnX, btnY, 84.0f, 16.0f};
+        Rectangle areaNavigate = playbackLayout.navigate;
         UIButtonState navigateState = UIButtonGetState(areaNavigate);
         navigateHover = navigateState.hovered;
+        if (navigateState.hovered)
+        {
+            SetUITooltip(areaNavigate,
+                         viewportNavigateMode ? "topbar.navigate.on" : "topbar.navigate.off",
+                         "Navegar",
+                         "Controla a camera ativa da cena durante o Play.");
+        }
         if (navigateState.clicked)
             viewportNavigateMode = !viewportNavigateMode;
     }
 
     UIButtonState playState = UIButtonGetState(areaPlay);
     playHover = playState.hovered;
+    if (playState.hovered)
+    {
+        const char *tooltipId = !playModeActive ? "topbar.play.start" : (playPaused ? "topbar.play.resume" : "topbar.play.pause");
+        const char *tooltipTitle = !playModeActive ? "Play" : (playPaused ? "Resume" : "Pause");
+        const char *tooltipText = !playModeActive ? "Inicia a simulacao da cena. Atalho: P."
+                                                  : (playPaused ? "Retoma a simulacao pausada."
+                                                                : "Pausa a simulacao sem sair do Play.");
+        SetUITooltip(areaPlay, tooltipId, tooltipTitle, tooltipText);
+    }
     if (playState.clicked)
     {
         if (!playModeActive)
@@ -368,12 +442,26 @@ void UpdateTopBar()
     }
     else if (playModeActive)
     {
-        Rectangle areaStop = {btnX + 164.0f, btnY, 60.0f, 16.0f};
-        Rectangle areaRestart = {btnX + 234.0f, btnY, 70.0f, 16.0f};
+        Rectangle areaStop = playbackLayout.stop;
+        Rectangle areaRestart = playbackLayout.restart;
         UIButtonState stopState = UIButtonGetState(areaStop);
         UIButtonState restartState = UIButtonGetState(areaRestart);
         stopHover = stopState.hovered;
         restartHover = restartState.hovered;
+        if (stopState.hovered)
+        {
+            SetUITooltip(areaStop,
+                         "topbar.play.stop",
+                         "Stop",
+                         "Encerra o Play e recarrega a cena.");
+        }
+        else if (restartState.hovered)
+        {
+            SetUITooltip(areaRestart,
+                         "topbar.play.restart",
+                         "Restart",
+                         "Reinicia a simulacao da cena atual.");
+        }
         if (stopState.clicked)
         {
             playStopRequested = true;
@@ -495,10 +583,10 @@ void DrawTopBar()
     Rectangle areaWireframe = GetTopBarWireframeButtonRect();
     DrawWireframeToggleIcon(areaWireframe, viewportWireframeHover, viewportWireframeMode);
 
-    barX += 80.0f;
+    TopBarPlaybackLayout playbackLayout = GetTopBarPlaybackLayout(barX, areaHelp, playModeActive);
     if (playModeActive)
     {
-        Rectangle areaNavigate = {barX, 4.0f, 84.0f, 16.0f};
+        Rectangle areaNavigate = playbackLayout.navigate;
         baseCfg.fontSize = 12;
         baseCfg.padding = 6;
         baseCfg.centerText = true;
@@ -516,13 +604,12 @@ void DrawTopBar()
         navigateCfg.borderColor = navigateColor;
         navigateCfg.borderHoverColor = navigateColor;
         UIButtonDraw(areaNavigate, "Navegar", nullptr, &navigateCfg, navigateHover);
-        barX += 94.0f;
     }
 
     const char *playLabel = playModeActive ? (playPaused ? "Resume" : "Pause") : "Play";
     Color playColor = playPaused ? (Color){80, 160, 220, 255} : (playModeActive ? (Color){220, 110, 80, 255} : (Color){80, 200, 120, 255});
 
-    Rectangle areaPlay = {barX, 4.0f, 60.0f, 16.0f};
+    Rectangle areaPlay = playbackLayout.play;
     baseCfg.fontSize = 12;
     baseCfg.padding = 6;
     baseCfg.centerText = true;
@@ -545,8 +632,8 @@ void DrawTopBar()
         Color stopColor = (Color){210, 90, 80, 255};
         Color restartColor = (Color){90, 170, 220, 255};
 
-        Rectangle areaStop = {barX + 70.0f, 4.0f, 60.0f, 16.0f};
-        Rectangle areaRestart = {barX + 140.0f, 4.0f, 70.0f, 16.0f};
+        Rectangle areaStop = playbackLayout.stop;
+        Rectangle areaRestart = playbackLayout.restart;
 
         UIButtonConfig stopCfg = baseCfg;
         stopCfg.textColor = stopColor;

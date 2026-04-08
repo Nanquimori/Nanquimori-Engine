@@ -16,6 +16,7 @@ CMakeFiles/NanquimoriEngine.dir/src/editor/ui/info_panel.cpp.obj: \
  C:/raylib/raylib/src/rlgl.h \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\ui_button.h \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\ui_style.h \
+ C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\ui_tooltip.h \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/cmath \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/requires_hosted.h \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/x86_64-w64-mingw32/bits/c++config.h \

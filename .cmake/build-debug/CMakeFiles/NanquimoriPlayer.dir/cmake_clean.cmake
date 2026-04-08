@@ -36,6 +36,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_button.cpp.obj.d"
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_style.cpp.obj"
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_style.cpp.obj.d"
+  "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.obj"
+  "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.obj.d"
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj"
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj.d"
   "CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.obj"

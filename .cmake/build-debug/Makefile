@@ -785,6 +785,33 @@ src/editor/ui/ui_style.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_style.cpp.s
 .PHONY : src/editor/ui/ui_style.cpp.s
 
+src/editor/ui/ui_tooltip.obj: src/editor/ui/ui_tooltip.cpp.obj
+.PHONY : src/editor/ui/ui_tooltip.obj
+
+# target to build an object file
+src/editor/ui/ui_tooltip.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/ui_tooltip.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.obj
+.PHONY : src/editor/ui/ui_tooltip.cpp.obj
+
+src/editor/ui/ui_tooltip.i: src/editor/ui/ui_tooltip.cpp.i
+.PHONY : src/editor/ui/ui_tooltip.i
+
+# target to preprocess a source file
+src/editor/ui/ui_tooltip.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/ui_tooltip.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.i
+.PHONY : src/editor/ui/ui_tooltip.cpp.i
+
+src/editor/ui/ui_tooltip.s: src/editor/ui/ui_tooltip.cpp.s
+.PHONY : src/editor/ui/ui_tooltip.s
+
+# target to generate assembly for a file
+src/editor/ui/ui_tooltip.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriEngine.dir\build.make CMakeFiles/NanquimoriEngine.dir/src/editor/ui/ui_tooltip.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\NanquimoriPlayer.dir\build.make CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.s
+.PHONY : src/editor/ui/ui_tooltip.cpp.s
+
 src/editor/viewport/camera_controller.obj: src/editor/viewport/camera_controller.cpp.obj
 .PHONY : src/editor/viewport/camera_controller.obj
 
@@ -1104,6 +1131,9 @@ help:
 	@echo ... src/editor/ui/ui_style.obj
 	@echo ... src/editor/ui/ui_style.i
 	@echo ... src/editor/ui/ui_style.s
+	@echo ... src/editor/ui/ui_tooltip.obj
+	@echo ... src/editor/ui/ui_tooltip.i
+	@echo ... src/editor/ui/ui_tooltip.s
 	@echo ... src/editor/viewport/camera_controller.obj
 	@echo ... src/editor/viewport/camera_controller.i
 	@echo ... src/editor/viewport/camera_controller.s

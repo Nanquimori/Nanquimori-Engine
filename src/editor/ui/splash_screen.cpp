@@ -20,6 +20,7 @@ typedef struct
     float imgX;
     float imgY;
     Rectangle panel;
+    Rectangle buttonNewProject;
     Rectangle buttonYT;
     Rectangle recentTitle;
     Rectangle recentList;
@@ -254,11 +255,11 @@ static SplashLayout GetSplashLayout(void)
     layout.screenW = (float)GetScreenWidth();
     layout.screenH = (float)GetScreenHeight();
     float leftW = (float)splashScreen.splash.width;
-    float rightW = (recentCount > 0) ? 300.0f : 0.0f;
-    float gap = (recentCount > 0) ? 20.0f : 0.0f;
+    float rightW = 300.0f;
+    float gap = 20.0f;
     float panelW = leftW + rightW + gap + 32.0f;
     float leftH = (float)splashScreen.splash.height + 86.0f;
-    float rightH = (recentCount > 0) ? (26.0f + recentCount * RECENT_ROW_STEP) : 0.0f;
+    float rightH = 34.0f + ((recentCount > 0) ? (26.0f + recentCount * RECENT_ROW_STEP) : 0.0f);
     float contentH = (leftH > rightH) ? leftH : rightH;
     float panelH = contentH + 62.0f;
     float panelX = layout.screenW * 0.5f - panelW * 0.5f;
@@ -276,10 +277,16 @@ static SplashLayout GetSplashLayout(void)
 
     float rightX = layout.imgX + leftW + gap;
     float recentSectionH = RECENT_SLOTS * RECENT_ROW_STEP;
-    float recentTitleTop = panelY + (panelH - (20.0f + recentSectionH)) * 0.5f;
+    float rightContentH = 34.0f + ((recentCount > 0) ? (20.0f + recentSectionH) : 0.0f);
+    float recentTitleTop = panelY + (panelH - rightContentH) * 0.5f + 42.0f;
     float minTopPadding = panelY + 18.0f;
     if (recentTitleTop < minTopPadding)
         recentTitleTop = minTopPadding;
+    layout.buttonNewProject = (Rectangle){
+        rightX,
+        recentTitleTop - 40.0f,
+        rightW,
+        30.0f};
     layout.recentTitle = (Rectangle){
         rightX,
         recentTitleTop,
@@ -304,6 +311,7 @@ void InitSplashScreen(void)
     splashScreen.bloquearFechar = true;
     splashScreen.texturaOk = (splashScreen.splash.id > 0);
     splashScreen.hoverYT = false;
+    splashScreen.hoverNewProject = false;
     ClearRecentIconCache();
 }
 
@@ -321,13 +329,24 @@ void UpdateSplashScreen(void)
     if (!splashScreen.mostrar || !splashScreen.texturaOk)
     {
         splashScreen.hoverYT = false;
+        splashScreen.hoverNewProject = false;
         return;
     }
 
     SplashLayout layout = GetSplashLayout();
     RefreshRecentIconCache();
+    UIButtonState newProjectState = UIButtonGetState(layout.buttonNewProject);
     UIButtonState ytState = UIButtonGetState(layout.buttonYT);
+    splashScreen.hoverNewProject = newProjectState.hovered;
     splashScreen.hoverYT = ytState.hovered;
+
+    if (newProjectState.clicked)
+    {
+        CreateNewProject();
+        splashScreen.mostrar = false;
+        splashInputBlock = true;
+        return;
+    }
 
     if (ytState.clicked)
         OpenURL("https://www.youtube.com/@Nanquimori");
@@ -424,6 +443,7 @@ void DrawSplashScreen(void)
     btnCfg.iconColor = style->buttonText;
     btnCfg.iconSize = 20.0f;
     btnCfg.borderThickness = 2.0f;
+    UIButtonDraw(layout.buttonNewProject, "Novo Projeto", nullptr, &btnCfg, splashScreen.hoverNewProject);
     UIButtonDraw(layout.buttonYT, "Canal @Nanquimori", &splashScreen.iconYT, &btnCfg, splashScreen.hoverYT);
 
     int recentCount = GetVisibleRecentCount();
@@ -481,6 +501,7 @@ void ShowSplashScreen(void)
     splashScreen.mostrar = true;
     splashScreen.bloquearFechar = true;
     splashScreen.hoverYT = false;
+    splashScreen.hoverNewProject = false;
     splashInputBlock = true;
 }
 

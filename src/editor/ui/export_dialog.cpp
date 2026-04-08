@@ -6,6 +6,7 @@
 #include "text_input.h"
 #include "ui_button.h"
 #include "ui_style.h"
+#include "ui_tooltip.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -248,6 +249,12 @@ static void DrawFieldLabel(Rectangle field, const char *label)
 {
     Rectangle labelBounds = {field.x, field.y - 16.0f, field.width, 12.0f};
     DrawClippedText(label, labelBounds, 11, GetUIStyle()->textSecondary);
+}
+
+static void SetTooltipOnHover(Rectangle rect, Vector2 mouse, const char *id, const char *title, const char *description)
+{
+    if (CheckCollisionPointRec(mouse, rect))
+        SetUITooltip(rect, id, title, description);
 }
 
 static Color ExportOptionHoverColor(void)
@@ -515,10 +522,16 @@ void DrawExportDialog(void)
     neutralButton.borderThickness = 1.0f;
 
     Vector2 mouse = GetMousePosition();
+    SetTooltipOnHover(layout.inputGameName, mouse, "export.game_name", "Titulo da janela", "Nome exibido na barra da janela do jogo.");
+    SetTooltipOnHover(layout.inputExeName, mouse, "export.exe_name", "Arquivo principal", "Nome do executavel gerado no build.");
+    SetTooltipOnHover(layout.inputOutputDir, mouse, "export.output_dir", "Pasta do build", "Define a pasta onde o build sera exportado.");
+    SetTooltipOnHover(layout.inputIconPath, mouse, "export.icon_path", "Icone do executavel", "Aceita caminho relativo ou absoluto para a imagem do icone.");
     UIButtonDraw(layout.buttonSelectIcon, "Escolher Arquivo", nullptr, &neutralButton,
                  CheckCollisionPointRec(mouse, layout.buttonSelectIcon));
     UIButtonDraw(layout.buttonUseProjectIcon, "Usar Icone do Projeto", nullptr, &neutralButton,
                  CheckCollisionPointRec(mouse, layout.buttonUseProjectIcon));
+    SetTooltipOnHover(layout.buttonSelectIcon, mouse, "export.select_icon", "Escolher Arquivo", "Abre o explorador para selecionar a imagem do icone.");
+    SetTooltipOnHover(layout.buttonUseProjectIcon, mouse, "export.use_project_icon", "Usar Icone do Projeto", "Reaproveita o icon.png ja salvo no projeto.");
 
     Rectangle iconHintBounds = {layout.panel.x + 24.0f, layout.buttonSelectIcon.y + 38.0f, layout.panel.width - 48.0f, 14.0f};
     const char *iconHint = exportDialogSettings.iconPath[0] != '\0'
@@ -544,6 +557,8 @@ void DrawExportDialog(void)
     int widthFlags = TextInputDraw(layout.inputWidth, exportWidthBuffer, (int)sizeof(exportWidthBuffer), &exportInputWidth, &intCfg);
     DrawFieldLabel(layout.inputHeight, "Altura da janela");
     int heightFlags = TextInputDraw(layout.inputHeight, exportHeightBuffer, (int)sizeof(exportHeightBuffer), &exportInputHeight, &intCfg);
+    SetTooltipOnHover(layout.inputWidth, mouse, "export.window_width", "Largura da janela", "Define a largura inicial da janela do player.");
+    SetTooltipOnHover(layout.inputHeight, mouse, "export.window_height", "Altura da janela", "Define a altura inicial da janela do player.");
     int textFlags = gameNameFlags | exeNameFlags | outputDirFlags | iconPathFlags | widthFlags | heightFlags;
     if (textFlags & (TEXT_INPUT_CHANGED | TEXT_INPUT_SUBMITTED | TEXT_INPUT_DEACTIVATED))
     {
@@ -565,22 +580,27 @@ void DrawExportDialog(void)
                    "Console de depuracao",
                    "Mostra uma janela de console para logs e diagnostico no Windows.",
                    exportDialogSettings.showConsole);
+    SetTooltipOnHover(layout.toggleConsole, mouse, "export.console", "Console de depuracao", "Exibe uma janela de console para logs e diagnostico.");
     DrawOptionCard(layout.toggleBorderless,
                    "Tela cheia sem borda (Recomendado)",
                    "Abre como janela sem borda no tamanho do monitor, sem trocar o modo de video.",
                    fullscreenMode == EXPORT_FULLSCREEN_BORDERLESS);
+    SetTooltipOnHover(layout.toggleBorderless, mouse, "export.borderless", "Tela cheia sem borda", "Usa o monitor atual sem trocar o modo de video.");
     DrawOptionCard(layout.toggleExclusive,
                    "Tela cheia exclusiva",
                    "Assume o monitor diretamente e pode trocar resolucao ou refresh do monitor.",
                    fullscreenMode == EXPORT_FULLSCREEN_EXCLUSIVE);
+    SetTooltipOnHover(layout.toggleExclusive, mouse, "export.exclusive", "Tela cheia exclusiva", "Assume o monitor diretamente e pode mudar resolucao.");
     DrawOptionCard(layout.toggleMaximized,
                    "Janela maximizada",
                    "Abre ocupando a area util do monitor sem depender da largura e altura definidas.",
                    exportDialogSettings.startMaximized);
+    SetTooltipOnHover(layout.toggleMaximized, mouse, "export.maximized", "Janela maximizada", "Abre ocupando a area util do monitor e ignora largura/altura.");
     DrawOptionCard(layout.toggleResizable,
                    "Janela redimensionavel",
                    "Permite que o jogador ajuste o tamanho da janela manualmente.",
                    exportDialogSettings.resizableWindow);
+    SetTooltipOnHover(layout.toggleResizable, mouse, "export.resizable", "Janela redimensionavel", "Permite que o jogador redimensione a janela manualmente.");
 
     UIButtonConfig exportButton = neutralButton;
     exportButton.bgColor = style->accentSoft;
@@ -594,6 +614,8 @@ void DrawExportDialog(void)
                  CheckCollisionPointRec(mouse, layout.buttonExport));
     UIButtonDraw(layout.buttonCancel, "Fechar", nullptr, &neutralButton,
                  CheckCollisionPointRec(mouse, layout.buttonCancel));
+    SetTooltipOnHover(layout.buttonExport, mouse, "export.build", "Gerar Build", "Salva o projeto e gera o build exportado.");
+    SetTooltipOnHover(layout.buttonCancel, mouse, "export.close", "Fechar", "Fecha a configuracao de build.");
 
     if (exportDialogStatus[0] != '\0')
     {

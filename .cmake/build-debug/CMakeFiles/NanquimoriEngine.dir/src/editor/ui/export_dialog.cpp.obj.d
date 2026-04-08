@@ -23,6 +23,7 @@ CMakeFiles/NanquimoriEngine.dir/src/editor/ui/export_dialog.cpp.obj: \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\text_input.h \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\ui_button.h \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\ui_style.h \
+ C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\ui_tooltip.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/stdio.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/corecrt_stdio_config.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/_mingw_off_t.h \

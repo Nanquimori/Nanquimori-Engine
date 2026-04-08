@@ -5,6 +5,7 @@
 #include "editor/ui/color_picker.h"
 #include "editor/ui/drag_float_input.h"
 #include "editor/ui/text_input.h"
+#include "editor/ui/ui_tooltip.h"
 #include "raymath.h"
 #include "editor/ui/ui_style.h"
 #include <stdio.h>
@@ -32,10 +33,40 @@ static bool CtrlHeld(void)
     return IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
 }
 
+static void SetTooltipOnHover(Rectangle rect, Vector2 mouse, const char *id, const char *title, const char *description)
+{
+    if (CheckCollisionPointRec(mouse, rect))
+        SetUITooltip(rect, id, title, description);
+}
+
+static const char *GetPropertiesHeaderTooltip(const char *title)
+{
+    if (!title)
+        return nullptr;
+    if (strcmp(title, "Properties") == 0)
+        return "Mostra e edita as configuracoes do item selecionado.";
+    if (strcmp(title, "Player") == 0)
+        return "Controla a inicializacao do player e o comportamento da janela.";
+    if (strcmp(title, "Objeto") == 0)
+        return "Agrupa os dados principais do objeto selecionado.";
+    if (strcmp(title, "Transform") == 0)
+        return "Edita posicao, rotacao e escala do objeto.";
+    if (strcmp(title, "Camera") == 0)
+        return "Configura projecao, clipping e a visao da camera.";
+    if (strcmp(title, "Fisica") == 0)
+        return "Ajusta colisao, gravidade e comportamento fisico.";
+    if (strcmp(title, "Prototype") == 0)
+        return "Controla o visual de prototipagem e seus presets.";
+    return nullptr;
+}
+
 static bool DrawSectionHeader(const char *title, int x, int *y, bool *expanded, bool allowInput, Vector2 mouse)
 {
     Rectangle header = {(float)(x + 8), (float)(*y), (float)(PROPERTIES_PAINEL_LARGURA - 16), 18.0f};
     bool hover = CheckCollisionPointRec(mouse, header);
+    const char *tooltip = GetPropertiesHeaderTooltip(title);
+    if (tooltip)
+        SetTooltipOnHover(header, mouse, title, title, tooltip);
     bool clicked = allowInput && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
     if (clicked)
         *expanded = !(*expanded);
@@ -581,6 +612,11 @@ static void DrawFloatPropertyInput(const char *label, float *value, int fieldInd
     *y += 16;
 
     Rectangle box = {(float)(x + 14), (float)(*y), width, 20.0f};
+    SetTooltipOnHover(box,
+                      GetMousePosition(),
+                      label,
+                      label,
+                      "Arraste para ajustar com precisao ou clique para digitar um valor.");
     bool fieldActive = DragFloatInputIsActive(&propertyFloatInputs[fieldIndex]);
     if (!fieldActive)
         DragFloatInputFormat(propertyFloatBuffer[fieldIndex], (int)sizeof(propertyFloatBuffer[fieldIndex]), *value);
@@ -643,6 +679,9 @@ static void DrawCameraResolutionInputs(int x, int *y, bool allowInput)
     const float inputWidth = (totalWidth - gap) * 0.5f;
     Rectangle widthBox = {(float)(x + 14), (float)(*y), inputWidth, 20.0f};
     Rectangle heightBox = {(float)(x + 14) + inputWidth + gap, (float)(*y), inputWidth, 20.0f};
+    Vector2 mouse = GetMousePosition();
+    SetTooltipOnHover(widthBox, mouse, "properties.camera.resolution_width", "Largura", "Define a largura usada pela camera e pelo build.");
+    SetTooltipOnHover(heightBox, mouse, "properties.camera.resolution_height", "Altura", "Define a altura usada pela camera e pelo build.");
 
     DragFloatInputConfig cfg = {0};
     cfg.fontSize = 12;
@@ -785,6 +824,8 @@ static void DrawPlayerSettingsSection(int x, int *y, bool allowInput, Vector2 mo
     const float optionWidth = ((float)(PROPERTIES_PAINEL_LARGURA - 28) - optionGap) * 0.5f;
     Rectangle maximizedRow = {(float)(x + 14), (float)(*y), optionWidth, 18.0f};
     Rectangle fullscreenRow = {(float)(x + 14) + optionWidth + optionGap, (float)(*y), optionWidth, 18.0f};
+    SetTooltipOnHover(maximizedRow, mouse, "properties.player.maximized", "Janela Maximizada", "Abre o player maximizado e desativa a resolucao manual.");
+    SetTooltipOnHover(fullscreenRow, mouse, "properties.player.fullscreen", "Fullscreen", "Abre o player em tela cheia sem borda.");
 
     if (DrawCheckboxField("Janela Maximizada", maximized, maximizedRow, allowInput, mouse))
     {
@@ -814,14 +855,13 @@ static void DrawPlayerSettingsSection(int x, int *y, bool allowInput, Vector2 mo
                              (float)(*y),
                              startButtonWidth,
                              18.0f};
+    SetTooltipOnHover(startButton, mouse, "properties.player.start", "Start", "Inicia o player externo com o projeto atual.");
     if (DrawPrimaryActionButton(startButton, "Start", allowInput, mouse))
     {
         playerLaunchStatusSuccess = LaunchProjectPlayer(playerLaunchStatus, (int)sizeof(playerLaunchStatus));
     }
     *y += 28;
 
-    DrawText("Abre o player externo com as configuracoes salvas do projeto.", x + 14, *y, 10, COR_TEXTO_SECUNDARIO);
-    *y += 16;
     if (playerLaunchStatus[0] != '\0')
     {
         Color statusColor = playerLaunchStatusSuccess ? (Color){78, 182, 112, 255} : (Color){200, 88, 78, 255};
@@ -846,6 +886,13 @@ static void DrawVec3Inputs(const char *label, Vector3 *value, int baseIndex, int
     float boxH = 20.0f;
 
     const char *axes[3] = {"X", "Y", "Z"};
+    const char *description = "Arraste ou digite os valores do vetor selecionado.";
+    if (strcmp(label, "Location") == 0)
+        description = "Move o objeto nos eixos X, Y e Z.";
+    else if (strcmp(label, "Rotation") == 0)
+        description = "Rotaciona o objeto em graus nos tres eixos.";
+    else if (strcmp(label, "Scale") == 0)
+        description = "Ajusta o tamanho do objeto nos tres eixos.";
 
     DragFloatInputConfig cfg = {0};
     cfg.fontSize = 12;
@@ -867,6 +914,7 @@ static void DrawVec3Inputs(const char *label, Vector3 *value, int baseIndex, int
         float boxX = (float)(x + 14) + i * (boxW + gap);
         DrawText(axes[i], (int)boxX + 2, (int)labelY, 10, COR_TEXTO_SECUNDARIO);
         Rectangle box = {boxX, boxY, boxW, boxH};
+        SetTooltipOnHover(box, GetMousePosition(), label, label, description);
 
         int idx = baseIndex + i;
         bool fieldActive = DragFloatInputIsActive(&transformInputs[idx]);
@@ -928,6 +976,11 @@ void DrawPropertiesPanel(void)
     DrawRectangle(x, 0, PROPERTIES_PAINEL_LARGURA, screenH, COR_PAINEL);
     const UIStyle *style = GetUIStyle();
     Rectangle propertiesHeader = {(float)(x + 6), 6.0f, (float)(PROPERTIES_PAINEL_LARGURA - 12), 22.0f};
+    SetTooltipOnHover(propertiesHeader,
+                      GetMousePosition(),
+                      "Properties",
+                      "Properties",
+                      GetPropertiesHeaderTooltip("Properties"));
     DrawEditorHeader(propertiesHeader, "Properties", 14);
 
     CleanupPhysEntries();
@@ -1060,6 +1113,11 @@ void DrawPropertiesPanel(void)
                     else
                         SetSceneRenderCameraObjectId(selId);
                 }
+                SetTooltipOnHover((Rectangle){(float)(x + 14), (float)(y - 18), (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f},
+                                  mouse,
+                                  "properties.camera.activate",
+                                  "Ativar Camera",
+                                  "Define esta camera como camera principal da cena.");
                 y += 4;
 
                 DrawText("Projection", x + 14, y, 12, COR_TEXTO);
@@ -1068,6 +1126,8 @@ void DrawPropertiesPanel(void)
                 int projectionWidth = (PROPERTIES_PAINEL_LARGURA - 28 - projectionGap) / 2;
                 Rectangle perspectiveBtn = {(float)(x + 14), (float)y, (float)projectionWidth, 20.0f};
                 Rectangle orthoBtn = {(float)(x + 14 + projectionWidth + projectionGap), (float)y, (float)projectionWidth, 20.0f};
+                SetTooltipOnHover(perspectiveBtn, mouse, "properties.camera.perspective", "Perspective", "Usa projecao com profundidade e field of view.");
+                SetTooltipOnHover(orthoBtn, mouse, "properties.camera.orthographic", "Orthographic", "Usa projecao ortografica sem perspectiva.");
                 if (DrawOptionButton(perspectiveBtn, "Perspective", obj->cameraProjection == CAMERA_PERSPECTIVE, allowInput, mouse))
                     obj->cameraProjection = CAMERA_PERSPECTIVE;
                 if (DrawOptionButton(orthoBtn, "Orthographic", obj->cameraProjection == CAMERA_ORTHOGRAPHIC, allowInput, mouse))
@@ -1095,6 +1155,8 @@ void DrawPropertiesPanel(void)
                 int actionWidth = (PROPERTIES_PAINEL_LARGURA - 28 - actionGap) / 2;
                 Rectangle useViewBtn = {(float)(x + 14), (float)y, (float)actionWidth, 20.0f};
                 Rectangle lookBtn = {(float)(x + 14 + actionWidth + actionGap), (float)y, (float)actionWidth, 20.0f};
+                SetTooltipOnHover(useViewBtn, mouse, "properties.camera.use_view", "Use View", "Copia a visao atual do viewport para esta camera.");
+                SetTooltipOnHover(lookBtn, mouse, "properties.camera.look_through", "Look Through", "Faz o viewport enxergar pela camera selecionada.");
                 if (DrawOptionButton(useViewBtn, "Use View", false, allowInput, mouse))
                 {
                     Camera viewCamera = GetEditorViewportCamera();
@@ -1127,6 +1189,11 @@ void DrawPropertiesPanel(void)
             phys->isStatic = true;
             phys->rigidbody = false;
         }
+        SetTooltipOnHover((Rectangle){(float)(x + 14), (float)(y - 18), (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f},
+                          mouse,
+                          "properties.physics.static",
+                          "Static",
+                          "Mantem o objeto fixo, sem simulacao dinamica.");
 
         bool rbOn = (phys && phys->rigidbody);
         if (phys && DrawCheckboxRow("Rigidbody", rbOn, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
@@ -1134,6 +1201,11 @@ void DrawPropertiesPanel(void)
             phys->rigidbody = true;
             phys->isStatic = false;
         }
+        SetTooltipOnHover((Rectangle){(float)(x + 14), (float)(y - 18), (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f},
+                          mouse,
+                          "properties.physics.rigidbody",
+                          "Rigidbody",
+                          "Permite que o objeto reaja a fisica e colisao.");
 
         bool colliderOn = (phys && (phys->collider || phys->terrain));
         if (phys && DrawCheckboxRow("Collider", colliderOn, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
@@ -1142,10 +1214,20 @@ void DrawPropertiesPanel(void)
             if (!phys->collider)
                 phys->terrain = false;
         }
+        SetTooltipOnHover((Rectangle){(float)(x + 14), (float)(y - 18), (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f},
+                          mouse,
+                          "properties.physics.collider",
+                          "Collider",
+                          "Ativa a colisao fisica do objeto.");
 
         bool gravityOn = (phys && phys->gravity);
         if (phys && DrawCheckboxRow("Gravity", gravityOn, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
             phys->gravity = !phys->gravity;
+        SetTooltipOnHover((Rectangle){(float)(x + 14), (float)(y - 18), (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f},
+                          mouse,
+                          "properties.physics.gravity",
+                          "Gravity",
+                          "Aplica gravidade quando o objeto usa rigidbody.");
 
         if (phys && (phys->collider || phys->terrain))
         {
@@ -1154,6 +1236,11 @@ void DrawPropertiesPanel(void)
 
             if (DrawCheckboxRow("Show Collisions", showCollisionDebug, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
                 showCollisionDebug = !showCollisionDebug;
+            SetTooltipOnHover((Rectangle){(float)(x + 14), (float)(y - 18), (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f},
+                              mouse,
+                              "properties.physics.show_collisions",
+                              "Show Collisions",
+                              "Desenha os volumes de colisao no viewport.");
 
             DrawText("Collision Mode", x + 14, y, 12, COR_TEXTO);
             y += 18;
@@ -1169,6 +1256,8 @@ void DrawPropertiesPanel(void)
 
             bool hoverMesh = CheckCollisionPointRec(mouse, btnMesh);
             bool hoverTerrain = CheckCollisionPointRec(mouse, btnTerrain);
+            SetTooltipOnHover(btnMesh, mouse, "properties.physics.mesh_bounds", "Mesh Bounds", "Usa os limites do modelo como volume de colisao.");
+            SetTooltipOnHover(btnTerrain, mouse, "properties.physics.terrain", "Terrain", "Trata o objeto como terreno estatico para colisao.");
             Color meshBg = meshActive ? COR_ITEM_SEL : (hoverMesh ? COR_ITEM : COR_PAINEL);
             Color terrainBg = terrainActive ? COR_ITEM_SEL : (hoverTerrain ? COR_ITEM : COR_PAINEL);
 
@@ -1220,6 +1309,11 @@ void DrawPropertiesPanel(void)
         {
         if (DrawCheckboxRow("Enabled", obj->protoEnabled, x, &y, (float)(PROPERTIES_PAINEL_LARGURA - 28), allowInput, mouse))
             obj->protoEnabled = !obj->protoEnabled;
+        SetTooltipOnHover((Rectangle){(float)(x + 14), (float)(y - 18), (float)(PROPERTIES_PAINEL_LARGURA - 28), 18.0f},
+                          mouse,
+                          "properties.prototype.enabled",
+                          "Prototype Enabled",
+                          "Ativa o visual de prototipagem para o objeto.");
 
         if (obj->protoEnabled)
         {
@@ -1254,6 +1348,8 @@ void DrawPropertiesPanel(void)
                     Color base = {0};
                     Color secondary = {0};
                     GetPackDisplay(obj, i, &packName, &base, &secondary);
+                    if (hover)
+                        SetUITooltip(btn, packName, packName, "Aplica este pack visual de prototipagem ao objeto.");
                     Color packText = active ? GetUIStyle()->buttonTextHover : COR_TEXTO;
                     DrawText(packName, (int)btn.x + 4, (int)btn.y + 3, 10, packText);
 
@@ -1277,6 +1373,7 @@ void DrawPropertiesPanel(void)
 
             DrawText("Cor Base", contentLeft, y, 12, COR_TEXTO);
             Rectangle baseSwatch = {(float)(contentRight - 16), (float)(y - 2), 16.0f, 16.0f};
+            SetTooltipOnHover(baseSwatch, mouse, "properties.prototype.base_color", "Cor Base", "Abre o seletor da cor principal do prototype.");
             DrawRectangleRec(baseSwatch, obj->protoBaseColor);
             DrawRectangleLinesEx(baseSwatch, 1, COR_BORDA);
             if (allowInput && CheckCollisionPointRec(mouse, baseSwatch) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
@@ -1289,6 +1386,7 @@ void DrawPropertiesPanel(void)
 
             DrawText("Cor Secundaria", contentLeft, y, 12, COR_TEXTO);
             Rectangle secSwatch = {(float)(contentRight - 16), (float)(y - 2), 16.0f, 16.0f};
+            SetTooltipOnHover(secSwatch, mouse, "properties.prototype.secondary_color", "Cor Secundaria", "Abre o seletor da cor secundaria do prototype.");
             DrawRectangleRec(secSwatch, obj->protoSecondaryColor);
             DrawRectangleLinesEx(secSwatch, 1, COR_BORDA);
             if (allowInput && CheckCollisionPointRec(mouse, secSwatch) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
@@ -1346,6 +1444,7 @@ void DrawPropertiesPanel(void)
 
                 Rectangle saveBtn = {(float)(x + 14), (float)(y), (float)(PROPERTIES_PAINEL_LARGURA - 28), 20.0f};
                 bool saveHover = CheckCollisionPointRec(mouse, saveBtn);
+                SetTooltipOnHover(saveBtn, mouse, "properties.prototype.save_custom", "Save Custom", "Salva as cores atuais como um preset customizado.");
                 Color saveBg = saveHover ? COR_ITEM : COR_PAINEL;
                 DrawRectangleRec(saveBtn, saveBg);
                 DrawRectangleLinesEx(saveBtn, 1, COR_BORDA);
@@ -1411,6 +1510,7 @@ void DrawPropertiesPanel(void)
                 {
                     Rectangle delBtn = {(float)(x + 14), (float)(y), (float)(PROPERTIES_PAINEL_LARGURA - 28), 20.0f};
                     bool delHover = CheckCollisionPointRec(mouse, delBtn);
+                    SetTooltipOnHover(delBtn, mouse, "properties.prototype.delete_custom", "Delete Custom", "Remove o preset customizado selecionado.");
                     Color delBg = delHover ? (Color){98, 30, 30, 255} : COR_PAINEL;
                     DrawRectangleRec(delBtn, delBg);
                     DrawRectangleLinesEx(delBtn, 1, COR_BORDA);

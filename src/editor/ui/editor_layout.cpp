@@ -1,5 +1,6 @@
 #include "editor_layout.h"
 #include "ui_style.h"
+#include "ui_tooltip.h"
 #include <math.h>
 
 enum EditorLayoutSplitter
@@ -143,6 +144,24 @@ void UpdateEditorLayout(bool allowInput)
     }
 
     gEditorLayout.hoveredSplitter = allowInput ? GetHoveredSplitter(mouse) : EDITOR_LAYOUT_SPLITTER_NONE;
+
+    if (allowInput)
+    {
+        if (gEditorLayout.hoveredSplitter == EDITOR_LAYOUT_SPLITTER_LEFT)
+        {
+            SetUITooltip(GetEditorLeftSplitterBounds(),
+                         "layout.left_splitter",
+                         "Redimensionar Outliner",
+                         "Arraste para ajustar a largura do painel esquerdo.");
+        }
+        else if (gEditorLayout.hoveredSplitter == EDITOR_LAYOUT_SPLITTER_RIGHT)
+        {
+            SetUITooltip(GetEditorRightSplitterBounds(),
+                         "layout.right_splitter",
+                         "Redimensionar Properties",
+                         "Arraste para ajustar a largura do painel direito.");
+        }
+    }
 
     if (allowInput && gEditorLayout.draggingSplitter == EDITOR_LAYOUT_SPLITTER_NONE && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {

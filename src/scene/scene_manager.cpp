@@ -1,4 +1,5 @@
 #include "scene_manager.h"
+#include "app/application.h"
 #include "assets/model_manager.h"
 #include "editor/ui/properties_panel.h"
 #include "editor/ui/info_panel.h"
@@ -644,6 +645,25 @@ void CreateNewScene(void)
     cenaAtiva = totalCenas - 1;
 
     CarregarCena(cenaAtiva);
+}
+
+void CreateNewProject(void)
+{
+    PrepareForProjectOpen();
+
+    totalCenas = 0;
+    cenaAtiva = -1;
+    projectPath[0] = '\0';
+    projectDir[0] = '\0';
+    pendingProjectIconPath[0] = '\0';
+    ResetProjectExportSettings(&projectExportSettings);
+    projectCameraPos = (Vector3){6.0f, 6.0f, 6.0f};
+    projectCameraTarget = (Vector3){0.0f, 0.0f, 0.0f};
+    loadedProjectCameraPending = true;
+
+    InitOutliner();
+    ClearActiveModels();
+    CreateNewScene();
 }
 
 void SwitchScene(int index)
@@ -1433,6 +1453,9 @@ bool OpenProject(const char *path)
 {
     if (!path || path[0] == '\0')
         return false;
+    if (!FileExists(path))
+        return false;
+    PrepareForProjectOpen();
     return LoadProject(path);
 }
 
@@ -1590,6 +1613,8 @@ bool LoadProject(const char *path)
     totalCenas = 0;
     cenaAtiva = -1;
     ResetProjectExportSettings(&projectExportSettings);
+    projectCameraPos = (Vector3){6.0f, 6.0f, 6.0f};
+    projectCameraTarget = (Vector3){0.0f, 0.0f, 0.0f};
 
     int activeFromFile = 0;
     loadedProjectCameraPending = false;

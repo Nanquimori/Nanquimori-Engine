@@ -75,6 +75,7 @@ Color ColorPickerDraw(ColorPickerState *state, Rectangle panel, const char *titl
 {
     if (!state)
         return WHITE;
+    (void)title;
 
     Vector2 mouse = GetMousePosition();
 
@@ -91,17 +92,8 @@ Color ColorPickerDraw(ColorPickerState *state, Rectangle panel, const char *titl
     DrawRectangleRec(panel, PICKER_BG);
     DrawRectangleLinesEx(panel, 1, PICKER_BORDER);
 
-    const char *t = (title && title[0]) ? title : "Color";
-    DrawText(t, (int)panel.x + 8, (int)panel.y + 6, 12, PICKER_TEXT);
-
-    Rectangle closeBtn = {panel.x + panel.width - 18, panel.y + 4, 14, 14};
-    DrawRectangleLinesEx(closeBtn, 1, PICKER_BORDER);
-    DrawText("X", (int)closeBtn.x + 4, (int)closeBtn.y + 1, 12, PICKER_TEXT);
-    if (CheckCollisionPointRec(mouse, closeBtn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-        state->open = false;
-
     float pad = 10.0f;
-    float headerSpace = 22.0f;
+    float headerSpace = 10.0f;
     float valueGap = 12.0f;
     float valueHeight = 12.0f;
     float hexGap = 10.0f;

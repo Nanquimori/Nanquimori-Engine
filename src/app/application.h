@@ -31,5 +31,6 @@ Camera GetEditorViewportCamera(void);
 void SetEditorViewportCamera(const Camera *camera);
 bool LookThroughSceneCameraObject(int objectId);
 bool LaunchProjectPlayer(char *status, int statusSize);
+void PrepareForProjectOpen(void);
 
 #endif // APPLICATION_H

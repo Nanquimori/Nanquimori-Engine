@@ -341,11 +341,26 @@ CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_style.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_style.cpp.s"
 	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\editor\ui\ui_style.cpp" -o CMakeFiles\NanquimoriPlayer.dir\src\editor\ui\ui_style.cpp.s
 
+CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/flags.make
+CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/includes_CXX.rsp
+CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.obj: C:/Users/Andrey\ Acelerion/Documents/Documentos\ Salvos/Raylib/Nanquimori\ Engine/src/editor/ui/ui_tooltip.cpp
+CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.obj"
+	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.obj -MF CMakeFiles\NanquimoriPlayer.dir\src\editor\ui\ui_tooltip.cpp.obj.d -o CMakeFiles\NanquimoriPlayer.dir\src\editor\ui\ui_tooltip.cpp.obj -c "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\editor\ui\ui_tooltip.cpp"
+
+CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.i"
+	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\editor\ui\ui_tooltip.cpp" > CMakeFiles\NanquimoriPlayer.dir\src\editor\ui\ui_tooltip.cpp.i
+
+CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.s"
+	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\editor\ui\ui_tooltip.cpp" -o CMakeFiles\NanquimoriPlayer.dir\src\editor\ui\ui_tooltip.cpp.s
+
 CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/flags.make
 CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/includes_CXX.rsp
 CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj: C:/Users/Andrey\ Acelerion/Documents/Documentos\ Salvos/Raylib/Nanquimori\ Engine/src/editor/viewport/camera_controller.cpp
 CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj"
 	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj -MF CMakeFiles\NanquimoriPlayer.dir\src\editor\viewport\camera_controller.cpp.obj.d -o CMakeFiles\NanquimoriPlayer.dir\src\editor\viewport\camera_controller.cpp.obj -c "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\editor\viewport\camera_controller.cpp"
 
 CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.i: cmake_force
@@ -360,7 +375,7 @@ CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.obj: CMakeFiles/Na
 CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/includes_CXX.rsp
 CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.obj: C:/Users/Andrey\ Acelerion/Documents/Documentos\ Salvos/Raylib/Nanquimori\ Engine/src/editor/viewport/gizmo.cpp
 CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.obj"
 	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.obj -MF CMakeFiles\NanquimoriPlayer.dir\src\editor\viewport\gizmo.cpp.obj.d -o CMakeFiles\NanquimoriPlayer.dir\src\editor\viewport\gizmo.cpp.obj -c "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\editor\viewport\gizmo.cpp"
 
 CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.i: cmake_force
@@ -375,7 +390,7 @@ CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.obj: CMakeFil
 CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/includes_CXX.rsp
 CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.obj: C:/Users/Andrey\ Acelerion/Documents/Documentos\ Salvos/Raylib/Nanquimori\ Engine/src/physics/nanquimori_physics.cpp
 CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.obj"
 	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.obj -MF CMakeFiles\NanquimoriPlayer.dir\src\physics\nanquimori_physics.cpp.obj.d -o CMakeFiles\NanquimoriPlayer.dir\src\physics\nanquimori_physics.cpp.obj -c "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\physics\nanquimori_physics.cpp"
 
 CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.i: cmake_force
@@ -390,7 +405,7 @@ CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.obj: CMakeFiles
 CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/includes_CXX.rsp
 CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.obj: C:/Users/Andrey\ Acelerion/Documents/Documentos\ Salvos/Raylib/Nanquimori\ Engine/src/runtime/game_application.cpp
 CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.obj"
 	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.obj -MF CMakeFiles\NanquimoriPlayer.dir\src\runtime\game_application.cpp.obj.d -o CMakeFiles\NanquimoriPlayer.dir\src\runtime\game_application.cpp.obj -c "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\runtime\game_application.cpp"
 
 CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_application.cpp.i: cmake_force
@@ -405,7 +420,7 @@ CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj: CMakeFiles/Nanquimor
 CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/includes_CXX.rsp
 CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj: C:/Users/Andrey\ Acelerion/Documents/Documentos\ Salvos/Raylib/Nanquimori\ Engine/src/scene/outliner.cpp
 CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj"
 	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.obj -MF CMakeFiles\NanquimoriPlayer.dir\src\scene\outliner.cpp.obj.d -o CMakeFiles\NanquimoriPlayer.dir\src\scene\outliner.cpp.obj -c "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\scene\outliner.cpp"
 
 CMakeFiles/NanquimoriPlayer.dir/src/scene/outliner.cpp.i: cmake_force
@@ -420,7 +435,7 @@ CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj: CMakeFiles/Nanqu
 CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/includes_CXX.rsp
 CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj: C:/Users/Andrey\ Acelerion/Documents/Documentos\ Salvos/Raylib/Nanquimori\ Engine/src/scene/scene_camera.cpp
 CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj"
 	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.obj -MF CMakeFiles\NanquimoriPlayer.dir\src\scene\scene_camera.cpp.obj.d -o CMakeFiles\NanquimoriPlayer.dir\src\scene\scene_camera.cpp.obj -c "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\scene\scene_camera.cpp"
 
 CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_camera.cpp.i: cmake_force
@@ -435,7 +450,7 @@ CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj: CMakeFiles/Nanq
 CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/includes_CXX.rsp
 CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj: C:/Users/Andrey\ Acelerion/Documents/Documentos\ Salvos/Raylib/Nanquimori\ Engine/src/scene/scene_manager.cpp
 CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj"
 	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.obj -MF CMakeFiles\NanquimoriPlayer.dir\src\scene\scene_manager.cpp.obj.d -o CMakeFiles\NanquimoriPlayer.dir\src\scene\scene_manager.cpp.obj -c "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\scene\scene_manager.cpp"
 
 CMakeFiles/NanquimoriPlayer.dir/src/scene/scene_manager.cpp.i: cmake_force
@@ -450,7 +465,7 @@ CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.obj: CMakeFiles/N
 CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/includes_CXX.rsp
 CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.obj: C:/Users/Andrey\ Acelerion/Documents/Documentos\ Salvos/Raylib/Nanquimori\ Engine/src/tools/svg_asset_loader.cpp
 CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.obj"
 	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.obj -MF CMakeFiles\NanquimoriPlayer.dir\src\tools\svg_asset_loader.cpp.obj.d -o CMakeFiles\NanquimoriPlayer.dir\src\tools\svg_asset_loader.cpp.obj -c "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\tools\svg_asset_loader.cpp"
 
 CMakeFiles/NanquimoriPlayer.dir/src/tools/svg_asset_loader.cpp.i: cmake_force
@@ -465,7 +480,7 @@ CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.obj: CMakeFiles/Nanqui
 CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/includes_CXX.rsp
 CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.obj: C:/Users/Andrey\ Acelerion/Documents/Documentos\ Salvos/Raylib/Nanquimori\ Engine/src/runtime/game_main.cpp
 CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.obj: CMakeFiles/NanquimoriPlayer.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.obj"
 	C:\raylib\w64devkit\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.obj -MF CMakeFiles\NanquimoriPlayer.dir\src\runtime\game_main.cpp.obj.d -o CMakeFiles\NanquimoriPlayer.dir\src\runtime\game_main.cpp.obj -c "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\src\runtime\game_main.cpp"
 
 CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.i: cmake_force
@@ -478,7 +493,7 @@ CMakeFiles/NanquimoriPlayer.dir/src/runtime/game_main.cpp.s: cmake_force
 
 CMakeFiles/NanquimoriPlayer.dir/NanquimoriPlayer_icon.rc.obj: CMakeFiles/NanquimoriPlayer.dir/flags.make
 CMakeFiles/NanquimoriPlayer.dir/NanquimoriPlayer_icon.rc.obj: NanquimoriPlayer_icon.rc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_28) "Building RC object CMakeFiles/NanquimoriPlayer.dir/NanquimoriPlayer_icon.rc.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_29) "Building RC object CMakeFiles/NanquimoriPlayer.dir/NanquimoriPlayer_icon.rc.obj"
 	C:\raylib\w64devkit\bin\windres.exe -O coff $(RC_DEFINES) $(RC_INCLUDES) $(RC_FLAGS) "C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\NanquimoriPlayer_icon.rc" CMakeFiles\NanquimoriPlayer.dir\NanquimoriPlayer_icon.rc.obj
 
 # Object files for target NanquimoriPlayer
@@ -501,6 +516,7 @@ NanquimoriPlayer_OBJECTS = \
 "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/top_bar.cpp.obj" \
 "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_button.cpp.obj" \
 "CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_style.cpp.obj" \
+"CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.obj" \
 "CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj" \
 "CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.obj" \
 "CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.obj" \
@@ -533,6 +549,7 @@ NanquimoriPlayer.exe: CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/text_input.c
 NanquimoriPlayer.exe: CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/top_bar.cpp.obj
 NanquimoriPlayer.exe: CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_button.cpp.obj
 NanquimoriPlayer.exe: CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_style.cpp.obj
+NanquimoriPlayer.exe: CMakeFiles/NanquimoriPlayer.dir/src/editor/ui/ui_tooltip.cpp.obj
 NanquimoriPlayer.exe: CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/camera_controller.cpp.obj
 NanquimoriPlayer.exe: CMakeFiles/NanquimoriPlayer.dir/src/editor/viewport/gizmo.cpp.obj
 NanquimoriPlayer.exe: CMakeFiles/NanquimoriPlayer.dir/src/physics/nanquimori_physics.cpp.obj
@@ -548,7 +565,7 @@ NanquimoriPlayer.exe: raylib/raylib/libraylib.a
 NanquimoriPlayer.exe: CMakeFiles/NanquimoriPlayer.dir/linkLibs.rsp
 NanquimoriPlayer.exe: CMakeFiles/NanquimoriPlayer.dir/objects1.rsp
 NanquimoriPlayer.exe: CMakeFiles/NanquimoriPlayer.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_29) "Linking CXX executable NanquimoriPlayer.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir="C:\Users\Andrey Acelerion\Documents\Documentos Salvos\Raylib\Nanquimori Engine\.cmake\build-debug\CMakeFiles" --progress-num=$(CMAKE_PROGRESS_30) "Linking CXX executable NanquimoriPlayer.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\NanquimoriPlayer.dir\link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

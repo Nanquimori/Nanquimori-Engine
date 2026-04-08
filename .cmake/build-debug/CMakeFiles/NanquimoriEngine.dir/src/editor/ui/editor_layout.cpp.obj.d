@@ -11,6 +11,7 @@ CMakeFiles/NanquimoriEngine.dir/src/editor/ui/editor_layout.cpp.obj: \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/_mingw_secapi.h \
  C:/raylib/w64devkit/x86_64-w64-mingw32/include/sdks/_mingw_ddk.h \
  C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\ui_style.h \
+ C:\Users\Andrey\ Acelerion\Documents\Documentos\ Salvos\Raylib\Nanquimori\ Engine\src\editor\ui\ui_tooltip.h \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/math.h \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/cmath \
  C:/raylib/w64devkit/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/bits/requires_hosted.h \

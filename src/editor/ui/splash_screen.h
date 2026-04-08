@@ -11,6 +11,7 @@ typedef struct
     bool bloquearFechar;
     bool texturaOk;
     bool hoverYT;
+    bool hoverNewProject;
 } SplashScreen;
 
 // Inicializar splash screen
